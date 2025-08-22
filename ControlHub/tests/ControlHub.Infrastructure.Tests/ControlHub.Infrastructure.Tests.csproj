@@ -23,4 +23,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ControlHub.Infrastructure\ControlHub.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
