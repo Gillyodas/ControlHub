@@ -4,29 +4,35 @@
     {
         public bool IsSuccess { get; }
         public string Error { get; }
+        public Exception? Exception { get; }
 
-        protected Result(bool isSuccess, string error)
+        protected Result(bool isSuccess, string error, Exception? exception = null)
         {
             IsSuccess = isSuccess;
             Error = error;
+            Exception = exception;
         }
 
         public static Result Success() => new(true, string.Empty);
-        public static Result Failure(string error) => new(false, error);
+        public static Result Failure(string error, Exception? ex = null)
+        => new(false, error, ex);
     }
 
     public class Result<T> : Result
     {
         public T Value { get; }
 
-        private Result(T value, bool isSuccess, string error)
-            : base(isSuccess, error)
+        private Result(T value, bool isSuccess, string error, Exception? exception = null)
+            : base(isSuccess, error, exception)
         {
             Value = value;
         }
 
-        public static Result<T> Success(T value) => new(value, true, string.Empty);
-        public static new Result<T> Failure(string error) => new(default!, false, error);
+        public static Result<T> Success(T value)
+            => new(value, true, string.Empty);
+
+        public static Result<T> Failure(string error, Exception? ex = null)
+            => new(default!, false, error, ex);
     }
 
     public class Maybe<T>
