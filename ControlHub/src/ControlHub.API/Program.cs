@@ -1,10 +1,14 @@
-using ControlHub.API.Configurations;
+﻿using ControlHub.API.Configurations;
+using ControlHub.API.Middlewares;
 using ControlHub.Application.Accounts.Commands.CreateAccount;
 using ControlHub.Application.Common.Behaviors;
-using MediatR;
-using Microsoft.Extensions.DependencyInjection;
-using ControlHub.Application.Common.Behaviors;
 using FluentValidation;
+using MediatR;
+using Serilog;
+using OpenTelemetry;
+using Prometheus;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
 
 namespace ControlHub.API
 {
@@ -14,6 +18,37 @@ namespace ControlHub.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Config Serilog
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("Application", "ControlHub.API")
+                .WriteTo.Console() // log ra console
+                .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day) // log file
+                .CreateLogger();
+
+            builder.Host.UseSerilog(); // thay thế logger mặc định
+
+            // Config OpenTelemetry
+            builder.Services.AddOpenTelemetry()
+            .WithTracing(tracerProviderBuilder =>
+            {
+                tracerProviderBuilder
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddOtlpExporter(opt =>
+                    {
+                        opt.Endpoint = new Uri("http://localhost:4317"); // Collector endpoint
+                    });
+            })
+            .WithMetrics(meterProviderBuilder =>
+            {
+                meterProviderBuilder
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddRuntimeInstrumentation();
+            });
+
+            // Config MediatR
             builder.Services.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(ControlHub.Application.AssemblyReference.Assembly));
             builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountCommandValidator>();
@@ -49,12 +84,14 @@ namespace ControlHub.API
 
             //*****************************************************************************************************
 
-            builder.Services.AddMediatR(cfg =>
-                cfg.RegisterServicesFromAssembly(ControlHub.Application.AssemblyReference.Assembly));
-
             var app = builder.Build();
 
+            // Middlewares
             app.UseMiddleware<ValidationExceptionMiddleware>();
+            app.UseMiddleware<GlobalExceptionMiddleware>();
+
+            // Metrics endpoint cho Prometheus
+            app.MapMetrics();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
