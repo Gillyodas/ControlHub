@@ -4,11 +4,11 @@ using ControlHub.Application.Accounts.Commands.CreateAccount;
 using ControlHub.Application.Common.Behaviors;
 using FluentValidation;
 using MediatR;
-using Serilog;
-using OpenTelemetry;
-using Prometheus;
-using OpenTelemetry.Trace;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+using Prometheus;
+using Serilog;
 
 namespace ControlHub.API
 {
@@ -35,9 +35,10 @@ namespace ControlHub.API
                 tracerProviderBuilder
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddOtlpExporter(opt =>
+                    .AddOtlpExporter(options =>
                     {
-                        opt.Endpoint = new Uri("http://localhost:4317"); // Collector endpoint
+                        options.Endpoint = new Uri("http://otel-collector:4317"); // dùng HTTP OTLP
+                        options.Protocol = OtlpExportProtocol.Grpc;
                     });
             })
             .WithMetrics(meterProviderBuilder =>
@@ -45,8 +46,13 @@ namespace ControlHub.API
                 meterProviderBuilder
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddRuntimeInstrumentation();
+                    .AddRuntimeInstrumentation()
+                    .AddOtlpExporter(options =>
+                    {
+                        options.Endpoint = new Uri("http://otel-collector:4318");
+                    });
             });
+
 
             // Config MediatR
             builder.Services.AddMediatR(cfg =>

@@ -1,0 +1,26 @@
+# ===== Build stage =====
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy project file của API và các dependency để cache restore
+COPY src/ControlHub.API/ControlHub.API.csproj src/ControlHub.API/
+COPY src/ControlHub.Application/ControlHub.Application.csproj src/ControlHub.Application/
+COPY src/ControlHub.Domain/ControlHub.Domain.csproj src/ControlHub.Domain/
+COPY src/ControlHub.Infrastructure/ControlHub.Infrastructure.csproj src/ControlHub.Infrastructure/
+COPY src/ControlHub.SharedKernel/ControlHub.SharedKernel.csproj src/ControlHub.SharedKernel/
+
+# Restore dependencies cho API project (kéo luôn dependency)
+RUN dotnet restore src/ControlHub.API/ControlHub.API.csproj
+
+# Copy toàn bộ source code (sau khi restore để tận dụng cache)
+COPY . .
+
+# Build và publish API
+WORKDIR /src/src/ControlHub.API
+RUN dotnet publish -c Release -o /app/publish
+
+# ===== Runtime stage =====
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "ControlHub.API.dll"]
