@@ -4634,11 +4634,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\ControlHub\\ControlHub\\src\\ControlHub.Infrastructure\\ControlHub.Infrastructure.csproj",
+      "projectUniqueName": "E:\\Project\\ControlHub\\src\\ControlHub.Infrastructure\\ControlHub.Infrastructure.csproj",
       "projectName": "ControlHub.Infrastructure",
-      "projectPath": "E:\\ControlHub\\ControlHub\\src\\ControlHub.Infrastructure\\ControlHub.Infrastructure.csproj",
+      "projectPath": "E:\\Project\\ControlHub\\src\\ControlHub.Infrastructure\\ControlHub.Infrastructure.csproj",
       "packagesPath": "C:\\Users\\Gill\\.nuget\\packages\\",
-      "outputPath": "E:\\ControlHub\\ControlHub\\src\\ControlHub.Infrastructure\\obj\\",
+      "outputPath": "E:\\Project\\ControlHub\\src\\ControlHub.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -4659,14 +4659,14 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "E:\\ControlHub\\ControlHub\\src\\ControlHub.Application\\ControlHub.Application.csproj": {
-              "projectPath": "E:\\ControlHub\\ControlHub\\src\\ControlHub.Application\\ControlHub.Application.csproj"
+            "E:\\Project\\ControlHub\\src\\ControlHub.Application\\ControlHub.Application.csproj": {
+              "projectPath": "E:\\Project\\ControlHub\\src\\ControlHub.Application\\ControlHub.Application.csproj"
             },
-            "E:\\ControlHub\\ControlHub\\src\\ControlHub.Domain\\ControlHub.Domain.csproj": {
-              "projectPath": "E:\\ControlHub\\ControlHub\\src\\ControlHub.Domain\\ControlHub.Domain.csproj"
+            "E:\\Project\\ControlHub\\src\\ControlHub.Domain\\ControlHub.Domain.csproj": {
+              "projectPath": "E:\\Project\\ControlHub\\src\\ControlHub.Domain\\ControlHub.Domain.csproj"
             },
-            "E:\\ControlHub\\ControlHub\\src\\ControlHub.SharedKernel\\ControlHub.SharedKernel.csproj": {
-              "projectPath": "E:\\ControlHub\\ControlHub\\src\\ControlHub.SharedKernel\\ControlHub.SharedKernel.csproj"
+            "E:\\Project\\ControlHub\\src\\ControlHub.SharedKernel\\ControlHub.SharedKernel.csproj": {
+              "projectPath": "E:\\Project\\ControlHub\\src\\ControlHub.SharedKernel\\ControlHub.SharedKernel.csproj"
             }
           }
         }
