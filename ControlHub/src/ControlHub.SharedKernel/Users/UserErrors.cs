@@ -1,4 +1,4 @@
-﻿using ControlHub.SharedKernel.Common;
+﻿using ControlHub.SharedKernel.Common.Errors;
 
 namespace ControlHub.SharedKernel.Users
 {
@@ -18,5 +18,8 @@ namespace ControlHub.SharedKernel.Users
 
         public static readonly Error ProfileUpdateFailed =
             new("User.ProfileUpdateFailed", "Failed to update user profile.");
+
+        public static readonly Error UnexpectedError =
+            new("User.UnexpectedError", "An unexpected error occurred. Please try again later.");
     }
 }

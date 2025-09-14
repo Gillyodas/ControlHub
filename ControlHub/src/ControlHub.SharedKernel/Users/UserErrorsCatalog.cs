@@ -1,15 +1,15 @@
-﻿using ControlHub.SharedKernel.Accounts;
-using ControlHub.SharedKernel.Common.Errors;
+﻿using ControlHub.SharedKernel.Common.Errors;
+using ControlHub.SharedKernel.Users;
 
-namespace ControlHub.SharedKernel.Accounts
+namespace ControlHub.Domain.Users
 {
-    public class AccountErrorsCatalog : IErrorCatalog
+    public class UserErrorsCatalog : IErrorCatalog
     {
         private static readonly Dictionary<string, string> _messageToCode;
 
-        static AccountErrorsCatalog()
+        static UserErrorsCatalog()
         {
-            _messageToCode = typeof(AccountErrors).GetFields()
+            _messageToCode = typeof(UserErrors).GetFields()
                 .Select(f => f.GetValue(null) as Error)
                 .Where(e => e != null)
                 .ToDictionary(e => e.Message, e => e.Code);
@@ -19,7 +19,7 @@ namespace ControlHub.SharedKernel.Accounts
         {
             return _messageToCode.TryGetValue(message, out var code)
                 ? code
-                : "null";
+                : null; // middleware sẽ fallback sang "Validation.Unknown"
         }
     }
 }
