@@ -25,6 +25,7 @@ namespace ControlHub.API.Configurations
 
             //User.Repositories
             services.AddScoped<IUserCommands, UserCommands>();
+            services.AddScoped<IUserQueries, UserQueries>();
 
 
             return services;

@@ -27,15 +27,9 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             {
                 Email email = Email.Create(request.email).Value;
 
-                Result<Maybe<Account>> resultAccount = await _accountQueries.GetAccountByEmail(email);
+                var resultAccount = await _accountQueries.GetAccountByEmail(email);
 
-                if (!resultAccount.IsSuccess)
-                    return Result<SignInDTO>.Failure(resultAccount.Error);
-
-                if (resultAccount.Value.HasNoValue)
-                    return Result<SignInDTO>.Failure("Account not found");
-
-                Result<bool> resultVerifyPassword = _passwordHasher.Verify(request.password, resultAccount.Value.Value.Salt, resultAccount.Value.Value.HashPassword);
+                Result<bool> resultVerifyPassword = _passwordHasher.Verify(request.password, resultAccount.Salt, resultAccount.HashPassword);
 
                 if (!resultVerifyPassword.IsSuccess)
                 {
@@ -45,7 +39,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
                     return Result<SignInDTO>.Failure(resultVerifyPassword.Error, resultVerifyPassword.Exception);
                 }
 
-                Account account = resultAccount.Value.Value;
+                Account account = resultAccount;
 
                 var dto = new SignInDTO(
                     account.Id,

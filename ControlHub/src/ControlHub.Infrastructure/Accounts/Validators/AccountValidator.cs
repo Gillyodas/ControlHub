@@ -19,10 +19,7 @@ namespace ControlHub.Infrastructure.Accounts.Validators
         {
             var result = await _accountQueries.GetByEmail(email);
 
-            if (!result.IsSuccess)
-                return Result<bool>.Failure(result.Error, result.Exception);
-
-            return Result<bool>.Success(result.Value.HasValue);
+            return Result<bool>.Success(result == null);
         }
     }
 }

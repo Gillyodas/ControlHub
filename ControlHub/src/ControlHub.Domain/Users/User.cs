@@ -1,4 +1,6 @@
-﻿namespace ControlHub.Domain.Users
+﻿using ControlHub.SharedKernel.Results;
+
+namespace ControlHub.Domain.Users
 {
     public class User
     {
@@ -25,6 +27,16 @@
             if (string.IsNullOrWhiteSpace(username))
                 throw new ArgumentException("Username cannot be empty", nameof(username));
             Username = username;
+        }
+
+        public Result UpdateUsername(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+                return Result.Failure("Username cannot be empty");
+
+            Username = username;
+
+            return Result.Success();
         }
     }
 }

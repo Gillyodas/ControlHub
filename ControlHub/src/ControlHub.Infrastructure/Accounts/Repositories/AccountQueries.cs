@@ -1,9 +1,11 @@
 ﻿using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Domain.Accounts;
 using ControlHub.Domain.Accounts.ValueObjects;
+using ControlHub.Domain.Users;
 using ControlHub.Infrastructure.Persistence;
-using ControlHub.SharedKernel.Results;
+using ControlHub.Infrastructure.Users;
 using ControlHub.SharedKernel.Accounts;
+using ControlHub.SharedKernel.Results;
 using Microsoft.EntityFrameworkCore;
 
 namespace ControlHub.Infrastructure.Accounts.Repositories
@@ -17,44 +19,26 @@ namespace ControlHub.Infrastructure.Accounts.Repositories
             _db = db;
         }
 
-        public async Task<Result<Maybe<Account>>> GetAccountByEmail(Email email)
+        public async Task<Account> GetAccountByEmail(Email email)
         {
-            try
-            {
-                AccountEntity? resultAccount = await _db.Accounts
-                                                  .AsNoTracking().Where(a => a.Email == email)
-                                                  .FirstOrDefaultAsync();
-
-                if (resultAccount == null)
-                    return Result<Maybe<Account>>.Failure(AccountErrors.EmailNotFound.Code);
-
-                Account domainAccount = AccountMapper.ToDomain(resultAccount);
-
-                return Result<Maybe<Account>>.Success(Maybe<Account>.From(domainAccount));
-            }
-            catch(Exception ex)
-            {
-                return Result<Maybe<Account>>.Failure("Db error", ex);
-            }
+                return AccountMapper.ToDomain(await _db.Accounts
+                                                       .AsNoTracking()
+                                                       .Include(a => a.User)
+                                                       .FirstOrDefaultAsync(a => a.Email == email));
         }
 
-        public async Task<Result<Maybe<Email>>> GetByEmail(Email email)
+        public async Task<Email> GetByEmail(Email email)
         {
-            try
-            {
-                Email? resultEmail = await _db.Accounts
-                                              .AsNoTracking()
-                                              .Where(a => a.Email == email)
-                                              .Select(a => a.Email)
-                                              .FirstOrDefaultAsync();
-
-                return Result<Maybe<Email>>.Success(Maybe<Email>.From(resultEmail));
-            }
-            catch (Exception ex)
-            {
-                return Result<Maybe<Email>>.Failure("Db error", ex);
-            }
+            return await _db.Accounts
+                            .AsNoTracking()
+                            .Where(a => a.Email == email)
+                            .Select(a => a.Email)
+                            .FirstOrDefaultAsync();
         }
 
+        public async Task<User> GetUserById(Guid id, CancellationToken cancellationToken)
+        {
+            return UserMapper.ToDomain(await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.AccId == id));
+        }
     }
 }

@@ -34,7 +34,14 @@ namespace ControlHub.API.Middlewares
                     traceId = context.TraceIdentifier
                 };
 
-                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                int statusCode = ex switch
+                {
+                    UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
+                    KeyNotFoundException => (int)HttpStatusCode.NotFound,
+                    _ => (int)HttpStatusCode.InternalServerError
+                };
+                context.Response.StatusCode = statusCode;
+
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsJsonAsync(errorResponse);
             }
