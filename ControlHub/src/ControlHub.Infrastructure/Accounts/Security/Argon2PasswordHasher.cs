@@ -27,44 +27,27 @@ public sealed class Argon2PasswordHasher : IPasswordHasher
             throw new ArgumentException("DegreeOfParallelism must be > 0", nameof(_opt.DegreeOfParallelism));
     }
 
-    public Result<(byte[] Salt, byte[] Hash)> Hash(string password)
+    public (byte[] Salt, byte[] Hash) Hash(string password)
     {
-        try
-        {
-            var salt = RandomNumberGenerator.GetBytes(_opt.SaltSize);
-            var hash = Compute(password, salt,
-                _opt.MemorySizeKB,
-                _opt.Iterations,
-                _opt.DegreeOfParallelism,
-                _opt.HashSize);
+        var salt = RandomNumberGenerator.GetBytes(_opt.SaltSize);
+        var hash = Compute(password, salt,
+            _opt.MemorySizeKB,
+            _opt.Iterations,
+            _opt.DegreeOfParallelism,
+            _opt.HashSize);
 
-            return Result<(byte[] Salt, byte[] Hash)>.Success((salt, hash));
-        }
-        catch (Exception ex)
-        {
-            return Result<(byte[] Salt, byte[] Hash)>.Failure("Password hashing failed", ex);
-        }
+        return (salt, hash);
     }
 
-    public Result<bool> Verify(string password, byte[] salt, byte[] expected)
+    public bool Verify(string password, byte[] salt, byte[] expected)
     {
-        try
-        {
-            var actual = Compute(password, salt,
-                _opt.MemorySizeKB,
-                _opt.Iterations,
-                _opt.DegreeOfParallelism,
-                expected.Length);
+        var actual = Compute(password, salt,
+            _opt.MemorySizeKB,
+            _opt.Iterations,
+            _opt.DegreeOfParallelism,
+            expected.Length);
 
-            bool isMatch = CryptographicOperations.FixedTimeEquals(expected, actual);
-            return isMatch
-                ? Result<bool>.Success(true)
-                : Result<bool>.Failure(AccountErrors.PasswordVerifyFailed.Code);
-        }
-        catch (Exception ex)
-        {
-            return Result<bool>.Failure(AccountErrors.PasswordHashFailed.Code, ex);
-        }
+        return CryptographicOperations.FixedTimeEquals(expected, actual);
     }
 
     private static byte[] Compute(string pwd, byte[] salt, int m, int t, int p, int len)

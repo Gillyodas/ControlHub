@@ -44,10 +44,7 @@ namespace ControlHub.Application.Accounts.Commands.CreateAccount
 
             var passwordHashResult = _passwordHasher.Hash(request.Password);
 
-            if(!passwordHashResult.IsSuccess)
-                return Result<Guid>.Failure(AccountErrors.PasswordHashFailed.Code);
-
-            var accountResult = AccountFactory.CreateWithUser(accId, email, passwordHashResult.Value.Hash, passwordHashResult.Value.Salt);
+            var accountResult = AccountFactory.CreateWithUser(accId, email, passwordHashResult.Hash, passwordHashResult.Salt);
 
             if (!accountResult.IsSuccess)
                 return Result<Guid>.Failure(accountResult.Error);
