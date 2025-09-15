@@ -60,7 +60,7 @@ namespace ControlHub.API
             // Config MediatR
             builder.Services.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(ControlHub.Application.AssemblyReference.Assembly));
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateAccountCommandValidator>();
+            builder.Services.AddValidatorsFromAssembly(ControlHub.Application.AssemblyReference.Assembly);
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             // Load extra config files BEFORE services use them
@@ -96,7 +96,6 @@ namespace ControlHub.API
             var app = builder.Build();
 
             // Middlewares
-            app.UseMiddleware<ValidationExceptionMiddleware>();
             app.UseMiddleware<GlobalExceptionMiddleware>();
 
             // Metrics endpoint cho Prometheus

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;
 
 namespace ControlHub.Domain.Accounts.ValueObjects
@@ -17,10 +18,10 @@ namespace ControlHub.Domain.Accounts.ValueObjects
         public static Result<Email> Create(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
-                return Result<Email>.Failure("Email cannot be empty.");
+                return Result<Email>.Failure(AccountErrors.EmailRequired.Code);
 
             if (!_emailRegex.IsMatch(value))
-                return Result<Email>.Failure("Invalid email format.");
+                return Result<Email>.Failure(AccountErrors.InvalidEmail.Code);
 
             return Result<Email>.Success(new Email(value));
         }
