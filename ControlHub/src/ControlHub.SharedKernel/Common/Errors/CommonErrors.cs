@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ControlHub.SharedKernel.Common
+namespace ControlHub.SharedKernel.Common.Errors
 {
     internal class CommonErrors
     {

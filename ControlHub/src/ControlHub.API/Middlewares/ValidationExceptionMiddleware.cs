@@ -1,40 +1,49 @@
 ﻿using ControlHub.SharedKernel.Accounts;
+using ControlHub.SharedKernel.Common.Errors;
 
-public class ValidationExceptionMiddleware
+namespace ControlHub.API.Middlewares
 {
-    private readonly RequestDelegate _next;
-
-    public ValidationExceptionMiddleware(RequestDelegate next)
+    public class ValidationExceptionMiddleware
     {
-        _next = next;
-    }
+        private readonly RequestDelegate _next;
+        private readonly IEnumerable<IErrorCatalog> _catalogs;
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        try
+        public ValidationExceptionMiddleware(RequestDelegate next, IEnumerable<IErrorCatalog> catalogs)
         {
-            await _next(context);
+            _next = next;
+            _catalogs = catalogs;
         }
-        catch (FluentValidation.ValidationException ex)
+
+        public async Task InvokeAsync(HttpContext context)
         {
-            var errors = ex.Errors
-                .Select(e => new
-                {
-                    // map lại bằng cách lookup từ AccountErrors
-                    Code = MapErrorCode(e.ErrorMessage),
-                    Message = e.ErrorMessage
-                });
+            try
+            {
+                await _next(context);
+            }
+            catch (FluentValidation.ValidationException ex)
+            {
+                var errors = ex.Errors
+                    .Select(e => new
+                    {
+                        Code = MapErrorCode(e.ErrorMessage),
+                        Message = e.ErrorMessage
+                    });
 
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            context.Response.ContentType = "application/json";
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                context.Response.ContentType = "application/json";
 
-            await context.Response.WriteAsJsonAsync(new { errors });
+                await context.Response.WriteAsJsonAsync(new { errors });
+            }
         }
-    }
 
-    private string MapErrorCode(string errorMessage)
-    {
-        // bạn có thể tạo dictionary <string, string> từ AccountErrors.Message → AccountErrors.Code
-        return AccountErrorsCatalog.GetCodeByMessage(errorMessage);
+        private string MapErrorCode(string errorMessage)
+        {
+            foreach (var catalog in _catalogs)
+            {
+                var code = catalog.GetCodeByMessage(errorMessage);
+                if (code != null) return code;
+            }
+            return "Validation.Unknown";
+        }
     }
 }

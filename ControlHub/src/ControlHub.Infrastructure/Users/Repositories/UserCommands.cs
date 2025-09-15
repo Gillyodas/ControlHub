@@ -2,6 +2,7 @@
 using ControlHub.Domain.Users;
 using ControlHub.Infrastructure.Persistence;
 using ControlHub.SharedKernel.Results;
+using Microsoft.EntityFrameworkCore;
 
 namespace ControlHub.Infrastructure.Users.Repositories
 {
@@ -14,22 +15,18 @@ namespace ControlHub.Infrastructure.Users.Repositories
             _db = db;
         }
 
-        public async Task<Result<bool>> AddAsync(User user)
+        public async Task AddAsync(User user, CancellationToken cancellationToken)
         {
-            try
-            {
-                var userEntity = UserMapper.ToEntity(user);
+            var userEntity = UserMapper.ToEntity(user);
+            await _db.Users.AddAsync(userEntity);
+            await _db.SaveChangesAsync();
+        }
 
-                await _db.Users.AddAsync(userEntity);
-
-                int rowAffected = await _db.SaveChangesAsync();
-
-                return Result<bool>.Success(rowAffected > 0);
-            }
-            catch(Exception ex)
-            {
-                return Result<bool>.Failure("Db error", ex);
-            }
+        public async Task SaveAsync(User user, CancellationToken cancellationToken)
+        {
+            var userEntity = UserMapper.ToEntity(user);
+            _db.Users.Update(userEntity);
+            await _db.SaveChangesAsync();
         }
     }
 }
