@@ -25,13 +25,13 @@ namespace ControlHub.Infrastructure.Accounts.Repositories
                                                        .FirstOrDefaultAsync(a => a.Email == email));
         }
 
-        public async Task<Email> GetByEmail(Email email)
+        public async Task<Email?> GetEmailByEmailAsync(Email email)
         {
             return await _db.Accounts
-                            .AsNoTracking()
-                            .Where(a => a.Email == email)
-                            .Select(a => a.Email)
-                            .FirstOrDefaultAsync();
+                .AsNoTracking()
+                .Where(a => a.Email == email)
+                .Select(a => a.Email)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<User> GetUserById(Guid id, CancellationToken cancellationToken)
