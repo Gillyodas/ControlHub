@@ -29,14 +29,11 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
 
                 var resultAccount = await _accountQueries.GetAccountByEmail(email);
 
-                Result<bool> resultVerifyPassword = _passwordHasher.Verify(request.password, resultAccount.Salt, resultAccount.HashPassword);
+                var resultVerifyPassword = _passwordHasher.Verify(request.password, resultAccount.Salt, resultAccount.HashPassword);
 
-                if (!resultVerifyPassword.IsSuccess)
+                if (!resultVerifyPassword)
                 {
-                    if (resultVerifyPassword.Error == AccountErrors.PasswordVerifyFailed.Code)
-                        return Result<SignInDTO>.Failure(AccountErrors.InvalidCredentials.Code);
-
-                    return Result<SignInDTO>.Failure(resultVerifyPassword.Error, resultVerifyPassword.Exception);
+                    return Result<SignInDTO>.Failure(AccountErrors.InvalidCredentials.Code);
                 }
 
                 Account account = resultAccount;
