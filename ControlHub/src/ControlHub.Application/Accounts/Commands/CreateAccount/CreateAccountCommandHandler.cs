@@ -4,6 +4,7 @@ using ControlHub.Application.Accounts.Interfaces.Security;
 using ControlHub.Domain.Accounts;
 using ControlHub.Domain.Accounts.ValueObjects;
 using ControlHub.Domain.Common.Factories;
+using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;
 using MediatR;
 
@@ -34,22 +35,17 @@ namespace ControlHub.Application.Accounts.Commands.CreateAccount
 
             var email = emailResult.Value;
 
-            var emailIsExist = await _accountValidator.EmailIsExistAsync(email);
-
-            if (!emailIsExist.IsSuccess)
+            if (await _accountValidator.EmailIsExistAsync(email))
             {
-                return Result<Guid>.Failure(emailIsExist.Error);
+                return Result<Guid>.Failure(AccountErrors.EmailAlreadyExists.Code);
             }
-
-            if (emailIsExist.Value)
-                return Result<Guid>.Failure("Email already exists");
 
             var accId = Guid.NewGuid();
 
             var passwordHashResult = _passwordHasher.Hash(request.Password);
 
             if(!passwordHashResult.IsSuccess)
-                return Result<Guid>.Failure(emailIsExist.Error);
+                return Result<Guid>.Failure(AccountErrors.PasswordHashFailed.Code);
 
             var accountResult = AccountFactory.CreateWithUser(accId, email, passwordHashResult.Value.Hash, passwordHashResult.Value.Salt);
 

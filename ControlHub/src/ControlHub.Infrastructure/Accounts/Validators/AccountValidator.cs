@@ -15,11 +15,9 @@ namespace ControlHub.Infrastructure.Accounts.Validators
             _accountQueries = accountQueries;
         }
 
-        public async Task<Result<bool>> EmailIsExistAsync(Email email)
+        public async Task<bool> EmailIsExistAsync(Email email)
         {
-            var result = await _accountQueries.GetByEmail(email);
-
-            return Result<bool>.Success(result == null);
+            return await _accountQueries.GetEmailByEmailAsync(email) != null;
         }
     }
 }
