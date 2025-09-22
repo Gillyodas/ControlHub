@@ -22,7 +22,7 @@ namespace ControlHub.API.Accounts.Controllers
         {
             var command = new ChangePasswordCommand(id, request.curPass, request.newPass);
 
-            var result = await _mediator.Send(command);
+            var result = await _mediator.Send(command, cancellationToken);
 
             if (!result.IsSuccess)
                 return BadRequest(new ChangePasswordResponse { Message = result.Error });
