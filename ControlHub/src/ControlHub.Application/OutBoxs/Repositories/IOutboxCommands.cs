@@ -4,6 +4,7 @@ namespace ControlHub.Application.OutBoxs.Repositories
 {
     public interface IOutboxCommands
     {
-        public Task AddAsync(OutboxMessage domainOutbox, CancellationToken cancellationToken);
+        Task AddAsync(OutboxMessage domainOutbox, CancellationToken cancellationToken);
+        Task SaveChangesAsync(CancellationToken cancellationToken);
     }
 }

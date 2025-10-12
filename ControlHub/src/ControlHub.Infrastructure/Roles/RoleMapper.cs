@@ -1,0 +1,61 @@
+﻿using ControlHub.Domain.Permissions;
+using ControlHub.Domain.Roles;
+using ControlHub.Infrastructure.Permissions;
+using ControlHub.Infrastructure.RolePermissions;
+using System.Linq;
+
+namespace ControlHub.Infrastructure.Roles
+{
+    public static class RoleMapper
+    {
+        public static Role ToDomain(RoleEntity entity)
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            var permissions = entity.RolePermissions
+                .Where(rp => rp.Permission != null)
+                .Select(rp => Permission.Rehydrate(
+                    rp.Permission.Id,
+                    rp.Permission.Code,
+                    rp.Permission.Description
+                ))
+                .ToList();
+
+            return Role.Rehydrate(
+                entity.Id,
+                entity.Name,
+                entity.Description,
+                entity.IsActive,
+                permissions
+            );
+        }
+
+        public static RoleEntity ToEntity(Role domain)
+        {
+            if (domain == null)
+                throw new ArgumentNullException(nameof(domain));
+
+            var roleEntity = new RoleEntity
+            {
+                Id = domain.Id,
+                Name = domain.Name,
+                Description = domain.Description,
+                IsActive = domain.IsActive,
+                RolePermissions = domain.Permissions.Select(p => new RolePermissionEntity
+                {
+                    RoleId = domain.Id,
+                    PermissionId = p.Id,
+                    Permission = new PermissionEntity
+                    {
+                        Id = p.Id,
+                        Code = p.Code,
+                        Description = p.Description
+                    }
+                }).ToList()
+            };
+
+            return roleEntity;
+        }
+    }
+}

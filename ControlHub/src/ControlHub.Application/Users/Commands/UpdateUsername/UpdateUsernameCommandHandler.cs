@@ -1,4 +1,5 @@
 ﻿using ControlHub.Application.Accounts.Interfaces.Repositories;
+using ControlHub.Application.Common.Persistence;
 using ControlHub.Application.Users.Interfaces.Repositories;
 using ControlHub.SharedKernel.Results;
 using ControlHub.SharedKernel.Users;
@@ -11,15 +12,15 @@ namespace ControlHub.Application.Users.Commands.UpdateUsername
     {
         private readonly ILogger<UpdateUsernameCommandHandler> _logger;
         private readonly IUserCommands _userCommands;
-        private readonly IUserQueries _userQueries;
         private readonly IAccountQueries _accountQueries;
+        private readonly IUnitOfWork _uow;
 
-        public UpdateUsernameCommandHandler(ILogger<UpdateUsernameCommandHandler> logger, IUserCommands userCommands, IUserQueries userQueries, IAccountQueries accountQueries)
+        public UpdateUsernameCommandHandler(ILogger<UpdateUsernameCommandHandler> logger, IUserCommands userCommands, IAccountQueries accountQueries, IUnitOfWork uow)
         {
             _logger = logger;
             _userCommands = userCommands;
-            _userQueries = userQueries;
             _accountQueries = accountQueries;
+            _uow = uow;
         }
 
         public async Task<Result<string>> Handle(UpdateUsernameCommand request, CancellationToken cancellationToken)
@@ -34,7 +35,9 @@ namespace ControlHub.Application.Users.Commands.UpdateUsername
             if (!updateResult.IsSuccess)
                 return Result<string>.Failure(updateResult.Error);
 
-            await _userCommands.SaveAsync(user, cancellationToken);
+            await _userCommands.UpdateAsync(user, cancellationToken);
+
+            await _uow.CommitAsync(cancellationToken);
 
             return Result<string>.Success(user.Username);
         }

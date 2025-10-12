@@ -1,6 +1,7 @@
-﻿using ControlHub.Domain.Accounts.ValueObjects;
-using ControlHub.Infrastructure.Tokens;
+﻿using ControlHub.Infrastructure.AccountRoles;
+using ControlHub.Infrastructure.RolePermissions;
 using ControlHub.Infrastructure.Users;
+using ControlHub.Infrastructure.Tokens;
 
 namespace ControlHub.Infrastructure.Accounts
 {
@@ -16,5 +17,6 @@ namespace ControlHub.Infrastructure.Accounts
         public ICollection<AccountIdentifierEntity> Identifiers { get; set; } = new List<AccountIdentifierEntity>();
         public UserEntity? User { get; set; }
         public ICollection<TokenEntity> Tokens { get; set; } = new List<TokenEntity>();
+        public ICollection<AccountRoleEntity> AccountRoles { get; set; } = new List<AccountRoleEntity>();
     }
 }

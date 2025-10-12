@@ -13,6 +13,7 @@ namespace ControlHub.Infrastructure.Tokens
                 entity.Type,
                 entity.ExpiredAt,
                 entity.IsUsed,
+                entity.IsRevoked,
                 entity.CreatedAt
             );
         }
@@ -27,6 +28,7 @@ namespace ControlHub.Infrastructure.Tokens
                 Type = domain.Type,
                 ExpiredAt = domain.ExpiredAt,
                 IsUsed = domain.IsUsed,
+                IsRevoked = domain.IsRevoked,
                 CreatedAt = domain.CreatedAt
             };
         }

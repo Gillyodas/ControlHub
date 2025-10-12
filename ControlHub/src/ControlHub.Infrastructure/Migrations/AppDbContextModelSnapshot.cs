@@ -22,6 +22,21 @@ namespace ControlHub.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ControlHub.Infrastructure.AccountRoles.AccountRoleEntity", b =>
+                {
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("AccountId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AccountRoles", (string)null);
+                });
+
             modelBuilder.Entity("ControlHub.Infrastructure.Accounts.AccountEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -110,6 +125,66 @@ namespace ControlHub.Infrastructure.Migrations
                     b.ToTable("OutboxMessages", (string)null);
                 });
 
+            modelBuilder.Entity("ControlHub.Infrastructure.Permissions.PermissionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Permissions", (string)null);
+                });
+
+            modelBuilder.Entity("ControlHub.Infrastructure.RolePermissions.RolePermissionEntity", b =>
+                {
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PermissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermissions", (string)null);
+                });
+
+            modelBuilder.Entity("ControlHub.Infrastructure.Roles.RoleEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles", (string)null);
+                });
+
             modelBuilder.Entity("ControlHub.Infrastructure.Tokens.TokenEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -124,6 +199,11 @@ namespace ControlHub.Infrastructure.Migrations
 
                     b.Property<DateTime>("ExpiredAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRevoked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsUsed")
                         .HasColumnType("bit");
@@ -173,6 +253,25 @@ namespace ControlHub.Infrastructure.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("ControlHub.Infrastructure.AccountRoles.AccountRoleEntity", b =>
+                {
+                    b.HasOne("ControlHub.Infrastructure.Accounts.AccountEntity", "Account")
+                        .WithMany("AccountRoles")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ControlHub.Infrastructure.Roles.RoleEntity", "Role")
+                        .WithMany("AccountRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("ControlHub.Infrastructure.Accounts.AccountIdentifierEntity", b =>
                 {
                     b.HasOne("ControlHub.Infrastructure.Accounts.AccountEntity", "Account")
@@ -182,6 +281,25 @@ namespace ControlHub.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("ControlHub.Infrastructure.RolePermissions.RolePermissionEntity", b =>
+                {
+                    b.HasOne("ControlHub.Infrastructure.Permissions.PermissionEntity", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ControlHub.Infrastructure.Roles.RoleEntity", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("ControlHub.Infrastructure.Tokens.TokenEntity", b =>
@@ -208,11 +326,25 @@ namespace ControlHub.Infrastructure.Migrations
 
             modelBuilder.Entity("ControlHub.Infrastructure.Accounts.AccountEntity", b =>
                 {
+                    b.Navigation("AccountRoles");
+
                     b.Navigation("Identifiers");
 
                     b.Navigation("Tokens");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ControlHub.Infrastructure.Permissions.PermissionEntity", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
+            modelBuilder.Entity("ControlHub.Infrastructure.Roles.RoleEntity", b =>
+                {
+                    b.Navigation("AccountRoles");
+
+                    b.Navigation("RolePermissions");
                 });
 #pragma warning restore 612, 618
         }

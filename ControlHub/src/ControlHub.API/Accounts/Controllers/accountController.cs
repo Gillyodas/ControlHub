@@ -2,7 +2,6 @@
 using ControlHub.API.Accounts.ViewModels.Request;
 using ControlHub.API.Accounts.ViewModels.Response;
 using ControlHub.Application.Accounts.Commands.ChangePassword;
-using ControlHub.Application.Accounts.Commands.ForgotPassword;
 using ControlHub.Application.Accounts.Commands.ResetPassword;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;

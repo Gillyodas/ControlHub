@@ -2,6 +2,7 @@
 using ControlHub.API.Accounts.ViewModels.Request;
 using ControlHub.API.Accounts.ViewModels.Response;
 using ControlHub.Application.Accounts.Commands.RefreshAccessToken;
+using ControlHub.Application.Accounts.Commands.SignOut;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -68,6 +69,22 @@ namespace ControlHub.API.Accounts.Controllers
             {
                 RefreshToken = request.RefreshToken,
                 AccessToken = request.AccessToken
+            });
+        }
+
+        [HttpPost("signout")]
+        public async Task<IActionResult> SignOut([FromBody] SignOutRequest request, CancellationToken cancellationToken)
+        {
+            var command = new SignOutCommand(request.accessToken, request.refreshToken);
+
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (!result.IsSuccess)
+                return BadRequest(new SignOutResponse { message = result.Error.Message });
+
+            return Ok(new SignOutResponse
+            {
+                message = null
             });
         }
     }

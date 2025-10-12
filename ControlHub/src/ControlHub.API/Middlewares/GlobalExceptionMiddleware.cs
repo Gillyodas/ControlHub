@@ -1,11 +1,8 @@
 ﻿using System.Net;
 using System.Text.Json;
-using ControlHub.Infrastructure.Common.Exceptions;
-using Microsoft.AspNetCore.Http;
+using ControlHub.SharedKernel.Common.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 public class GlobalExceptionMiddleware
 {

@@ -1,8 +1,8 @@
-﻿using ControlHub.Application.Accounts.Commands.RefreshAccessToken;
-using ControlHub.Application.Accounts.DTOs;
+﻿using ControlHub.Application.Accounts.DTOs;
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.Application.Tokens.Interfaces;
+using ControlHub.Application.Tokens.Interfaces.Generate;
 using ControlHub.Application.Tokens.Interfaces.Repositories;
 using ControlHub.Domain.Accounts.Identifiers.Interfaces;
 using ControlHub.Domain.Accounts.Interfaces.Security;
@@ -98,7 +98,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
 
             IEnumerable<string> roles = new[]
             {
-                "SuperAdmin", "Admin", "Manager", "Auditor", "User"
+                "User"
             };
 
             if (account.Identifiers == null || !account.Identifiers.Any())

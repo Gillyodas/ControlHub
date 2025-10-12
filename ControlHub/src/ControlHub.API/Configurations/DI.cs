@@ -5,7 +5,10 @@ using ControlHub.Application.Common.Persistence;
 using ControlHub.Application.Emails.Interfaces;
 using ControlHub.Application.OutBoxs;
 using ControlHub.Application.OutBoxs.Repositories;
+using ControlHub.Application.Permissions.Interfaces.Repositories;
+using ControlHub.Application.Roles.Interfaces.Repositories;
 using ControlHub.Application.Tokens.Interfaces;
+using ControlHub.Application.Tokens.Interfaces.Generate;
 using ControlHub.Application.Tokens.Interfaces.Repositories;
 using ControlHub.Application.Tokens.Interfaces.Sender;
 using ControlHub.Application.Users.Interfaces.Repositories;
@@ -19,7 +22,9 @@ using ControlHub.Infrastructure.Identifiers.Validator;
 using ControlHub.Infrastructure.Outboxs;
 using ControlHub.Infrastructure.Outboxs.Handler;
 using ControlHub.Infrastructure.Outboxs.Repositories;
+using ControlHub.Infrastructure.Permissions.Repositories;
 using ControlHub.Infrastructure.Persistence;
+using ControlHub.Infrastructure.Roles.Repositories;
 using ControlHub.Infrastructure.Tokens;
 using ControlHub.Infrastructure.Tokens.Generate;
 using ControlHub.Infrastructure.Tokens.Repositories;
@@ -52,6 +57,9 @@ namespace ControlHub.API.Configurations
             //Token.Repositories
             services.AddScoped<ITokenQueries, TokenQueries>();
             services.AddScoped<ITokenCommands, TokenCommands>();
+
+            //Token.Verifier
+            services.AddScoped<ITokenVerifier, TokenVerifier>();
 
             //Email
             services.AddScoped<IEmailSender, SmtpEmailSender>();
@@ -89,6 +97,14 @@ namespace ControlHub.API.Configurations
 
             //Processor background service
             services.AddHostedService<OutboxProcessor>();
+
+            //Role.Repositories
+            services.AddScoped<IRoleCommands, RoleCommands>();
+            services.AddScoped<IRoleQueries, RoleQueries>();
+
+            //Permission.Repositories
+            services.AddScoped<IPermissionCommands, PermissionCommands>();
+            services.AddScoped<IPermissionQueries, PermissionQueries>();
 
             return services;
         }
