@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using ControlHub.Application.Tokens.Interfaces;
 
 namespace ControlHub.Infrastructure.Tokens.Generate
 {

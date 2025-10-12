@@ -92,5 +92,27 @@ namespace ControlHub.SharedKernel.Accounts
 
         public static readonly LogCode ResetPassword_Success =
             new("Account.ResetPassword.Success", "Password reset successfully");
+
+        // LogOut
+        public static readonly LogCode SignOut_Started =
+            new("Account.SignOut.Started", "Starting sign-out process");
+
+        public static readonly LogCode SignOut_InvalidToken =
+            new("Account.SignOut.InvalidToken", "Access token is invalid");
+
+        public static readonly LogCode SignOut_TokenNotFound =
+            new("Account.SignOut.TokenNotFound", "Token not found in database");
+
+        public static readonly LogCode SignOut_InvalidAccountId =
+            new("Account.SignOut.InvalidAccountId", "Invalid account ID extracted from token");
+
+        public static readonly LogCode SignOut_MismatchedAccount =
+            new("Account.SignOut.MismatchedAccount", "Access and refresh token belong to different accounts");
+
+        public static readonly LogCode SignOut_TokenAlreadyRevoked =
+            new("Account.SignOut.AlreadyRevoked", "Token already revoked before logout");
+
+        public static readonly LogCode SignOut_Success =
+            new("Account.SignOut.Success", "User signed out successfully");
     }
 }

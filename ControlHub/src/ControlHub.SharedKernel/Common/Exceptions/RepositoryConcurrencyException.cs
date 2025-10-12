@@ -1,4 +1,4 @@
-﻿namespace ControlHub.Infrastructure.Common.Exceptions
+﻿namespace ControlHub.SharedKernel.Common.Exceptions
 {
     public class RepositoryConcurrencyException : RepositoryException
     {

@@ -13,6 +13,7 @@ namespace ControlHub.Domain.Tokens
         public DateTime ExpiredAt { get; private set; }
         public bool IsUsed { get; private set; }
         public DateTime CreatedAt { get; private set; }
+        public bool IsRevoked { get; private set; }
 
         private Token() { } // for rehydration
 
@@ -35,7 +36,15 @@ namespace ControlHub.Domain.Tokens
             => new Token(Guid.NewGuid(), accountId, value, type, expiredAt);
 
         // Rehydrate từ persistence
-        public static Token Rehydrate(Guid id, Guid accountId, string value, TokenType type, DateTime expiredAt, bool isUsed, DateTime createdAt)
+        public static Token Rehydrate(
+            Guid id,
+            Guid accountId,
+            string value,
+            TokenType type,
+            DateTime expiredAt,
+            bool isUsed,
+            bool isRevoked,
+            DateTime createdAt)
         {
             return new Token
             {
@@ -45,6 +54,7 @@ namespace ControlHub.Domain.Tokens
                 Type = type,
                 ExpiredAt = expiredAt,
                 IsUsed = isUsed,
+                IsRevoked = isRevoked,
                 CreatedAt = createdAt
             };
         }
@@ -62,6 +72,18 @@ namespace ControlHub.Domain.Tokens
             return Result.Success();
         }
 
-        public bool IsValid() => !IsUsed && DateTime.UtcNow <= ExpiredAt;
+        public bool IsValid() => !IsUsed && !IsRevoked && DateTime.UtcNow <= ExpiredAt;
+
+        public Result Revoke()
+        {
+            if (IsRevoked)
+                return Result.Failure(TokenErrors.TokenAlreadyRevoked);
+
+            if (IsUsed)
+                return Result.Failure(TokenErrors.TokenAlreadyUsed);
+
+            IsRevoked = true;
+            return Result.Success();
+        }
     }
 }

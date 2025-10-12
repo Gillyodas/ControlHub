@@ -1,7 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using ControlHub.Application.Tokens.Interfaces;
-using ControlHub.Domain.Accounts.ValueObjects;
+using ControlHub.Application.Tokens.Interfaces.Generate;
 using Microsoft.Extensions.Configuration;
 
 namespace ControlHub.Infrastructure.Tokens.Generate

@@ -19,6 +19,8 @@ namespace ControlHub.Infrastructure.Tokens
 
         public DateTime CreatedAt { get; set; }
 
+        public bool IsRevoked { get; set; }
+
         // Navigation
         public AccountEntity Account { get; set; } = null!;
     }

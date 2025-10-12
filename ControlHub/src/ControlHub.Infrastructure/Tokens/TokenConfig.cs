@@ -28,6 +28,10 @@ namespace ControlHub.Infrastructure.Tokens
             builder.HasIndex(t => t.Value).IsUnique();
 
             builder.HasIndex(t => t.ExpiredAt);
+
+            builder.Property(t => t.IsRevoked)
+                   .HasDefaultValue(false)
+                   .IsRequired();
         }
     }
 }
