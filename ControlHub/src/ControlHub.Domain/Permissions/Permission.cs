@@ -1,15 +1,7 @@
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-﻿using ControlHub.SharedKernel.Permissions;
-=======
-﻿using System.Text.RegularExpressions;
+
+
+using System.Text.RegularExpressions;
 using ControlHub.SharedKernel.Permissions;
->>>>>>> Stashed changes
-=======
-﻿using System.Text.RegularExpressions;
-using ControlHub.Domain.Permissions; // Thêm using cho PermissionErrors
-using ControlHub.SharedKernel.Permissions;
->>>>>>> feature/auth/claims-enrichment
 using ControlHub.SharedKernel.Results;
 
 namespace ControlHub.Domain.Permissions

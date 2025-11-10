@@ -3,15 +3,8 @@ using System.Text;
 using ControlHub.API.Configurations;
 using ControlHub.API.Middlewares;
 using ControlHub.Application.Common.Behaviors;
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
 using ControlHub.Application.Tokens;
 using ControlHub.Infrastructure.Permissions.AuthZ;
->>>>>>> Stashed changes
-=======
-using ControlHub.Infrastructure.Permissions.AuthZ;
->>>>>>> feature/auth/claims-enrichment
 using ControlHub.Infrastructure.Tokens;
 using FluentValidation;
 using MediatR;
@@ -25,7 +18,6 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Prometheus;
 using Serilog;
-using ControlHub.Application.Tokens;
 
 namespace ControlHub.API
 {

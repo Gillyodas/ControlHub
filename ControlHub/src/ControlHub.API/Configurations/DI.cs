@@ -33,7 +33,6 @@ using ControlHub.Infrastructure.Tokens.Generate;
 using ControlHub.Infrastructure.Tokens.Repositories;
 using ControlHub.Infrastructure.Tokens.Sender;
 using ControlHub.Infrastructure.Users.Repositories;
-using Microsoft.AspNetCore.Authorization;
 
 namespace ControlHub.API.Configurations
 {
