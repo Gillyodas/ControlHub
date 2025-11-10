@@ -2,6 +2,7 @@
 using ControlHub.Domain.Accounts.Identifiers.Interfaces;
 using ControlHub.Domain.Accounts.Interfaces.Security;
 using ControlHub.Domain.Accounts.ValueObjects;
+using ControlHub.Domain.Roles;
 using ControlHub.Domain.Users;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;
@@ -10,6 +11,7 @@ namespace ControlHub.Domain.Accounts.Services
 {
     public class RegisterService
     {
+        private static Guid roleId = Guid.Parse("26510585-5434-4AAC-A5E9-E65A2B0175EF");
         public static Result<Maybe<Account>> CreateWithUserAndIdentifier(
             Guid accountId,
             string Value,
@@ -21,7 +23,7 @@ namespace ControlHub.Domain.Accounts.Services
         {
             var pass = passwordHasher.Hash(Pass);
 
-            var account = Account.Create(accountId, pass);
+            var account = Account.Create(accountId, pass, roleId);
 
             var validator = identifierValidatorFactory.Get(Type);
             if(validator == null)

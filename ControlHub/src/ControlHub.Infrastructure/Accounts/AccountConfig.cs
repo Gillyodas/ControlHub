@@ -1,7 +1,5 @@
-﻿using ControlHub.Infrastructure.AccountRoles;
-using ControlHub.Infrastructure.Accounts;
+﻿using ControlHub.Infrastructure.Accounts;
 using ControlHub.Infrastructure.Users;
-using ControlHub.Infrastructure.Tokens;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -45,10 +43,11 @@ public class AccountConfig : IEntityTypeConfiguration<AccountEntity>
                .HasForeignKey(t => t.AccountId)
                .OnDelete(DeleteBehavior.Cascade);
 
-        // N–N (through join entity): Account <-> Role
-        builder.HasMany(a => a.AccountRoles)
-               .WithOne(ar => ar.Account)
-               .HasForeignKey(ar => ar.AccountId)
-               .OnDelete(DeleteBehavior.Cascade);
+        // 1–N: Account <-> Role
+        builder
+            .HasOne(a => a.Role)
+            .WithMany(r => r.Accounts)
+            .HasForeignKey(a => a.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

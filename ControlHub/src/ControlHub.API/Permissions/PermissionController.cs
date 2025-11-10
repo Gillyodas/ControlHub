@@ -1,7 +1,9 @@
 ﻿using ControlHub.API.Permissions.ViewModels.Requests;
 using ControlHub.API.Permissions.ViewModels.Responses;
 using ControlHub.Application.Permissions.Commands.CreatePermissions;
+using ControlHub.Application.Permissions.Interfaces;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ControlHub.API.Permissions
@@ -11,12 +13,15 @@ namespace ControlHub.API.Permissions
     public class PermissionController : ControllerBase
     {
         private readonly IMediator _mediator;
-        public PermissionController(IMediator mediator)
+        private readonly IPermissionService _permissionService;
+        public PermissionController(IMediator mediator, IPermissionService permissionService)
         {
             _mediator = mediator;
+            _permissionService = permissionService;
         }
+        [Authorize(Policy = "Permission:permission.create")]
         [HttpPost("permissions")]
-        public async Task<IActionResult> CreatePermissions([FromBody] CreatePermissionsRequest request)
+        public async Task<IActionResult> CreatePermissions([FromBody] CreatePermissionsRequest request, CancellationToken cancellationToken)
         {
             var command = new CreatePermissionsCommand(request.Permissions);
 
@@ -28,6 +33,13 @@ namespace ControlHub.API.Permissions
             }
 
             return Ok();
+        }
+        [AllowAnonymous]
+        [HttpGet("permissions/{roleId}")]
+        public async Task<IActionResult> GetPermissionForRoleId(string roleId, CancellationToken cancellationToken)
+        {
+            var result = await _permissionService.GetPermissionsForRoleIdAsync(Guid.Parse(roleId), cancellationToken);
+            return Ok(result);
         }
     }
 }
