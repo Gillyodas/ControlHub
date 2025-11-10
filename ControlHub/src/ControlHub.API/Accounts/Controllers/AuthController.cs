@@ -4,6 +4,7 @@ using ControlHub.API.Accounts.ViewModels.Response;
 using ControlHub.Application.Accounts.Commands.RefreshAccessToken;
 using ControlHub.Application.Accounts.Commands.SignOut;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ControlHub.API.Accounts.Controllers
@@ -19,6 +20,7 @@ namespace ControlHub.API.Accounts.Controllers
             _mediator = mediator;
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
         {
@@ -36,6 +38,7 @@ namespace ControlHub.API.Accounts.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpPost("signin")]
         public async Task<IActionResult> SignIn([FromBody] SignInRequest request, CancellationToken cancellationToken)
         {

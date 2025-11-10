@@ -27,5 +27,8 @@ namespace ControlHub.SharedKernel.Permissions
 
         public static readonly Error PermissionNotFoundValid =
             new("Permission.NotFoundValid", "No valid permissions found.");
+
+        public static readonly Error IdRequired =
+            new("Permission.Id.Required", "Id is required.");
     }
 }

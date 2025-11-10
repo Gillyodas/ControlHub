@@ -95,16 +95,9 @@ namespace ControlHub.Application.Accounts.Commands.RefreshAccessToken
                 TokenLogs.Refresh_Valid.Message,
                 acc.Id);
 
-            IEnumerable<string> roles = new[]
-            {
-                "SuperAdmin",
-                "Admin",
-                "Manager",
-                "Auditor",
-                "User"
-            };
+            var roleId = await _accountQueries.GetRoleIdByAccIdAsync(acc.Id, cancellationToken);
 
-            var accessTokenValue = _accessTokenGenerator.Generate(acc.Id.ToString(), acc.Identifiers.First().ToString(), roles);
+            var accessTokenValue = _accessTokenGenerator.Generate(acc.Id.ToString(), acc.Identifiers.First().ToString(), roleId.ToString());
             var newAccessToken = _tokenFactory.Create(acc.Id, accessTokenValue, TokenType.AccessToken);
             await _tokenCommands.AddAsync(newAccessToken, cancellationToken);
 

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ControlHub.Domain.Permissions;
 using ControlHub.Domain.Roles;
 
 namespace ControlHub.Application.Roles.Interfaces.Repositories
@@ -11,6 +7,7 @@ namespace ControlHub.Application.Roles.Interfaces.Repositories
     {
         Task<Role> GetByIdAsync(Guid id, CancellationToken cancellationToken);
         Task<IEnumerable<Role>> GetAllAsync(CancellationToken cancellationToken);
+        Task<IReadOnlyList<Guid>> GetPermissionIdsByRoleIdAsync(Guid roleId, CancellationToken cancellationToken);
         Task<IEnumerable<Role>> SearchByNameAsync(string name, CancellationToken cancellationToken);
         Task<bool> ExistAsync(Guid roleId, CancellationToken cancellationToken);
     }
