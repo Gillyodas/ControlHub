@@ -1,9 +1,14 @@
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 ﻿using ControlHub.Infrastructure.AccountRoles;
 =======
 ﻿using ControlHub.Infrastructure.Accounts;
 >>>>>>> Stashed changes
 using ControlHub.Infrastructure.RolePermissions;
+=======
+﻿using ControlHub.Infrastructure.RolePermissions;
+using ControlHub.Infrastructure.Accounts;
+>>>>>>> feature/auth/claims-enrichment
 
 namespace ControlHub.Infrastructure.Roles
 {
@@ -15,7 +20,7 @@ namespace ControlHub.Infrastructure.Roles
         public bool IsActive { get; set; }
 
         // Navigation
-        public ICollection<AccountRoleEntity> AccountRoles { get; set; } = new List<AccountRoleEntity>();
+        public ICollection<AccountEntity> Accounts { get; set; } = new List<AccountEntity>();
         public ICollection<RolePermissionEntity> RolePermissions { get; set; } = new List<RolePermissionEntity>();
     }
 }

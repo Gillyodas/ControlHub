@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 ﻿using ControlHub.Infrastructure.AccountRoles;
 using ControlHub.Infrastructure.RolePermissions;
+=======
+﻿using ControlHub.Infrastructure.Roles;
+>>>>>>> feature/auth/claims-enrichment
 using ControlHub.Infrastructure.Users;
 =======
 ﻿using ControlHub.Infrastructure.Roles;
@@ -18,10 +22,13 @@ namespace ControlHub.Infrastructure.Accounts
         public bool IsActive { get; set; }
         public bool IsDeleted { get; set; }
 
+        // Foreign Key
+        public Guid RoleId { get; set; }
+
         // Navigation
+        public RoleEntity Role { get; set; } = default!;
         public ICollection<AccountIdentifierEntity> Identifiers { get; set; } = new List<AccountIdentifierEntity>();
         public UserEntity? User { get; set; }
         public ICollection<TokenEntity> Tokens { get; set; } = new List<TokenEntity>();
-        public ICollection<AccountRoleEntity> AccountRoles { get; set; } = new List<AccountRoleEntity>();
     }
 }

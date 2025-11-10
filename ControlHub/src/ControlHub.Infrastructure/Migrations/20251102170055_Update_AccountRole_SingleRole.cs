@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
+=======
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+>>>>>>> feature/auth/claims-enrichment
 
 #nullable disable
 
