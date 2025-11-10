@@ -1,18 +1,9 @@
-<<<<<<< HEAD
-﻿using Microsoft.EntityFrameworkCore.Migrations;
-=======
-﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
->>>>>>> feature/auth/claims-enrichment
-
-#nullable disable
 
 namespace ControlHub.Infrastructure.Migrations
 {
-    /// <inheritdoc />
     public partial class Update_AccountRole_SingleRole : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

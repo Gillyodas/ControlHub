@@ -1,14 +1,5 @@
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-﻿using ControlHub.Infrastructure.AccountRoles;
-=======
-﻿using ControlHub.Infrastructure.Accounts;
->>>>>>> Stashed changes
-using ControlHub.Infrastructure.RolePermissions;
-=======
-﻿using ControlHub.Infrastructure.RolePermissions;
 using ControlHub.Infrastructure.Accounts;
->>>>>>> feature/auth/claims-enrichment
+using ControlHub.Infrastructure.RolePermissions;
 
 namespace ControlHub.Infrastructure.Roles
 {

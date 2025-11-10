@@ -1,5 +1,4 @@
 ﻿using ControlHub.Application.Roles.Interfaces.Repositories;
-using ControlHub.Domain.Permissions;
 using ControlHub.Domain.Roles;
 using ControlHub.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

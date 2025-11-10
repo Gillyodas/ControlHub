@@ -2,7 +2,6 @@
 using ControlHub.Domain.Accounts.Identifiers.Interfaces;
 using ControlHub.Domain.Accounts.Interfaces.Security;
 using ControlHub.Domain.Accounts.ValueObjects;
-using ControlHub.Domain.Roles;
 using ControlHub.Domain.Users;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;

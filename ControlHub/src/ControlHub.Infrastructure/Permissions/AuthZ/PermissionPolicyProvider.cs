@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Options;
-=======
-﻿using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authorization;
->>>>>>> feature/auth/claims-enrichment
+using Microsoft.Extensions.Options;
 
 namespace ControlHub.Infrastructure.Permissions.AuthZ
 {

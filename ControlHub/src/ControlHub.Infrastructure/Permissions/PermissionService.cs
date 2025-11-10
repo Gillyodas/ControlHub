@@ -1,9 +1,5 @@
 ﻿using ControlHub.Application.Permissions.Interfaces;
 using ControlHub.Application.Permissions.Interfaces.Repositories;
-<<<<<<< HEAD
-=======
-using ControlHub.Domain.Permissions;
->>>>>>> feature/auth/claims-enrichment
 using Microsoft.Extensions.Logging;
 
 namespace ControlHub.Infrastructure.Permissions
