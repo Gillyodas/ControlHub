@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ControlHub.Infrastructure.RolePermissions.Repositories
 {
-    public class RolePermissionQuery : IRolePermissionQuery
+    public class RolePermissionQuery : IRolePermissionQueries
     {
         private readonly AppDbContext _db;
         private readonly IMapper _mapper;

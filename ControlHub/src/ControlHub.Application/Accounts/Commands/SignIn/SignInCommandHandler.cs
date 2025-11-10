@@ -1,6 +1,7 @@
 ﻿using ControlHub.Application.Accounts.DTOs;
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Persistence;
+using ControlHub.Application.Roles.Interfaces.Repositories;
 using ControlHub.Application.Tokens.Interfaces;
 using ControlHub.Application.Tokens.Interfaces.Generate;
 using ControlHub.Application.Tokens.Interfaces.Repositories;
@@ -96,10 +97,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
                 return Result<SignInDTO>.Failure(AccountErrors.InvalidCredentials);
             }
 
-            IEnumerable<string> roles = new[]
-            {
-                "User"
-            };
+            var roleId = await _accountQueries.GetRoleIdByAccIdAsync(account.Id, cancellationToken);
 
             if (account.Identifiers == null || !account.Identifiers.Any())
             {
@@ -114,7 +112,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             var accessTokenValue = _accessTokenGenerator.Generate(
                 account.Id.ToString(),
                 account.Identifiers.First().ToString(),
-                roles);
+                roleId.ToString());
 
             var refreshTokenValue = _refreshTokenGenerator.Generate();
 

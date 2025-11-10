@@ -1,5 +1,9 @@
 ﻿using System.Security.Claims;
 using ControlHub.Application.Permissions.Interfaces;
+<<<<<<< HEAD
+=======
+using Serilog;
+>>>>>>> feature/auth/claims-enrichment
 
 namespace ControlHub.API.Middlewares
 {

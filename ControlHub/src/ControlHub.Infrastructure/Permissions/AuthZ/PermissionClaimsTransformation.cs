@@ -1,4 +1,8 @@
 ﻿using System.Security.Claims;
+<<<<<<< HEAD
+=======
+using System.Security.Cryptography.Xml;
+>>>>>>> feature/auth/claims-enrichment
 using ControlHub.Application.Permissions.Interfaces;
 using ControlHub.Application.Tokens;
 using Microsoft.AspNetCore.Authentication;
