@@ -4,14 +4,14 @@ using ControlHub.Domain.Accounts.Enums;
 
 namespace ControlHub.API.Accounts.Mappers
 {
-    public static class RegisterRequestMapper
+    public static class RegisterUserRequestMapper
     {
-        public static CreateAccountCommand ToCommand(RegisterRequest request)
+        public static RegisterUserCommand ToCommand(RegisterUserRequest request)
         {
             if (!Enum.TryParse<IdentifierType>(request.Type, ignoreCase: true, out var type))
                 throw new ArgumentException("Unsupported identifier type");
 
-            return new CreateAccountCommand(request.Value, type, request.Password);
+            return new RegisterUserCommand(request.Value, type, request.Password);
         }
     }
 }

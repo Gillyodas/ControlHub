@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using ControlHub.Application.Roles.Interfaces.Repositories;
+using ControlHub.Domain.Roles;
 using ControlHub.Infrastructure.Persistence;
 
 namespace ControlHub.Infrastructure.RolePermissions.Repositories
@@ -12,6 +13,11 @@ namespace ControlHub.Infrastructure.RolePermissions.Repositories
         {
             _context = context;
             _mapper = mapper;
+        }
+
+        public Task AddRangeAsync(IEnumerable<RolePermission> rolePermissions, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }

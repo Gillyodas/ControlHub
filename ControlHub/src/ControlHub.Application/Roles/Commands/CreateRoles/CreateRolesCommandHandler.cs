@@ -13,7 +13,7 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
 {
     public class CreateRolesCommandHandler : IRequestHandler<CreateRolesCommand, Result<PartialResult<Role, string>>>
     {
-        private readonly IRoleCommands _roleCommands;
+        private readonly IRoleRepository _roleCommands;
         private readonly IRoleQueries _roleQueries;
         private readonly IPermissionQueries _permissionQueries;
         private readonly CreateRoleWithPermissionsService _createRoleWithPermissionsService;
@@ -21,7 +21,7 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
         private readonly IUnitOfWork _uow;
 
         public CreateRolesCommandHandler(
-            IRoleCommands roleCommands,
+            IRoleRepository roleCommands,
             IRoleQueries roleQueries,
             IPermissionQueries permissionQueries,
             CreateRoleWithPermissionsService createRoleWithPermissionsService,

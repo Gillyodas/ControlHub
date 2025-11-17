@@ -22,16 +22,51 @@ namespace ControlHub.API.Accounts.Controllers
 
         [AllowAnonymous]
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> Register([FromBody] RegisterUserRequest request, CancellationToken cancellationToken)
         {
-            var command = RegisterRequestMapper.ToCommand(request);
+            var command = RegisterUserRequestMapper.ToCommand(request);
 
             var result = await _mediator.Send(command, cancellationToken);
 
             if (!result.IsSuccess)
-                return BadRequest(new RegisterResponse { Message = result.Error.Message });
+                return BadRequest(new RegisterUserResponse { Message = result.Error.Message });
 
-            return Ok(new RegisterResponse
+            return Ok(new RegisterUserResponse
+            {
+                AccountId = result.Value,
+                Message = "Register success"
+            });
+        }
+
+        [Authorize(Policy = "Permission:account.register_admin")]
+        [HttpPost("register-admin")]
+        public async Task<IActionResult> Register([FromBody] RegisterAdminRequest request, CancellationToken cancellationToken)
+        {
+            var command = RegisterAdminRequestMapper.ToCommand(request);
+
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (!result.IsSuccess)
+                return BadRequest(new RegisterAdminResponse { Message = result.Error.Message });
+
+            return Ok(new RegisterAdminResponse
+            {
+                AccountId = result.Value,
+                Message = "Register success"
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpPost("register-supperadmin")]
+        public async Task<IActionResult> Register([FromBody] RegisterSupperAdminRequest request, CancellationToken cancellationToken)
+        {
+            var command = RegisterSupperAdminRequestMapper.ToCommand(request);
+
+            var result = await _mediator.Send(command, cancellationToken);
+            if (!result.IsSuccess)
+                return BadRequest(new RegisterSupperAdminResponse { Message = result.Error.Message });
+
+            return Ok(new RegisterSupperAdminResponse
             {
                 AccountId = result.Value,
                 Message = "Register success"
@@ -58,6 +93,7 @@ namespace ControlHub.API.Accounts.Controllers
             });
         }
 
+        [Authorize]
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshAccessTokenRequest request, CancellationToken cancellationToken)
         {
@@ -75,6 +111,7 @@ namespace ControlHub.API.Accounts.Controllers
             });
         }
 
+        [Authorize]
         [HttpPost("signout")]
         public async Task<IActionResult> SignOut([FromBody] SignOutRequest request, CancellationToken cancellationToken)
         {

@@ -16,6 +16,7 @@ using ControlHub.Application.Users.Interfaces.Repositories;
 using ControlHub.Domain.Accounts.Identifiers.Interfaces;
 using ControlHub.Domain.Accounts.Interfaces.Security;
 using ControlHub.Domain.Common.Services;
+using ControlHub.Infrastructure.Accounts.Factories;
 using ControlHub.Infrastructure.Accounts.Repositories;
 using ControlHub.Infrastructure.Accounts.Security;
 using ControlHub.Infrastructure.Accounts.Validators;
@@ -72,6 +73,7 @@ namespace ControlHub.API.Configurations
 
             //Account.Factory
             services.AddScoped<IIdentifierValidatorFactory, IdentifierValidatorFactory>();
+            services.AddScoped<IAccountFactory, AccountFactory>();
 
             //Account.Repositories
             services.AddScoped<IAccountQueries, AccountQueries>();
@@ -102,7 +104,7 @@ namespace ControlHub.API.Configurations
             services.AddHostedService<OutboxProcessor>();
 
             //Role.Repositories
-            services.AddScoped<IRoleCommands, RoleCommands>();
+            services.AddScoped<IRoleRepository, RoleRepository>();
             services.AddScoped<IRoleQueries, RoleQueries>();
 
             //Permission.Repositories

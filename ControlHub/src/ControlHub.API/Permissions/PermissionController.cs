@@ -34,12 +34,5 @@ namespace ControlHub.API.Permissions
 
             return Ok();
         }
-        [AllowAnonymous]
-        [HttpGet("permissions/{roleId}")]
-        public async Task<IActionResult> GetPermissionForRoleId(string roleId, CancellationToken cancellationToken)
-        {
-            var result = await _permissionService.GetPermissionsForRoleIdAsync(Guid.Parse(roleId), cancellationToken);
-            return Ok(result);
-        }
     }
 }

@@ -27,5 +27,9 @@
         // Unexpected / Unhandled
         public static Error Unexpected(string code, string message) =>
             new($"Unexpected.{code}", message);
+
+        // Failure
+        public static Error Failure(string code, string message) =>
+            new($"Failure.{code}", message);
     }
 }

@@ -7,12 +7,12 @@ using Microsoft.Extensions.Logging;
 
 namespace ControlHub.Infrastructure.Roles.Repositories
 {
-    public class RoleCommands : IRoleCommands
+    public class RoleRepository : IRoleRepository
     {
         private readonly AppDbContext _db;
-        private readonly ILogger<RoleCommands> _logger;
+        private readonly ILogger<RoleRepository> _logger;
 
-        public RoleCommands(AppDbContext db, ILogger<RoleCommands> logger)
+        public RoleRepository(AppDbContext db, ILogger<RoleRepository> logger)
         {
             _db = db;
             _logger = logger;
@@ -137,6 +137,14 @@ namespace ControlHub.Infrastructure.Roles.Repositories
                 _logger.LogError(ex, "Unexpected error during Role SaveChanges");
                 throw new RepositoryException("Unexpected error during role save operation.", ex);
             }
+        }
+
+        public async Task<Role> GetByIdAsync(Guid roleId, CancellationToken cancellationToken)
+        {
+            var entity = await _db.Roles
+                .FirstOrDefaultAsync(r => r.Id == roleId, cancellationToken);
+
+            return RoleMapper.ToDomain(entity);
         }
     }
 }

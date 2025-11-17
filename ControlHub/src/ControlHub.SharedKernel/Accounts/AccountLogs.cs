@@ -4,21 +4,53 @@ namespace ControlHub.SharedKernel.Accounts
 {
     public static class AccountLogs
     {
-        // CreateAccount
-        public static readonly LogCode CreateAccount_Started =
-            new("Account.Create.Started", "Starting account creation");
+        // RegisterUser
+        public static readonly LogCode RegisterUser_Started =
+            new("Account.RegisterUser.Started", "Starting account creation");
 
-        public static readonly LogCode CreateAccount_InvalidIdentifier =
-            new("Account.Create.InvalidIdentifier", "Invalid identifier format");
+        public static readonly LogCode RegisterUser_InvalidIdentifier =
+            new("Account.RegisterUser.InvalidIdentifier", "Invalid identifier format");
 
-        public static readonly LogCode CreateAccount_IdentifierExists =
-            new("Account.Create.IdentifierExists", "Identifier already exists");
+        public static readonly LogCode RegisterUser_IdentifierExists =
+            new("Account.RegisterUser.IdentifierExists", "Identifier already exists");
 
-        public static readonly LogCode CreateAccount_FactoryFailed =
-            new("Account.Create.FactoryFailed", "Account factory failed");
+        public static readonly LogCode RegisterUser_FactoryFailed =
+            new("Account.RegisterUser.FactoryFailed", "Account factory failed");
 
-        public static readonly LogCode CreateAccount_Success =
-            new("Account.Create.Success", "Account created successfully");
+        public static readonly LogCode RegisterUser_Success =
+            new("Account.RegisterUser.Success", "Account created successfully");
+
+        // RegisterAdmin
+        public static readonly LogCode RegisterAdmin_Started =
+            new("Account.RegisterAdmin.Started", "Starting account creation");
+
+        public static readonly LogCode RegisterAdmin_InvalidIdentifier =
+            new("Account.RegisterAdmin.InvalidIdentifier", "Invalid identifier format");
+
+        public static readonly LogCode RegisterAdmin_IdentifierExists =
+            new("Account.RegisterAdmin.IdentifierExists", "Identifier already exists");
+
+        public static readonly LogCode RegisterAdmin_FactoryFailed =
+            new("Account.RegisterAdmin.FactoryFailed", "Account factory failed");
+
+        public static readonly LogCode RegisterAdmin_Success =
+            new("Account.RegisterAdmin.Success", "Account created successfully");
+
+        // RegisterSupperAdmin
+        public static readonly LogCode RegisterSupperAdmin_Started =
+            new("Account.RegisterSupperAdmin.Started", "Starting account creation");
+
+        public static readonly LogCode RegisterSupperAdmin_InvalidIdentifier =
+            new("Account.RegisterSupperAdmin.InvalidIdentifier", "Invalid identifier format");
+
+        public static readonly LogCode RegisterSupperAdmin_IdentifierExists =
+            new("Account.RegisterSupperAdmin.IdentifierExists", "Identifier already exists");
+
+        public static readonly LogCode RegisterSupperAdmin_FactoryFailed =
+            new("Account.RegisterSupperAdmin.FactoryFailed", "Account factory failed");
+
+        public static readonly LogCode RegisterSupperAdmin_Success =
+            new("Account.RegisterSupperAdmin.Success", "Account created successfully");
 
         // ChangePassword
         public static readonly LogCode ChangePassword_Started =

@@ -69,6 +69,38 @@ namespace ControlHub.Domain.Roles
             return Result.Success();
         }
 
+        public Result<PartialResult<Permission, string>> AddRangePermission(IEnumerable<Permission> permissionsToAdd)
+        {
+            var successes = new List<Permission>();
+            var failures = new List<string>();
+
+            var existingCodes = _permissions.Select(p => p.Code).ToHashSet();
+
+            foreach (var per in permissionsToAdd)
+            {
+                if (existingCodes.Contains(per.Code))
+                {
+                    failures.Add($"{per.Code}: is already exist in role: {this.Name}");
+                }
+                else
+                {
+                    _permissions.Add(per);
+                    successes.Add(per);
+
+                    existingCodes.Add(per.Code);
+                }
+            }
+
+            var partial = PartialResult<Permission, string>.Create(successes, failures);
+
+            if (!partial.Successes.Any() && partial.Failures.Any())
+            {
+                return Result<PartialResult<Permission, string>>.Failure(RoleErrors.AllPermissionsAlreadyExist);
+            }
+
+            return Result<PartialResult<Permission, string>>.Success(partial);
+        }
+
         public Result RemovePermission(string code)
         {
             var found = _permissions.FirstOrDefault(p => p.Code == code);

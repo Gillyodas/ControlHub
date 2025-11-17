@@ -2,6 +2,7 @@
 using ControlHub.API.Users.ViewModels.Response;
 using ControlHub.Application.Users.Commands.UpdateUsername;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ControlHub.API.Users.Controllers
@@ -16,6 +17,7 @@ namespace ControlHub.API.Users.Controllers
             _mediator = mediator;
         }
 
+        [Authorize]
         [HttpPatch("username/{id}")]
         public async Task<IActionResult> UpdateUsername(Guid id, [FromBody] UpdateUsernameRequest request, CancellationToken cancellationToken)
         {
