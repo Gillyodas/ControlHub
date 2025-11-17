@@ -42,5 +42,14 @@ namespace ControlHub.SharedKernel.Roles
 
         public static readonly Error PartialRoleCreation =
             new("Role.PartialRoleCreation", "Some roles were created successfully while others failed.");
+
+        public static readonly Error RoleIdRequired =
+            new("Role.IdRequired", "Role Id is required.");
+
+        public static readonly Error AllPermissionsAlreadyExist =
+            new("Role.Permissions.NoNew", "No new permissions were added. All specified permissions already exist in this role.");
+
+        public static readonly Error InvalidRoleIdFormat =
+            new("Role.InvalidId", "The provided Role ID is not in a valid GUID format.");
     }
 }

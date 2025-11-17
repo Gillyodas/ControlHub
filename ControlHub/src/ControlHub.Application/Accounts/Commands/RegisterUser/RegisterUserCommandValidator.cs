@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace ControlHub.Application.Accounts.Commands.CreateAccount
 {
-    public class CreateAccountCommandValidator : AbstractValidator<CreateAccountCommand>
+    public class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
     {
-        public CreateAccountCommandValidator()
+        public RegisterUserCommandValidator()
         {
             RuleFor(x => x.Value)
                 .NotEmpty().WithMessage(AccountErrors.IdentifierRequired.Message)

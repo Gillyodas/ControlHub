@@ -4,6 +4,7 @@ using ControlHub.API.Accounts.ViewModels.Response;
 using ControlHub.Application.Accounts.Commands.ChangePassword;
 using ControlHub.Application.Accounts.Commands.ResetPassword;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ControlHub.API.Accounts.Controllers
@@ -19,6 +20,7 @@ namespace ControlHub.API.Accounts.Controllers
             _mediator = mediator;
         }
 
+        [Authorize]
         [HttpPost("change-password/{id}")]
         public async Task<IActionResult> ChangePasswordCommand(Guid id, [FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
         {
@@ -32,6 +34,7 @@ namespace ControlHub.API.Accounts.Controllers
             return Ok();
         }
 
+        [AllowAnonymous]
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
         {
@@ -45,6 +48,7 @@ namespace ControlHub.API.Accounts.Controllers
             return Ok();
         }
 
+        [AllowAnonymous]
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken cancellationToken)
         {

@@ -54,9 +54,9 @@ namespace ControlHub.Infrastructure.Permissions.Repositories
         public async Task<IEnumerable<Permission>> GetByIdsAsync(IEnumerable<Guid> permissionIds, CancellationToken cancellationToken)
         {
             var entities = await _db.Permissions
-            .AsNoTracking()
-            .Where(p => permissionIds.Contains(p.Id))
-            .ToListAsync(cancellationToken);
+                .AsNoTracking()
+                .Where(p => permissionIds.Contains(p.Id))
+                .ToListAsync(cancellationToken);
 
             return entities.Select(PermissionMapper.ToDomain).ToList();
         }

@@ -1,6 +1,8 @@
 ﻿using ControlHub.API.Roles.ViewModels.Requests;
 using ControlHub.API.Roles.ViewModels.Responses;
 using ControlHub.Application.Roles.Commands.CreateRoles;
+using ControlHub.Application.Roles.Commands.SetRolePermissions;
+using ControlHub.Domain.Permissions;
 using ControlHub.Domain.Roles;
 using ControlHub.SharedKernel.Results;
 using MediatR;
@@ -20,6 +22,45 @@ namespace ControlHub.API.Roles
         }
 
         [AllowAnonymous]
+        //[Authorize(Policy = "Permission:role.add_permissions")]
+        [HttpPost("update")]
+        public async Task<IActionResult> AddPermissionsForRole([FromBody] AddPermissonsForRoleRequest request, CancellationToken cancellationToken)
+        {
+            var command = new AddPermissonsForRoleCommand(request.RoleId, request.PermissionIds, cancellationToken);
+            var result = await _mediator.Send(command, cancellationToken);
+
+            if (result.IsFailure)
+            {
+                return BadRequest(new AddPermissonsForRoleResponse
+                {
+                    Message = result.Error.Message
+                });
+            }
+
+            if (result is Result<PartialResult<Permission, string>> typedResult)
+            {
+                var summary = typedResult.Value;
+                return Ok(new AddPermissonsForRoleResponse
+                {
+                    Message = summary.Failures.Any()
+                        ? "Partial success: some permissions failed to add."
+                        : "All permissions add successfully.",
+                    SuccessCount = summary.Successes.Count(),
+                    FailureCount = summary.Failures.Count(),
+                    FailedRoles = summary.Failures
+                });
+            }
+
+            // fallback – nếu handler chỉ trả về Result.Success()
+            return Ok(new AddPermissonsForRoleResponse
+            {
+                Message = "All roles created successfully.",
+                SuccessCount = request.PermissionIds.Count(),
+                FailureCount = 0
+            });
+        }
+
+        [Authorize(Policy = "Permission:role.create")]
         [HttpPost("roles")]
         public async Task<IActionResult> CreateRoles([FromBody] CreateRolesRequest request, CancellationToken ct)
         {

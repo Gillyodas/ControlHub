@@ -1,5 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using ControlHub.Application.Tokens.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -7,12 +8,6 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace ControlHub.Infrastructure.Tokens.Generate
 {
-    // Interface ITokenVerifier của bạn vẫn rất hữu ích
-    public interface ITokenVerifier
-    {
-        ClaimsPrincipal? Verify(string token);
-    }
-
     public class TokenVerifier : ITokenVerifier
     {
         private readonly ILogger<TokenVerifier> _logger;

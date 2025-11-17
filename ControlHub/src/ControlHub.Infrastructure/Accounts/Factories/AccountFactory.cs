@@ -1,4 +1,6 @@
-﻿using ControlHub.Domain.Accounts.Enums;
+﻿using ControlHub.Application.Accounts.Interfaces;
+using ControlHub.Domain.Accounts;
+using ControlHub.Domain.Accounts.Enums;
 using ControlHub.Domain.Accounts.Identifiers.Interfaces;
 using ControlHub.Domain.Accounts.Interfaces.Security;
 using ControlHub.Domain.Accounts.ValueObjects;
@@ -6,34 +8,43 @@ using ControlHub.Domain.Users;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;
 
-namespace ControlHub.Domain.Accounts.Services
+namespace ControlHub.Infrastructure.Accounts.Factories
 {
-    public class RegisterService
+    public class AccountFactory : IAccountFactory
     {
-        private static Guid roleId = Guid.Parse("26510585-5434-4AAC-A5E9-E65A2B0175EF");
-        public static Result<Maybe<Account>> CreateWithUserAndIdentifier(
-            Guid accountId,
-            string Value,
-            IdentifierType Type,
-            string Pass,
+        private readonly IPasswordHasher _passwordHasher;
+        private readonly IIdentifierValidatorFactory _identifierValidatorFactory;
+
+        public AccountFactory(
             IPasswordHasher passwordHasher,
-            IIdentifierValidatorFactory identifierValidatorFactory,
+            IIdentifierValidatorFactory identifierValidatorFactory)
+        {
+            _passwordHasher = passwordHasher;
+            _identifierValidatorFactory = identifierValidatorFactory;
+        }
+
+        public Result<Maybe<Account>> CreateWithUserAndIdentifier(
+            Guid accountId,
+            string identifierValue,
+            IdentifierType identifierType,
+            string rawPassword,
+            Guid roleId,
             string? username = "No name")
         {
-            var pass = passwordHasher.Hash(Pass);
+            var pass = _passwordHasher.Hash(rawPassword);
 
             var account = Account.Create(accountId, pass, roleId);
 
-            var validator = identifierValidatorFactory.Get(Type);
+            var validator = _identifierValidatorFactory.Get(identifierType);
             if (validator == null)
                 return Result<Maybe<Account>>.Failure(AccountErrors.UnsupportedIdentifierType);
 
-            var (isValid, normalized, error) = validator.ValidateAndNormalize(Value);
+            var (isValid, normalized, error) = validator.ValidateAndNormalize(identifierValue);
 
             if (!isValid)
                 return Result<Maybe<Account>>.Failure(error);
 
-            var ident = Identifier.Create(Type, Value, normalized);
+            var ident = Identifier.Create(identifierType, identifierValue, normalized);
 
             var addResult = account.AddIdentifier(ident);
             if (!addResult.IsSuccess)

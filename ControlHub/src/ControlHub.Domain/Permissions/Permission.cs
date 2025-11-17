@@ -17,32 +17,26 @@ namespace ControlHub.Domain.Permissions
 
         private Permission(Guid id, string code, string description)
         {
-            // Các validation cơ bản này có thể giữ ở đây
-            // Hoặc chuyển vào hàm Create, tùy bạn
             Id = id;
             Code = code;
             Description = description;
         }
 
-        // Factory methods
-        // THAY ĐỔI 1: Chuyển từ "Permission" sang "Result<Permission>"
         public static Result<Permission> Create(Guid id, string code, string description)
         {
             if (id == Guid.Empty)
             {
-                // THAY ĐỔI 2: Chuyển từ "throw" sang "return Result.Failure"
                 return Result<Permission>.Failure(PermissionErrors.IdRequired);
             }
 
             if (string.IsNullOrWhiteSpace(code))
             {
-                // THAY ĐỔI 3:
                 return Result<Permission>.Failure(PermissionErrors.PermissionCodeRequired);
             }
 
             var normalizedCode = code.Trim().ToLowerInvariant();
 
-            var regexPattern = @"^[a-z0-9]+\.[a-z0-9]+$";
+            var regexPattern = @"^[a-z0-9_]+\.[a-z0-9_]+$";
 
             if (!Regex.IsMatch(normalizedCode, regexPattern))
             {

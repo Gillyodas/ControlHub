@@ -33,5 +33,17 @@ namespace ControlHub.SharedKernel.Roles
 
         public static readonly LogCode CreateRoles_Failed =
             new("Role.CreateRoles.Failed", "Unexpected error occurred while creating roles");
+
+        public static readonly LogCode SetPermissions_Started =
+        new("Role.SetPermissions.Started", "Starting to set permissions for role");
+
+        public static readonly LogCode SetPermissions_InvalidRoleId =
+            new("Role.SetPermissions.InvalidRoleId", "Role ID provided has an invalid format");
+
+        public static readonly LogCode SetPermissions_RoleNotFound =
+            new("Role.SetPermissions.RoleNotFound", "Role was not found in the database");
+
+        public static readonly LogCode SetPermissions_Finished =
+            new("Role.SetPermissions.Finished", "Finished setting permissions for role");
     }
 }

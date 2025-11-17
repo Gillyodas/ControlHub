@@ -1,5 +1,4 @@
-﻿using ControlHub.Application.Accounts.Commands.CreateAccount;
-using ControlHub.Application.Accounts.Interfaces;
+﻿using ControlHub.Application.Accounts.Interfaces;
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Domain.Accounts;
 using ControlHub.Domain.Accounts.ValueObjects;

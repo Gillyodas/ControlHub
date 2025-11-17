@@ -13,6 +13,9 @@ namespace ControlHub.SharedKernel.Accounts
         public static readonly Error EmailRequired =
             new("Account.EmailRequired", "Email is required.");
 
+        public static readonly Error MasterKeyRequired =
+            new("Account.MasterKeyRequired", "MasterKey is required.");
+
         public static readonly Error InvalidEmail =
             new("Account.InvalidEmail", "Email format is invalid.");
 
