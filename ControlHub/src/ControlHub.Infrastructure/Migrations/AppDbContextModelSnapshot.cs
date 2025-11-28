@@ -17,20 +17,16 @@ namespace ControlHub.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "8.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ControlHub.Infrastructure.Accounts.AccountEntity", b =>
+            modelBuilder.Entity("ControlHub.Domain.Accounts.Account", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<byte[]>("HashPassword")
-                        .IsRequired()
-                        .HasColumnType("varbinary(64)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -41,10 +37,6 @@ namespace ControlHub.Infrastructure.Migrations
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<byte[]>("Salt")
-                        .IsRequired()
-                        .HasColumnType("varbinary(64)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("RoleId");
@@ -52,39 +44,7 @@ namespace ControlHub.Infrastructure.Migrations
                     b.ToTable("Accounts", (string)null);
                 });
 
-            modelBuilder.Entity("ControlHub.Infrastructure.Accounts.AccountIdentifierEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("NormalizedValue")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AccountId");
-
-                    b.HasIndex("Type", "NormalizedValue")
-                        .IsUnique();
-
-                    b.ToTable("AccountIdentifiers", (string)null);
-                });
-
-            modelBuilder.Entity("ControlHub.Infrastructure.Outboxs.OutboxMessageEntity", b =>
+            modelBuilder.Entity("ControlHub.Domain.Outboxs.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -106,16 +66,20 @@ namespace ControlHub.Infrastructure.Migrations
                     b.Property<DateTime?>("ProcessedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Type")
+                    b.Property<string>("Type")
+                        .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("int");
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Processed")
+                        .HasFilter("[Processed] = 0");
 
                     b.ToTable("OutboxMessages", (string)null);
                 });
 
-            modelBuilder.Entity("ControlHub.Infrastructure.Permissions.PermissionEntity", b =>
+            modelBuilder.Entity("ControlHub.Domain.Permissions.Permission", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -133,25 +97,13 @@ namespace ControlHub.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Code")
+                        .IsUnique();
+
                     b.ToTable("Permissions", (string)null);
                 });
 
-            modelBuilder.Entity("ControlHub.Infrastructure.RolePermissions.RolePermissionEntity", b =>
-                {
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PermissionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("RoleId", "PermissionId");
-
-                    b.HasIndex("PermissionId");
-
-                    b.ToTable("RolePermissions", (string)null);
-                });
-
-            modelBuilder.Entity("ControlHub.Infrastructure.Roles.RoleEntity", b =>
+            modelBuilder.Entity("ControlHub.Domain.Roles.Role", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -175,7 +127,7 @@ namespace ControlHub.Infrastructure.Migrations
                     b.ToTable("Roles", (string)null);
                 });
 
-            modelBuilder.Entity("ControlHub.Infrastructure.Tokens.TokenEntity", b =>
+            modelBuilder.Entity("ControlHub.Domain.Tokens.Token", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -191,35 +143,26 @@ namespace ControlHub.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsRevoked")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsUsed")
                         .HasColumnType("bit");
 
                     b.Property<int>("Type")
-                        .HasMaxLength(50)
                         .HasColumnType("int");
 
                     b.Property<string>("Value")
                         .IsRequired()
-                        .HasMaxLength(2048)
-                        .HasColumnType("nvarchar(2048)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
 
-                    b.HasIndex("ExpiredAt");
-
-                    b.HasIndex("Value")
-                        .IsUnique();
-
                     b.ToTable("Tokens");
                 });
 
-            modelBuilder.Entity("ControlHub.Infrastructure.Users.UserEntity", b =>
+            modelBuilder.Entity("ControlHub.Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -243,38 +186,123 @@ namespace ControlHub.Infrastructure.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("ControlHub.Infrastructure.Accounts.AccountEntity", b =>
+            modelBuilder.Entity("ControlHub.Infrastructure.RolePermissions.RolePermissionEntity", b =>
                 {
-                    b.HasOne("ControlHub.Infrastructure.Roles.RoleEntity", "Role")
-                        .WithMany("Accounts")
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PermissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermissions", (string)null);
+                });
+
+            modelBuilder.Entity("ControlHub.Domain.Accounts.Account", b =>
+                {
+                    b.HasOne("ControlHub.Domain.Roles.Role", "Role")
+                        .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsMany("ControlHub.Domain.Accounts.ValueObjects.Identifier", "Identifiers", b1 =>
+                        {
+                            b1.Property<Guid>("AccountId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int");
+
+                            SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
+
+                            b1.Property<string>("NormalizedValue")
+                                .IsRequired()
+                                .HasMaxLength(300)
+                                .HasColumnType("nvarchar(300)");
+
+                            b1.Property<int>("Type")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(300)
+                                .HasColumnType("nvarchar(300)");
+
+                            b1.HasKey("AccountId", "Id");
+
+                            b1.HasIndex("Type", "NormalizedValue")
+                                .IsUnique();
+
+                            b1.ToTable("AccountIdentifiers", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("AccountId");
+                        });
+
+                    b.OwnsOne("ControlHub.Domain.Accounts.ValueObjects.Password", "Password", b1 =>
+                        {
+                            b1.Property<Guid>("AccountId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<byte[]>("Hash")
+                                .IsRequired()
+                                .HasColumnType("varbinary(64)")
+                                .HasColumnName("HashPassword");
+
+                            b1.Property<byte[]>("Salt")
+                                .IsRequired()
+                                .HasColumnType("varbinary(64)")
+                                .HasColumnName("Salt");
+
+                            b1.HasKey("AccountId");
+
+                            b1.ToTable("Accounts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("AccountId");
+                        });
+
+                    b.Navigation("Identifiers");
+
+                    b.Navigation("Password")
                         .IsRequired();
 
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("ControlHub.Infrastructure.Accounts.AccountIdentifierEntity", b =>
+            modelBuilder.Entity("ControlHub.Domain.Tokens.Token", b =>
                 {
-                    b.HasOne("ControlHub.Infrastructure.Accounts.AccountEntity", "Account")
-                        .WithMany("Identifiers")
+                    b.HasOne("ControlHub.Domain.Accounts.Account", null)
+                        .WithMany("Tokens")
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
 
-                    b.Navigation("Account");
+            modelBuilder.Entity("ControlHub.Domain.Users.User", b =>
+                {
+                    b.HasOne("ControlHub.Domain.Accounts.Account", null)
+                        .WithOne("User")
+                        .HasForeignKey("ControlHub.Domain.Users.User", "AccId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ControlHub.Infrastructure.RolePermissions.RolePermissionEntity", b =>
                 {
-                    b.HasOne("ControlHub.Infrastructure.Permissions.PermissionEntity", "Permission")
-                        .WithMany("RolePermissions")
+                    b.HasOne("ControlHub.Domain.Permissions.Permission", "Permission")
+                        .WithMany()
                         .HasForeignKey("PermissionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ControlHub.Infrastructure.Roles.RoleEntity", "Role")
-                        .WithMany("RolePermissions")
+                    b.HasOne("ControlHub.Domain.Roles.Role", "Role")
+                        .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -284,47 +312,11 @@ namespace ControlHub.Infrastructure.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("ControlHub.Infrastructure.Tokens.TokenEntity", b =>
+            modelBuilder.Entity("ControlHub.Domain.Accounts.Account", b =>
                 {
-                    b.HasOne("ControlHub.Infrastructure.Accounts.AccountEntity", "Account")
-                        .WithMany("Tokens")
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Account");
-                });
-
-            modelBuilder.Entity("ControlHub.Infrastructure.Users.UserEntity", b =>
-                {
-                    b.HasOne("ControlHub.Infrastructure.Accounts.AccountEntity", "Account")
-                        .WithOne("User")
-                        .HasForeignKey("ControlHub.Infrastructure.Users.UserEntity", "AccId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Account");
-                });
-
-            modelBuilder.Entity("ControlHub.Infrastructure.Accounts.AccountEntity", b =>
-                {
-                    b.Navigation("Identifiers");
-
                     b.Navigation("Tokens");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("ControlHub.Infrastructure.Permissions.PermissionEntity", b =>
-                {
-                    b.Navigation("RolePermissions");
-                });
-
-            modelBuilder.Entity("ControlHub.Infrastructure.Roles.RoleEntity", b =>
-                {
-                    b.Navigation("Accounts");
-
-                    b.Navigation("RolePermissions");
                 });
 #pragma warning restore 612, 618
         }

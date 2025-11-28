@@ -24,7 +24,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
         private readonly IAccessTokenGenerator _accessTokenGenerator;
         private readonly IRefreshTokenGenerator _refreshTokenGenerator;
         private readonly ITokenFactory _tokenFactory;
-        private readonly ITokenCommands _tokenCommands;
+        private readonly ITokenRepository _tokenRepository;
         private readonly IUnitOfWork _uow;
 
         public SignInCommandHandler(
@@ -35,7 +35,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             IAccessTokenGenerator accessTokenGenerator,
             IRefreshTokenGenerator refreshTokenGenerator,
             ITokenFactory tokenFactory,
-            ITokenCommands tokenCommands,
+            ITokenRepository tokenRepository,
             IUnitOfWork uow)
         {
             _logger = logger;
@@ -45,7 +45,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             _accessTokenGenerator = accessTokenGenerator;
             _refreshTokenGenerator = refreshTokenGenerator;
             _tokenFactory = tokenFactory;
-            _tokenCommands = tokenCommands;
+            _tokenRepository = tokenRepository;
             _uow = uow;
         }
 
@@ -127,8 +127,8 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             var accessToken = _tokenFactory.Create(account.Id, accessTokenValue, TokenType.AccessToken);
             var refreshToken = _tokenFactory.Create(account.Id, refreshTokenValue, TokenType.RefreshToken);
 
-            await _tokenCommands.AddAsync(accessToken, cancellationToken);
-            await _tokenCommands.AddAsync(refreshToken, cancellationToken);
+            await _tokenRepository.AddAsync(accessToken, cancellationToken);
+            await _tokenRepository.AddAsync(refreshToken, cancellationToken);
             await _uow.CommitAsync(cancellationToken);
 
             _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}",
@@ -137,10 +137,10 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
                 account.Id);
 
             var dto = new SignInDTO(
-                account.Id,
-                account.User.Match(some: u => u.Username, none: () => "No name"),
-                accessTokenValue,
-                refreshTokenValue);
+            account.Id,
+            account.User?.Username ?? "No name",
+            accessTokenValue,
+            refreshTokenValue);
 
             return Result<SignInDTO>.Success(dto);
         }

@@ -1,5 +1,5 @@
 ﻿using ControlHub.Application.Accounts.Interfaces.Repositories;
-using ControlHub.Domain.Accounts;
+using ControlHub.Application.Common.Persistence;
 using ControlHub.Domain.Accounts.Interfaces.Security;
 using ControlHub.Domain.Accounts.ValueObjects;
 using ControlHub.SharedKernel.Accounts;
@@ -11,21 +11,21 @@ namespace ControlHub.Application.Accounts.Commands.ChangePassword
 {
     public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordCommand, Result>
     {
-        private readonly IAccountQueries _accountQueries;
-        private readonly IAccountCommands _accountCommands;
+        private readonly IAccountRepository _accountRepository;
         private readonly IPasswordHasher _passwordHasher;
         private readonly ILogger<ChangePasswordCommandHandler> _logger;
+        private readonly IUnitOfWork _uow;
 
         public ChangePasswordCommandHandler(
-            IAccountQueries accountQueries,
-            IAccountCommands accountCommands,
+            IAccountRepository accountRepository,
             IPasswordHasher passwordHasher,
-            ILogger<ChangePasswordCommandHandler> logger)
+            ILogger<ChangePasswordCommandHandler> logger,
+            IUnitOfWork uow)
         {
-            _accountQueries = accountQueries;
-            _accountCommands = accountCommands;
+            _accountRepository = accountRepository;
             _passwordHasher = passwordHasher;
             _logger = logger;
+            _uow = uow;
         }
 
         public async Task<Result> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
@@ -35,7 +35,7 @@ namespace ControlHub.Application.Accounts.Commands.ChangePassword
                 AccountLogs.ChangePassword_Started.Message,
                 request.id);
 
-            Account? acc = await _accountQueries.GetWithoutUserByIdAsync(request.id, cancellationToken);
+            var acc = await _accountRepository.GetWithoutUserByIdAsync(request.id, cancellationToken);
             if (acc is null)
             {
                 _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
@@ -69,7 +69,7 @@ namespace ControlHub.Application.Accounts.Commands.ChangePassword
                 return updateResult;
             }
 
-            await _accountCommands.UpdateAsync(acc, cancellationToken);
+            await _uow.CommitAsync(cancellationToken);
 
             _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}",
                 AccountLogs.ChangePassword_Success.Code,

@@ -43,4 +43,8 @@
 		<ProjectReference Include="..\ControlHub.SharedKernel\ControlHub.SharedKernel.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Permissions\AuthZ\" />
+	</ItemGroup>
+
 </Project>

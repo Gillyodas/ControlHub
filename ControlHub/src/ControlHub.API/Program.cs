@@ -4,6 +4,7 @@ using ControlHub.API.Configurations;
 using ControlHub.API.Middlewares;
 using ControlHub.Application.Common.Behaviors;
 using ControlHub.Application.Tokens;
+using ControlHub.Infrastructure.Authorization.Permissions;
 using ControlHub.Infrastructure.Permissions.AuthZ;
 using ControlHub.Infrastructure.Tokens;
 using FluentValidation;

@@ -10,18 +10,18 @@ namespace ControlHub.Application.Permissions.Commands.CreatePermissions
 {
     public class CreatePermissionsCommandHandler : IRequestHandler<CreatePermissionsCommand, Result>
     {
-        private readonly IPermissionCommands _permissionCommands;
+        private readonly IPermissionRepository _permissionRepository;
         private readonly IPermissionQueries _permissionQueries;
         private readonly IUnitOfWork _uow;
         private readonly ILogger<CreatePermissionsCommandHandler> _logger;
 
         public CreatePermissionsCommandHandler(
-            IPermissionCommands permissionCommands,
+            IPermissionRepository permissionRepository,
             IPermissionQueries permissionQueries,
             IUnitOfWork uow,
             ILogger<CreatePermissionsCommandHandler> logger)
         {
-            _permissionCommands = permissionCommands;
+            _permissionRepository = permissionRepository;
             _permissionQueries = permissionQueries;
             _uow = uow;
             _logger = logger;
@@ -69,7 +69,7 @@ namespace ControlHub.Application.Permissions.Commands.CreatePermissions
                 validPermissions.Add(permissionResult.Value);
             }
 
-            await _permissionCommands.AddRangeAsync(validPermissions, cancellationToken);
+            await _permissionRepository.AddRangeAsync(validPermissions, cancellationToken);
             await _uow.CommitAsync(cancellationToken);
 
             _logger.LogInformation("{Code}: {Message}. Created={Count}",

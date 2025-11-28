@@ -19,7 +19,8 @@ namespace ControlHub.API.Permissions
             _mediator = mediator;
             _permissionService = permissionService;
         }
-        [Authorize(Policy = "Permission:permission.create")]
+        //[Authorize(Policy = "Permission:permission.create")]
+        [AllowAnonymous]
         [HttpPost("permissions")]
         public async Task<IActionResult> CreatePermissions([FromBody] CreatePermissionsRequest request, CancellationToken cancellationToken)
         {

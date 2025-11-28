@@ -13,26 +13,23 @@ namespace ControlHub.Application.Accounts.Commands.ResetPassword
 {
     public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand, Result>
     {
-        private readonly IAccountCommands _accountCommands;
+        private readonly IAccountRepository _accountRepository;
         private readonly ILogger<ResetPasswordCommandHandler> _logger;
         private readonly IUnitOfWork _uow;
         private readonly ITokenQueries _tokenQueries;
-        private readonly IAccountQueries _accountQueries;
         private readonly IPasswordHasher _passwordHasher;
 
         public ResetPasswordCommandHandler(
-            IAccountCommands accountCommands,
+            IAccountRepository accountRepository,
             ILogger<ResetPasswordCommandHandler> logger,
             IUnitOfWork uow,
             ITokenQueries tokenQueries,
-            IAccountQueries accountQueries,
             IPasswordHasher passwordHasher)
         {
-            _accountCommands = accountCommands;
+            _accountRepository = accountRepository;
             _logger = logger;
             _uow = uow;
             _tokenQueries = tokenQueries;
-            _accountQueries = accountQueries;
             _passwordHasher = passwordHasher;
         }
         public async Task<Result> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
@@ -63,7 +60,7 @@ namespace ControlHub.Application.Accounts.Commands.ResetPassword
                 return Result.Failure(TokenErrors.TokenInvalid);
             }
 
-            var acc = await _accountQueries.GetWithoutUserByIdAsync(token.AccountId, cancellationToken);
+            var acc = await _accountRepository.GetWithoutUserByIdAsync(token.AccountId, cancellationToken);
             if (acc == null)
             {
                 _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
@@ -96,8 +93,6 @@ namespace ControlHub.Application.Accounts.Commands.ResetPassword
             }
 
             acc.UpdatePassword(pass);
-
-            await _accountCommands.UpdateAsync(acc, cancellationToken);
             await _uow.CommitAsync();
 
             _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}",

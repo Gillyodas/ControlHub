@@ -16,7 +16,7 @@ namespace ControlHub.Application.Accounts.Commands.RefreshAccessToken
     {
         private readonly ITokenQueries _tokenQueries;
         private readonly IAccessTokenGenerator _accessTokenGenerator;
-        private readonly ITokenCommands _tokenCommands;
+        private readonly ITokenRepository _tokenRepository;
         private readonly IUnitOfWork _uow;
         private readonly IAccountQueries _accountQueries;
         private readonly ITokenFactory _tokenFactory;
@@ -25,7 +25,7 @@ namespace ControlHub.Application.Accounts.Commands.RefreshAccessToken
         public RefreshAccessTokenCommandHandler(
             ITokenQueries tokenQueries,
             IAccessTokenGenerator accessTokenGenerator,
-            ITokenCommands tokenCommands,
+            ITokenRepository tokenRepository,
             IUnitOfWork uow,
             IAccountQueries accountQueries,
             ITokenFactory tokenFactory,
@@ -35,7 +35,7 @@ namespace ControlHub.Application.Accounts.Commands.RefreshAccessToken
         {
             _tokenQueries = tokenQueries;
             _accessTokenGenerator = accessTokenGenerator;
-            _tokenCommands = tokenCommands;
+            _tokenRepository = tokenRepository;
             _uow = uow;
             _accountQueries = accountQueries;
             _tokenFactory = tokenFactory;
@@ -99,7 +99,7 @@ namespace ControlHub.Application.Accounts.Commands.RefreshAccessToken
 
             var accessTokenValue = _accessTokenGenerator.Generate(acc.Id.ToString(), acc.Identifiers.First().ToString(), roleId.ToString());
             var newAccessToken = _tokenFactory.Create(acc.Id, accessTokenValue, TokenType.AccessToken);
-            await _tokenCommands.AddAsync(newAccessToken, cancellationToken);
+            await _tokenRepository.AddAsync(newAccessToken, cancellationToken);
 
             var oldAccessToken = await _tokenQueries.GetByValueAsync(request.accessValue, cancellationToken);
             if (oldAccessToken != null)
@@ -114,14 +114,12 @@ namespace ControlHub.Application.Accounts.Commands.RefreshAccessToken
                 }
 
                 oldAccessToken.MarkAsUsed();
-                await _tokenCommands.UpdateAsync(oldAccessToken, cancellationToken);
             }
 
             refreshToken.MarkAsUsed();
-            await _tokenCommands.UpdateAsync(refreshToken, cancellationToken);
 
             var newRefreshToken = _tokenFactory.Create(acc.Id, _refreshTokenGenerator.Generate(), TokenType.RefreshToken);
-            await _tokenCommands.AddAsync(newRefreshToken, cancellationToken);
+            await _tokenRepository.AddAsync(newRefreshToken, cancellationToken);
 
             await _uow.CommitAsync(cancellationToken);
 

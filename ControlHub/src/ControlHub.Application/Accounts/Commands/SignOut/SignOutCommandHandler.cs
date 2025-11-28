@@ -12,20 +12,20 @@ namespace ControlHub.Application.Accounts.Commands.SignOut
 {
     public class SignOutCommandHandler : IRequestHandler<SignOutCommand, Result>
     {
-        private readonly ITokenCommands _tokenCommands;
+        private readonly ITokenRepository _tokenRepository;
         private readonly ITokenQueries _tokenQueries;
         private readonly ITokenVerifier _tokenVerifier;
         private readonly IUnitOfWork _uow;
         private readonly ILogger<SignOutCommandHandler> _logger;
 
         public SignOutCommandHandler(
-            ITokenCommands tokenCommands,
+            ITokenRepository tokenRepository,
             ITokenQueries tokenQueries,
             ITokenVerifier tokenVerifier,
             IUnitOfWork uow,
             ILogger<SignOutCommandHandler> logger)
         {
-            _tokenCommands = tokenCommands;
+            _tokenRepository = tokenRepository;
             _tokenQueries = tokenQueries;
             _tokenVerifier = tokenVerifier;
             _uow = uow;
@@ -99,8 +99,6 @@ namespace ControlHub.Application.Accounts.Commands.SignOut
                 return Result.Failure(TokenErrors.TokenAlreadyRevoked);
             }
 
-            await _tokenCommands.UpdateAsync(accessToken, cancellationToken);
-            await _tokenCommands.UpdateAsync(refreshToken, cancellationToken);
             await _uow.CommitAsync(cancellationToken);
 
             _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}",

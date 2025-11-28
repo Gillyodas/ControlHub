@@ -1,10 +1,10 @@
-﻿using ControlHub.Infrastructure.Accounts;
-using ControlHub.Infrastructure.Outboxs;
-using ControlHub.Infrastructure.Permissions;
+﻿using ControlHub.Domain.Accounts;
+using ControlHub.Domain.Outboxs;
+using ControlHub.Domain.Permissions;
+using ControlHub.Domain.Roles;
+using ControlHub.Domain.Tokens;
+using ControlHub.Domain.Users;
 using ControlHub.Infrastructure.RolePermissions;
-using ControlHub.Infrastructure.Roles;
-using ControlHub.Infrastructure.Tokens;
-using ControlHub.Infrastructure.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace ControlHub.Infrastructure.Persistence
@@ -17,15 +17,14 @@ namespace ControlHub.Infrastructure.Persistence
         }
 
         // Aggregate Roots
-        public DbSet<AccountEntity> Accounts { get; set; } = default!;
-        public DbSet<RoleEntity> Roles { get; set; } = default!;
-        public DbSet<PermissionEntity> Permissions { get; set; } = default!;
+        public DbSet<Account> Accounts { get; set; } = default!;
+        public DbSet<Role> Roles { get; set; } = default!;
+        public DbSet<Permission> Permissions { get; set; } = default!;
 
         // Entities thuộc Aggregate
-        public DbSet<UserEntity> Users { get; set; } = default!;
-        public DbSet<TokenEntity> Tokens { get; set; } = default!;
-        public DbSet<AccountIdentifierEntity> AccountIdentifiers { get; set; } = default!;
-        public DbSet<OutboxMessageEntity> OutboxMessages { get; set; } = default!;
+        public DbSet<User> Users { get; set; } = default!;
+        public DbSet<Token> Tokens { get; set; } = default!;
+        public DbSet<OutboxMessage> OutboxMessages { get; set; } = default!;
 
         // Join Entities
         public DbSet<RolePermissionEntity> RolePermissions { get; set; } = default!;

@@ -1,35 +1,47 @@
 ﻿namespace ControlHub.SharedKernel.Common.Errors
 {
-    public sealed record Error(string Code, string Message)
+    public enum ErrorType
     {
-        public static readonly Error None = new(string.Empty, string.Empty);
+        Failure = 0,
+        Validation = 1, // 400
+        NotFound = 2,   // 404
+        Conflict = 3,   // 409
+        Unauthorized = 4, // 401
+        Forbidden = 5     // 403
+    }
 
-        // Validation error
+    public sealed record Error(string Code, string Message, ErrorType Type = ErrorType.Failure)
+    {
+        public static readonly Error None = new(string.Empty, string.Empty, ErrorType.Failure);
+
+        // --- SỬA LỖI: Factory Method phải truyền đúng ErrorType ---
+
+        // Validation (400)
         public static Error Validation(string code, string message) =>
-            new($"Validation.{code}", message);
+            new(code, message, ErrorType.Validation);
 
-        // Conflict (ví dụ trùng khóa, cập nhật song song)
+        // Conflict (409)
         public static Error Conflict(string code, string message) =>
-            new($"Conflict.{code}", message);
+            new(code, message, ErrorType.Conflict);
 
-        // Not Found
+        // Not Found (404)
         public static Error NotFound(string code, string message) =>
-            new($"NotFound.{code}", message);
+            new(code, message, ErrorType.NotFound);
 
-        // Unauthorized
+        // Unauthorized (401)
         public static Error Unauthorized(string code, string message) =>
-            new($"Unauthorized.{code}", message);
+            new(code, message, ErrorType.Unauthorized);
 
-        // Forbidden (bị chặn truy cập)
+        // Forbidden (403)
         public static Error Forbidden(string code, string message) =>
-            new($"Forbidden.{code}", message);
+            new(code, message, ErrorType.Forbidden);
 
-        // Unexpected / Unhandled
-        public static Error Unexpected(string code, string message) =>
-            new($"Unexpected.{code}", message);
-
-        // Failure
+        // Failure (500 hoặc 400 chung)
         public static Error Failure(string code, string message) =>
-            new($"Failure.{code}", message);
+            new(code, message, ErrorType.Failure);
+
+        // Unexpected (500)
+        public static Error Unexpected(string code, string message) =>
+            new(code, message, ErrorType.Failure);
     }
 }

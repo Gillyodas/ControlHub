@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ControlHub.Domain.Permissions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ControlHub.Infrastructure.Permissions
 {
-    public class PermissionConfig : IEntityTypeConfiguration<PermissionEntity>
+    public class PermissionConfig : IEntityTypeConfiguration<Permission>
     {
-        public void Configure(EntityTypeBuilder<PermissionEntity> builder)
+        public void Configure(EntityTypeBuilder<Permission> builder)
         {
             builder.ToTable("Permissions");
 
@@ -14,6 +15,9 @@ namespace ControlHub.Infrastructure.Permissions
             builder.Property(p => p.Code)
                 .HasMaxLength(100)
                 .IsRequired();
+
+            builder.HasIndex(p => p.Code)
+                .IsUnique();
 
             builder.Property(p => p.Description)
                 .HasMaxLength(255);

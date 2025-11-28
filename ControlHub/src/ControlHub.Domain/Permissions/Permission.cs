@@ -1,5 +1,3 @@
-
-
 using System.Text.RegularExpressions;
 using ControlHub.SharedKernel.Permissions;
 using ControlHub.SharedKernel.Results;
@@ -8,13 +6,18 @@ namespace ControlHub.Domain.Permissions
 {
     public class Permission
     {
-        public Guid Id { get; private set; }
-        public string Code { get; private set; }
-        public string Description { get; private set; }
+        // Regex cho phép: chữ thường, số, dấu chấm và dấu gạch dưới
+        public const string PermissionCodeRegex = @"^[a-z0-9_]+\.[a-z0-9_]+$";
 
-        // Constructor private vẫn giữ nguyên, rất tốt!
+        public Guid Id { get; private set; }
+        public string Code { get; private set; } = default!; // EF Core sẽ set giá trị này
+        public string Description { get; private set; } = string.Empty;
+
+        // Constructor rỗng cho EF Core (Bắt buộc)
+        // EF Core dùng cái này để tạo object trước khi fill dữ liệu từ DB
         private Permission() { }
 
+        // Constructor private cho Factory Method
         private Permission(Guid id, string code, string description)
         {
             Id = id;
@@ -22,50 +25,41 @@ namespace ControlHub.Domain.Permissions
             Description = description;
         }
 
+        // Factory Method
         public static Result<Permission> Create(Guid id, string code, string description)
         {
             if (id == Guid.Empty)
-            {
                 return Result<Permission>.Failure(PermissionErrors.IdRequired);
-            }
 
             if (string.IsNullOrWhiteSpace(code))
-            {
                 return Result<Permission>.Failure(PermissionErrors.PermissionCodeRequired);
-            }
 
             var normalizedCode = code.Trim().ToLowerInvariant();
 
-            var regexPattern = @"^[a-z0-9_]+\.[a-z0-9_]+$";
-
-            if (!Regex.IsMatch(normalizedCode, regexPattern))
+            if (!Regex.IsMatch(normalizedCode, PermissionCodeRegex))
             {
-                // THAY ĐỔI 4:
                 return Result<Permission>.Failure(PermissionErrors.InvalidPermissionFormat);
             }
 
             var normalizedDescription = description?.Trim() ?? string.Empty;
 
-            // THAY ĐỔI 5: Trả về Success
             return Result<Permission>.Success(new Permission(id, normalizedCode, normalizedDescription));
         }
 
-        public static Permission Rehydrate(Guid id, string code, string description)
-            => new Permission(id, code, description);
-
-        // Behavior (Hàm Update của bạn đã làm đúng)
+        // Behavior: Update
         public Result Update(string code, string description)
         {
             if (string.IsNullOrWhiteSpace(code))
                 return Result.Failure(PermissionErrors.PermissionCodeRequired);
 
-            var regexPattern = @"^[a-z0-9]+\.[a-z0-9]+$";
-            if (!Regex.IsMatch(code.Trim().ToLowerInvariant(), regexPattern))
+            var normalizedCode = code.Trim().ToLowerInvariant();
+
+            if (!Regex.IsMatch(normalizedCode, PermissionCodeRegex))
             {
                 return Result.Failure(PermissionErrors.InvalidPermissionFormat);
             }
 
-            Code = code.Trim().ToLowerInvariant();
+            Code = normalizedCode;
             Description = description?.Trim() ?? string.Empty;
             return Result.Success();
         }

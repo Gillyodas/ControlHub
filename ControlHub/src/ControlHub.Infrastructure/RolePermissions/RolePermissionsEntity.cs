@@ -1,15 +1,15 @@
-﻿using ControlHub.Infrastructure.Permissions;
-using ControlHub.Infrastructure.Roles;
+﻿using ControlHub.Domain.Permissions;
+using ControlHub.Domain.Roles;
 
 namespace ControlHub.Infrastructure.RolePermissions
 {
+    // Class này thuần túy là POCO cho bảng trung gian (Join Table)
     public class RolePermissionEntity
     {
         public Guid RoleId { get; set; }
         public Guid PermissionId { get; set; }
 
-        // Navigation
-        public RoleEntity Role { get; set; } = default!;
-        public PermissionEntity Permission { get; set; } = default!;
+        public Role Role { get; set; } = default!;
+        public Permission Permission { get; set; } = default!;
     }
 }

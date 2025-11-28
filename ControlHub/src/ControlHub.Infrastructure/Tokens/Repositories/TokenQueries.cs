@@ -15,12 +15,10 @@ namespace ControlHub.Infrastructure.Tokens.Repositories
         }
         public async Task<Token?> GetByValueAsync(string Value, CancellationToken cancellationToken)
         {
-            var token = await _db.Tokens
+            return await _db.Tokens
                 .AsNoTracking()
                 .Where(t => t.Value == Value)
                 .FirstOrDefaultAsync(cancellationToken);
-
-            return token != null ? TokenMapper.ToDomain(token) : null;
         }
     }
 }
