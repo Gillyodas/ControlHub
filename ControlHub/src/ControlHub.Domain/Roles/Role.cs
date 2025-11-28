@@ -1,6 +1,7 @@
 ﻿using ControlHub.Domain.Permissions;
 using ControlHub.SharedKernel.Results;
 using ControlHub.SharedKernel.Roles;
+// using ControlHub.SharedKernel.Roles; // (Giả sử bạn có RoleErrors ở đây)
 
 namespace ControlHub.Domain.Roles
 {
@@ -12,35 +13,33 @@ namespace ControlHub.Domain.Roles
         public bool IsActive { get; private set; }
 
         private readonly List<Permission> _permissions = new();
+
         public IReadOnlyCollection<Permission> Permissions => _permissions.AsReadOnly();
 
+        // Navigation Property (Optional): Nếu bạn muốn truy cập ngược lại từ Role -> Accounts
+        // public IReadOnlyCollection<Account> Accounts => _accounts.AsReadOnly();
+        // private readonly List<Account> _accounts = new();
+
+        // Constructor cho EF Core
         private Role() { }
 
         private Role(Guid id, string name, string description, bool isActive)
         {
-            if (id == Guid.Empty)
-                throw new ArgumentException("Id is required", nameof(id));
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Name is required", nameof(name));
-
             Id = id;
-            Name = name.Trim();
-            Description = description?.Trim() ?? string.Empty;
+            Name = name;
+            Description = description;
             IsActive = isActive;
         }
 
-        // Factory methods
         public static Role Create(Guid id, string name, string description)
-            => new Role(id, name, description, true);
-
-        public static Role Rehydrate(Guid id, string name, string description, bool isActive, IEnumerable<Permission> permissions)
         {
-            var role = new Role(id, name, description, isActive);
-            role._permissions.AddRange(permissions);
-            return role;
+            if (id == Guid.Empty) throw new ArgumentException("Id is required", nameof(id));
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required", nameof(name));
+
+            return new Role(id, name.Trim(), description?.Trim() ?? string.Empty, true);
         }
 
-        // Behavior
+        // Logic Update
         public Result Update(string name, string description)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -51,19 +50,17 @@ namespace ControlHub.Domain.Roles
             return Result.Success();
         }
 
-        public void Deactivate() => IsActive = false;
-        public void Activate() => IsActive = true;
-
-        public void Delete()
-        {
-            IsActive = false;
-            _permissions.Clear();
-        }
-
+        // Logic Add Permission
         public Result AddPermission(Permission permission)
         {
+            if (permission == null)
+                return Result.Failure(RoleErrors.PermissionNotFound); // Hoặc lỗi Null
+
+            // Kiểm tra trùng lặp trong list hiện tại
             if (_permissions.Any(p => p.Code == permission.Code))
+            {
                 return Result.Failure(RoleErrors.PermissionAlreadyExists);
+            }
 
             _permissions.Add(permission);
             return Result.Success();
@@ -86,7 +83,6 @@ namespace ControlHub.Domain.Roles
                 {
                     _permissions.Add(per);
                     successes.Add(per);
-
                     existingCodes.Add(per.Code);
                 }
             }
@@ -101,14 +97,7 @@ namespace ControlHub.Domain.Roles
             return Result<PartialResult<Permission, string>>.Success(partial);
         }
 
-        public Result RemovePermission(string code)
-        {
-            var found = _permissions.FirstOrDefault(p => p.Code == code);
-            if (found == null)
-                return Result.Failure(RoleErrors.PermissionNotFound);
-
-            _permissions.Remove(found);
-            return Result.Success();
-        }
+        public void Deactivate() => IsActive = false;
+        public void Activate() => IsActive = true;
     }
 }

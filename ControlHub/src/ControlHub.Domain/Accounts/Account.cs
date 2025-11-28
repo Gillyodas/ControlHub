@@ -1,6 +1,7 @@
 ﻿using ControlHub.Domain.Accounts.Enums;
 using ControlHub.Domain.Accounts.ValueObjects;
 using ControlHub.Domain.Roles;
+using ControlHub.Domain.Tokens;
 using ControlHub.Domain.Users;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;
@@ -11,52 +12,45 @@ namespace ControlHub.Domain.Accounts
     public class Account
     {
         public Guid Id { get; private set; }
-        public Password Password { get; private set; }
+
+        // Value Object: Password (sẽ được map phẳng vào bảng Accounts)
+        public Password Password { get; private set; } = default!;
+
         public bool IsActive { get; private set; }
         public bool IsDeleted { get; private set; }
 
-        // Quan hệ 1-nhiều (Account - Role)
+        // Foreign Key
         public Guid RoleId { get; private set; }
-        public Maybe<Role> Role { get; private set; } = Maybe<Role>.None;
 
+        // Navigation Properties (EF Core cần kiểu cụ thể, không dùng Maybe<T> ở đây)
+        public Role? Role { get; private set; }
+        public User? User { get; private set; }
+
+        // Collections (EF Core sẽ map vào field private)
         private readonly List<Identifier> _identifiers = new();
         public IReadOnlyCollection<Identifier> Identifiers => _identifiers.AsReadOnly();
 
-        public Maybe<User> User { get; private set; }
+        private readonly List<Token> _tokens = new();
+        public IReadOnlyCollection<Token> Tokens => _tokens.AsReadOnly();
 
+        // Constructor cho EF Core
         private Account() { }
 
-        private Account(Guid id, Password pass, Guid roleId, bool isActive, bool isDeleted, Maybe<User> user, Maybe<Role> role)
+        private Account(Guid id, Password pass, Guid roleId, bool isActive, bool isDeleted)
         {
             if (id == Guid.Empty) throw new ArgumentException("Id is required", nameof(id));
             if (roleId == Guid.Empty) throw new ArgumentException("RoleId is required", nameof(roleId));
 
             Id = id;
-            Password = pass;
+            Password = pass ?? throw new ArgumentNullException(nameof(pass));
             RoleId = roleId;
             IsActive = isActive;
             IsDeleted = isDeleted;
-            User = user;
-            Role = role;
         }
 
+        // Factory
         public static Account Create(Guid id, Password pass, Guid roleId)
-            => new Account(id, pass, roleId, true, false, Maybe<User>.None, Maybe<Role>.None);
-
-        public static Account Rehydrate(
-            Guid id,
-            Password pass,
-            Guid roleId,
-            bool isActive,
-            bool isDeleted,
-            Maybe<User> user,
-            Maybe<Role> role,
-            IEnumerable<Identifier> identifiers)
-        {
-            var acc = new Account(id, pass, roleId, isActive, isDeleted, user, role);
-            acc._identifiers.AddRange(identifiers);
-            return acc;
-        }
+            => new Account(id, pass, roleId, true, false);
 
         // Behaviors
         public Result AddIdentifier(Identifier identifier)
@@ -79,24 +73,25 @@ namespace ControlHub.Domain.Accounts
 
         public Result AttachUser(User user)
         {
-            if (user == null)
-                return Result.Failure(UserErrors.Required);
+            if (user == null) return Result.Failure(UserErrors.Required);
+            if (User != null) return Result.Failure(UserErrors.AlreadyAtached);
 
-            if (User.HasValue)
-                return Result.Failure(UserErrors.AlreadyAtached);
-
-            User = Maybe<User>.From(user);
+            User = user;
             return Result.Success();
         }
 
         public Result AttachRole(Role role)
         {
-            if (role == null)
-                return Result.Failure(AccountErrors.RoleRequired);
-
-            Role = Maybe<Role>.From(role);
+            if (role == null) return Result.Failure(AccountErrors.RoleRequired);
+            Role = role;
             RoleId = role.Id;
             return Result.Success();
+        }
+
+        // Quản lý Token ngay trong Account (Aggregate Root)
+        public void AddToken(Token token)
+        {
+            _tokens.Add(token);
         }
 
         public void Deactivate() => IsActive = false;
@@ -104,19 +99,14 @@ namespace ControlHub.Domain.Accounts
         public void Delete()
         {
             IsDeleted = true;
-            User.Match(
-                some: u => u.Delete(),
-                none: () => { }
-            );
+            User?.Delete();
+            // Logic xóa tokens hoặc identifiers nếu cần
         }
 
         public Result UpdatePassword(Password newPass)
         {
-            if (newPass is null)
-                return Result.Failure(AccountErrors.PasswordRequired);
-
-            if (!newPass.IsValid())
-                return Result.Failure(AccountErrors.PasswordIsNotValid);
+            if (newPass is null) return Result.Failure(AccountErrors.PasswordRequired);
+            if (!newPass.IsValid()) return Result.Failure(AccountErrors.PasswordIsNotValid);
 
             Password = newPass;
             return Result.Success();

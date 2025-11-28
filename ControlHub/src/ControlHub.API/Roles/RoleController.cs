@@ -60,7 +60,8 @@ namespace ControlHub.API.Roles
             });
         }
 
-        [Authorize(Policy = "Permission:role.create")]
+        //[Authorize(Policy = "Permission:role.create")]
+        [AllowAnonymous]
         [HttpPost("roles")]
         public async Task<IActionResult> CreateRoles([FromBody] CreateRolesRequest request, CancellationToken ct)
         {

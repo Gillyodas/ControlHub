@@ -8,14 +8,20 @@ namespace ControlHub.Domain.Tokens
     {
         public Guid Id { get; private set; }
         public Guid AccountId { get; private set; }
-        public string Value { get; private set; }
+        public string Value { get; private set; } = default!; // EF Core set
         public TokenType Type { get; private set; }
         public DateTime ExpiredAt { get; private set; }
         public bool IsUsed { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public bool IsRevoked { get; private set; }
 
-        private Token() { } // for rehydration
+        // Navigation Property (Optional)
+        // Trong Domain, Token thường không cần giữ object Account.
+        // Chỉ cần AccountId là đủ để định danh chủ sở hữu.
+        // Nếu cần, bạn có thể thêm: 
+        // public Account Account { get; private set; } = null!;
+
+        private Token() { } // for EF Core
 
         private Token(Guid id, Guid accountId, string value, TokenType type, DateTime expiredAt)
         {
@@ -29,13 +35,14 @@ namespace ControlHub.Domain.Tokens
             ExpiredAt = expiredAt;
             CreatedAt = DateTime.UtcNow;
             IsUsed = false;
+            IsRevoked = false;
         }
 
-        // Factory method để tạo token mới
+        // Factory method
         public static Token Create(Guid accountId, string value, TokenType type, DateTime expiredAt)
             => new Token(Guid.NewGuid(), accountId, value, type, expiredAt);
 
-        // Rehydrate từ persistence
+        // Rehydrate
         public static Token Rehydrate(
             Guid id,
             Guid accountId,

@@ -19,8 +19,8 @@ namespace ControlHub.SharedKernel.Accounts
         public static readonly Error InvalidEmail =
             new("Account.InvalidEmail", "Email format is invalid.");
 
-        public static readonly Error EmailAlreadyExists =
-            new("Account.EmailAlreadyExists", "Email is already registered.");
+        public static readonly Error EmailAlreadyExists = Error.Conflict(
+        "Account.EmailAlreadyExists", "The email provided is already in use.");
 
         public static readonly Error EmailNotFound =
             new("Account.EmailNotFound", "Email does not exist.");
@@ -55,8 +55,8 @@ namespace ControlHub.SharedKernel.Accounts
         public static readonly Error PasswordSameAsOld =
             new("Account.PasswordSameAsOld", "New password must not be the same as the current password.");
 
-        public static readonly Error InvalidCredentials =
-            new("Account.InvalidCredentials", "Email or password is incorrect.");
+        public static readonly Error InvalidCredentials = Error.Unauthorized(
+        "Auth.InvalidCredentials", "Invalid email or password.");
 
         public static readonly Error LockedOut =
             new("Account.LockedOut", "Account is temporarily locked due to multiple failed login attempts.");
@@ -64,8 +64,8 @@ namespace ControlHub.SharedKernel.Accounts
         public static readonly Error UnsupportedIdentifierType =
             new("Identifier.UnsupportedType", "Unsupported identifier type.");
 
-        public static readonly Error IdentifierNotFound =
-            new("Identifier.NotFound", "The identifier was not found.");
+        public static readonly Error IdentifierNotFound = Error.NotFound(
+        "Account.IdentifierNotFound", "Identifier not found.");
 
         public static readonly Error IdentifierRequired =
             new("Identifier.Required", "The identifier is required.");
@@ -84,5 +84,6 @@ namespace ControlHub.SharedKernel.Accounts
 
         public static readonly Error RoleRequired =
             new("Account.RoleRequired", "Account required role");
+
     }
 }

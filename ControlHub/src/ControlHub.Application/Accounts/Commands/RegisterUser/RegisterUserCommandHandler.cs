@@ -13,7 +13,7 @@ namespace ControlHub.Application.Accounts.Commands.RegisterUser
     public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, Result<Guid>>
     {
         private readonly IAccountValidator _accountValidator;
-        private readonly IAccountCommands _accountCommands;
+        private readonly IAccountRepository _accountRepository;
         private readonly ILogger<RegisterUserCommandHandler> _logger;
         private readonly IAccountFactory _accountFactory;
         private readonly IConfiguration _config;
@@ -21,14 +21,14 @@ namespace ControlHub.Application.Accounts.Commands.RegisterUser
 
         public RegisterUserCommandHandler(
             IAccountValidator accountValidator,
-            IAccountCommands accountCommands,
+            IAccountRepository accountRepository,
             ILogger<RegisterUserCommandHandler> logger,
             IAccountFactory accountFactory,
             IConfiguration config,
             IUnitOfWork uow)
         {
             _accountValidator = accountValidator;
-            _accountCommands = accountCommands;
+            _accountRepository = accountRepository;
             _logger = logger;
             _accountFactory = accountFactory;
             _config = config;
@@ -73,7 +73,7 @@ namespace ControlHub.Application.Accounts.Commands.RegisterUser
                 return Result<Guid>.Failure(accountResult.Error);
             }
 
-            await _accountCommands.AddAsync(accountResult.Value.Value, cancellationToken);
+            await _accountRepository.AddAsync(accountResult.Value.Value, cancellationToken);
 
             _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}, Ident {Ident}",
                 AccountLogs.RegisterUser_Success.Code,

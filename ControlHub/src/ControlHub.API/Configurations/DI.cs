@@ -20,6 +20,7 @@ using ControlHub.Infrastructure.Accounts.Factories;
 using ControlHub.Infrastructure.Accounts.Repositories;
 using ControlHub.Infrastructure.Accounts.Security;
 using ControlHub.Infrastructure.Accounts.Validators;
+using ControlHub.Infrastructure.Authorization.Handlers;
 using ControlHub.Infrastructure.Emails;
 using ControlHub.Infrastructure.Identifiers.Validator;
 using ControlHub.Infrastructure.Outboxs;
@@ -34,6 +35,7 @@ using ControlHub.Infrastructure.Tokens.Generate;
 using ControlHub.Infrastructure.Tokens.Repositories;
 using ControlHub.Infrastructure.Tokens.Sender;
 using ControlHub.Infrastructure.Users.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ControlHub.API.Configurations
 {
@@ -60,7 +62,7 @@ namespace ControlHub.API.Configurations
 
             //Token.Repositories
             services.AddScoped<ITokenQueries, TokenQueries>();
-            services.AddScoped<ITokenCommands, TokenCommands>();
+            services.AddScoped<ITokenRepository, TokenRepository>();
 
             //Token.Verifier
             services.AddScoped<ITokenVerifier, TokenVerifier>();
@@ -77,7 +79,7 @@ namespace ControlHub.API.Configurations
 
             //Account.Repositories
             services.AddScoped<IAccountQueries, AccountQueries>();
-            services.AddScoped<IAccountCommands, AccountCommands>();
+            services.AddScoped<IAccountRepository, AccountRepository>();
 
             //Identifier.Validator
             services.AddScoped<IIdentifierValidator, EmailIdentifierValidator>();
@@ -85,14 +87,14 @@ namespace ControlHub.API.Configurations
             services.AddScoped<IIdentifierValidator, PhoneIdentifierValidator>();
 
             //User.Repositories
-            services.AddScoped<IUserCommands, UserCommands>();
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserQueries, UserQueries>();
 
             //Persistence
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             //Outbox.Repositories
-            services.AddScoped<IOutboxCommands, OutboxCommands>();
+            services.AddScoped<IOutboxRepository, OutboxRepository>();
 
             //Outbox.Handlers
             services.AddScoped<IOutboxHandler, EmailOutboxHandler>();
@@ -108,7 +110,7 @@ namespace ControlHub.API.Configurations
             services.AddScoped<IRoleQueries, RoleQueries>();
 
             //Permission.Repositories
-            services.AddScoped<IPermissionCommands, PermissionCommands>();
+            services.AddScoped<IPermissionRepository, PermissionRepository>();
             services.AddScoped<IPermissionQueries, PermissionQueries>();
 
             //Permission.Services
@@ -116,6 +118,8 @@ namespace ControlHub.API.Configurations
 
             services.AddScoped<CreateRoleWithPermissionsService>();
             services.AddScoped<AssignPermissionsService>();
+
+            services.AddSingleton<IAuthorizationHandler, SameUserAuthorizationHandler>();
 
 
             return services;

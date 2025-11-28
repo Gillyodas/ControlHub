@@ -1,53 +1,84 @@
-﻿using ControlHub.Infrastructure.Accounts;
-using ControlHub.Infrastructure.Users;
+﻿using ControlHub.Domain.Accounts;
+using ControlHub.Domain.Tokens;
+using ControlHub.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-public class AccountConfig : IEntityTypeConfiguration<AccountEntity>
+namespace ControlHub.Infrastructure.Accounts
 {
-    public void Configure(EntityTypeBuilder<AccountEntity> builder)
+    public class AccountConfig : IEntityTypeConfiguration<Account>
     {
-        builder.ToTable("Accounts");
+        public void Configure(EntityTypeBuilder<Account> builder)
+        {
+            builder.ToTable("Accounts");
 
-        builder.HasKey(a => a.Id);
+            builder.HasKey(a => a.Id);
 
-        builder.Property(a => a.HashPassword)
-               .HasColumnType("varbinary(64)")
-               .IsRequired();
+            builder.Property(a => a.IsActive).IsRequired();
+            builder.Property(a => a.IsDeleted).IsRequired();
 
-        builder.Property(a => a.Salt)
-               .HasColumnType("varbinary(64)")
-               .IsRequired();
+            // --- 1. CẤU HÌNH VALUE OBJECT: PASSWORD (Owned Entity) ---
+            // EF Core sẽ nhúng các cột của Password vào bảng Accounts
+            builder.OwnsOne(a => a.Password, passBuilder =>
+            {
+                passBuilder.Property(p => p.Hash)
+                    .HasColumnName("HashPassword") // Tên cột trong DB
+                    .HasColumnType("varbinary(64)")
+                    .IsRequired();
 
-        builder.Property(a => a.IsActive)
-               .IsRequired();
+                passBuilder.Property(p => p.Salt)
+                    .HasColumnName("Salt") // Tên cột trong DB
+                    .HasColumnType("varbinary(64)")
+                    .IsRequired();
+            });
 
-        builder.Property(a => a.IsDeleted)
-               .IsRequired();
+            // --- 2. CẤU HÌNH RELATIONSHIPS ---
 
-        // 1–1: Account <-> User
-        builder.HasOne(a => a.User)
-               .WithOne(u => u.Account)
-               .HasForeignKey<UserEntity>(u => u.AccId)
-               .OnDelete(DeleteBehavior.Cascade);
+            // Account (1) -> Role (1)
+            builder.HasOne(a => a.Role)
+                .WithMany() // Hoặc .WithMany(r => r.Accounts) nếu bên Role có list Accounts
+                .HasForeignKey(a => a.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-        // 1–N: Account <-> Identifiers
-        builder.HasMany(a => a.Identifiers)
-               .WithOne(i => i.Account)
-               .HasForeignKey(i => i.AccountId)
-               .OnDelete(DeleteBehavior.Cascade);
+            // Account (1) -> User (1)
+            builder.HasOne(a => a.User)
+                .WithOne() // Hoặc .WithOne(u => u.Account) nếu bên User có prop Account
+                .HasForeignKey<User>(u => u.AccId) // User giữ khóa ngoại AccId
+                .OnDelete(DeleteBehavior.Cascade);
 
-        // 1–N: Account <-> Tokens
-        builder.HasMany(a => a.Tokens)
-               .WithOne(t => t.Account)
-               .HasForeignKey(t => t.AccountId)
-               .OnDelete(DeleteBehavior.Cascade);
+            // Account (1) -> Tokens (N)
+            builder.HasMany(a => a.Tokens)
+                .WithOne() // Bên Token đã cấu hình HasOne<Account>
+                .HasForeignKey(t => t.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-        // 1–N: Account <-> Role
-        builder
-            .HasOne(a => a.Role)
-            .WithMany(r => r.Accounts)
-            .HasForeignKey(a => a.RoleId)
-            .OnDelete(DeleteBehavior.Restrict);
+            // Access Mode cho Tokens
+            builder.Navigation(a => a.Tokens)
+                .HasField("_tokens")
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            // --- 3. CẤU HÌNH OWNED COLLECTION: IDENTIFIERS ---
+            // Map List<Identifier> (VO) sang bảng riêng "AccountIdentifiers"
+            // EF Core sẽ tự tạo Shadow PK cho bảng này.
+            builder.OwnsMany(a => a.Identifiers, ib =>
+            {
+                ib.ToTable("AccountIdentifiers");
+
+                ib.WithOwner().HasForeignKey("AccountId"); // FK trỏ về Account
+
+                // Map các property của Identifier
+                ib.Property(i => i.Type).IsRequired();
+                ib.Property(i => i.Value).IsRequired().HasMaxLength(300);
+                ib.Property(i => i.NormalizedValue).IsRequired().HasMaxLength(300);
+
+                // Tạo Unique Index trên bảng phụ
+                ib.HasIndex(i => new { i.Type, i.NormalizedValue }).IsUnique();
+            });
+
+            // Access Mode cho Identifiers
+            builder.Navigation(a => a.Identifiers)
+                .HasField("_identifiers")
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
+        }
     }
 }

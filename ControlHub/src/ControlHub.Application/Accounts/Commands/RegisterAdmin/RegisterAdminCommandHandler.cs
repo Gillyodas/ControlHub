@@ -2,6 +2,7 @@
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.SharedKernel.Accounts;
+using ControlHub.SharedKernel.Common.Errors;
 using ControlHub.SharedKernel.Results;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -12,7 +13,7 @@ namespace ControlHub.Application.Accounts.Commands.RegisterAdmin
     public class RegisterAdminCommandHandler : IRequestHandler<RegisterAdminCommand, Result<Guid>>
     {
         private readonly IAccountValidator _accountValidator;
-        private readonly IAccountCommands _accountCommands;
+        private readonly IAccountRepository _accountRepository;
         private readonly ILogger<RegisterAdminCommandHandler> _logger;
         private readonly IAccountFactory _accountFactory;
         private readonly IConfiguration _config;
@@ -20,14 +21,14 @@ namespace ControlHub.Application.Accounts.Commands.RegisterAdmin
 
         public RegisterAdminCommandHandler(
             IAccountValidator accountValidator,
-            IAccountCommands accountCommands,
+            IAccountRepository accountRepository,
             ILogger<RegisterAdminCommandHandler> logger,
             IAccountFactory accountFactory,
             IConfiguration config,
             IUnitOfWork uow)
         {
             _accountValidator = accountValidator;
-            _accountCommands = accountCommands;
+            _accountRepository = accountRepository;
             _logger = logger;
             _accountFactory = accountFactory;
             _config = config;
@@ -52,7 +53,13 @@ namespace ControlHub.Application.Accounts.Commands.RegisterAdmin
             }
 
             var accId = Guid.NewGuid();
-            var userRoleId = Guid.Parse(_config["RoleSettings:AdminRoleId"]);
+
+            var roleIdString = _config["RoleSettings:AdminRoleId"];
+            if (!Guid.TryParse(roleIdString, out var userRoleId))
+            {
+                _logger.LogError("Invalid Admin Role ID configuration: {Value}", roleIdString);
+                return Result<Guid>.Failure(CommonErrors.SystemConfigurationError);
+            }
 
             var accountResult = _accountFactory.CreateWithUserAndIdentifier(
                 accId,
@@ -72,7 +79,7 @@ namespace ControlHub.Application.Accounts.Commands.RegisterAdmin
                 return Result<Guid>.Failure(accountResult.Error);
             }
 
-            await _accountCommands.AddAsync(accountResult.Value.Value, cancellationToken);
+            await _accountRepository.AddAsync(accountResult.Value.Value, cancellationToken);
 
             _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}, Ident {Ident}",
                 AccountLogs.RegisterAdmin_Success.Code,

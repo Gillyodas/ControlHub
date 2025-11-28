@@ -13,20 +13,19 @@ namespace ControlHub.Infrastructure.Tokens.Generate
         {
             var claims = new List<Claim>
             {
-                // "sub" là định danh duy nhất của user theo chuẩn JWT
+                // 1. LƯU ID VÀO CẢ "sub" VÀ "NameIdentifier"
+                // "sub" là chuẩn JWT quốc tế
                 new Claim(JwtRegisteredClaimNames.Sub, accountId),
+        
+                // "NameIdentifier" là chuẩn của .NET Identity để định danh User ID
+                new Claim(ClaimTypes.NameIdentifier, accountId), 
 
-                // Thêm NameIdentifier cho dễ lấy ở HttpContext.User
-                new Claim(ClaimTypes.NameIdentifier, identifier),
+                new Claim(ClaimTypes.Name, identifier),
 
-                // Mỗi token nên có JTI (JWT ID) để phân biệt, phục vụ revoke nếu cần
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-
-                // Thêm role claim
                 new Claim(ClaimTypes.Role, roleId)
             };
 
-            // TTL 15 phút
             return GenerateToken(claims, TimeSpan.FromMinutes(15));
         }
     }

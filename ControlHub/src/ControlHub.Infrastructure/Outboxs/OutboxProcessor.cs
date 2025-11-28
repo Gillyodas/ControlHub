@@ -44,12 +44,11 @@ namespace ControlHub.Infrastructure.Outboxs
 
                         await handler.HandleAsync(msg.Payload, cancellationToken);
 
-                        msg.Processed = true;
-                        msg.ProcessedOn = DateTime.UtcNow;
+                        msg.MarkProcessed();
                     }
                     catch (Exception ex)
                     {
-                        msg.Error = ex.Message;
+                        msg.MarkFailed(ex.Message);
                         _logger.LogError(ex, "Failed to process outbox {Id}", msg.Id);
                     }
                 }

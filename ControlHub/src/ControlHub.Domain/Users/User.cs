@@ -5,10 +5,21 @@ namespace ControlHub.Domain.Users
 {
     public class User
     {
+        // Properties
         public Guid Id { get; private set; }
         public string? Username { get; private set; }
         public bool IsDeleted { get; private set; }
+
+        // Foreign Key & Navigation
         public Guid AccId { get; private set; }
+
+        // Navigation property về Account (Aggregate Root cha nếu User nằm trong Account Aggregate)
+        // Hoặc chỉ là reference nếu User là Aggregate riêng biệt (tùy thiết kế của bạn)
+        // Ở đây tôi khai báo nó, nhưng EF Core sẽ set nó.
+        // public Account Account { get; private set; } = null!; 
+
+        // Constructor rỗng cho EF Core
+        private User() { }
 
         public User(Guid id, Guid accId, string? username = null)
         {
@@ -21,6 +32,7 @@ namespace ControlHub.Domain.Users
             IsDeleted = false;
         }
 
+        // Behavior
         public void Delete() => IsDeleted = true;
 
         public void SetUsername(string? username)

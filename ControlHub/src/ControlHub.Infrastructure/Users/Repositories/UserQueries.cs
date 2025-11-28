@@ -15,7 +15,7 @@ namespace ControlHub.Infrastructure.Users.Repositories
         }
         public async Task<User> GetByAccountId(Guid id, CancellationToken cancellationToken)
         {
-            return UserMapper.ToDomain(await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.AccId == id));
+            return await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.AccId == id);
         }
     }
 }

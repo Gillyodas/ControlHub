@@ -5,12 +5,13 @@
         public Guid Id { get; private set; }
         public DateTime OccurredOn { get; private set; }
         public OutboxMessageType Type { get; private set; }
-        public string Payload { get; private set; }
+        public string Payload { get; private set; } = default!;
         public bool Processed { get; private set; }
         public DateTime? ProcessedOn { get; private set; }
         public string? Error { get; private set; }
 
-        private OutboxMessage() { } // EF / serialization
+        // Constructor cho EF Core
+        private OutboxMessage() { }
 
         private OutboxMessage(Guid id, OutboxMessageType type, string payload)
         {
@@ -21,9 +22,11 @@
             Processed = false;
         }
 
+        // Factory method
         public static OutboxMessage Create(OutboxMessageType type, string payload)
             => new OutboxMessage(Guid.NewGuid(), type, payload);
 
+        // Rehydrate (nếu cần thiết, nhưng EF Core thường tự lo việc này)
         public static OutboxMessage Rehydrate(
             Guid id,
             DateTime occurredOn,
@@ -45,6 +48,7 @@
             };
         }
 
+        // Behavior
         public void MarkProcessed()
         {
             Processed = true;
@@ -56,6 +60,7 @@
         {
             Processed = false;
             Error = error;
+            // Có thể cập nhật ProcessedOn để biết lần fail cuối cùng nếu muốn
         }
     }
 }

@@ -22,9 +22,9 @@ namespace ControlHub.Application.Accounts.Commands.ForgotPassword
         private readonly ILogger<ForgotPasswordCommandHandler> _logger;
         private readonly IIdentifierValidatorFactory _identifierValidatorFactory;
         private readonly IUnitOfWork _uow;
-        private readonly ITokenCommands _tokenCommands;
+        private readonly ITokenRepository _tokenRepository;
         private readonly ITokenFactory _tokenFactory;
-        private readonly IOutboxCommands _outboxCommands;
+        private readonly IOutboxRepository _outboxCommands;
 
         public ForgotPasswordCommandHandler(
             IPasswordResetTokenGenerator passwordResetTokenGenerator,
@@ -32,16 +32,16 @@ namespace ControlHub.Application.Accounts.Commands.ForgotPassword
             ILogger<ForgotPasswordCommandHandler> logger,
             IIdentifierValidatorFactory identifierValidatorFactory,
             IUnitOfWork uow,
-            ITokenCommands tokenCommands,
+            ITokenRepository tokenRepository,
             ITokenFactory tokenFactory,
-            IOutboxCommands outboxCommands)
+            IOutboxRepository outboxCommands)
         {
             _passwordResetTokenGenerator = passwordResetTokenGenerator;
             _accountQueries = accountQueries;
             _logger = logger;
             _identifierValidatorFactory = identifierValidatorFactory;
             _uow = uow;
-            _tokenCommands = tokenCommands;
+            _tokenRepository = tokenRepository;
             _tokenFactory = tokenFactory;
             _outboxCommands = outboxCommands;
         }
@@ -93,7 +93,7 @@ namespace ControlHub.Application.Accounts.Commands.ForgotPassword
                 acc.Id);
 
             var domainToken = _tokenFactory.Create(acc.Id, resetToken, TokenType.ResetPassword);
-            await _tokenCommands.AddAsync(domainToken, cancellationToken);
+            await _tokenRepository.AddAsync(domainToken, cancellationToken);
 
             var resetLink = $"https://localhost:7110/swagger/index.html?token={domainToken.Value}";
             var payload = new

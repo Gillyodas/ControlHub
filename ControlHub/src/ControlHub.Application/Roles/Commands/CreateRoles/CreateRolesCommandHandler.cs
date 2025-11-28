@@ -2,6 +2,7 @@
 using ControlHub.Application.Permissions.Interfaces.Repositories;
 using ControlHub.Application.Roles.Interfaces.Repositories;
 using ControlHub.Domain.Common.Services;
+using ControlHub.Domain.Permissions;
 using ControlHub.Domain.Roles;
 using ControlHub.SharedKernel.Permissions;
 using ControlHub.SharedKernel.Results;
@@ -13,24 +14,24 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
 {
     public class CreateRolesCommandHandler : IRequestHandler<CreateRolesCommand, Result<PartialResult<Role, string>>>
     {
-        private readonly IRoleRepository _roleCommands;
+        private readonly IRoleRepository _roleRepository;
         private readonly IRoleQueries _roleQueries;
-        private readonly IPermissionQueries _permissionQueries;
+        private readonly IPermissionRepository _permissionRepository;
         private readonly CreateRoleWithPermissionsService _createRoleWithPermissionsService;
         private readonly ILogger<CreateRolesCommandHandler> _logger;
         private readonly IUnitOfWork _uow;
 
         public CreateRolesCommandHandler(
-            IRoleRepository roleCommands,
+            IRoleRepository roleRepository,
             IRoleQueries roleQueries,
-            IPermissionQueries permissionQueries,
+            IPermissionRepository permissionRepository,
             CreateRoleWithPermissionsService createRoleWithPermissionsService,
             ILogger<CreateRolesCommandHandler> logger,
             IUnitOfWork uow)
         {
-            _roleCommands = roleCommands;
+            _roleRepository = roleRepository;
             _roleQueries = roleQueries;
-            _permissionQueries = permissionQueries;
+            _permissionRepository = permissionRepository;
             _createRoleWithPermissionsService = createRoleWithPermissionsService;
             _logger = logger;
             _uow = uow;
@@ -43,16 +44,13 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
                 RoleLogs.CreateRoles_Started.Message,
                 request.Roles?.Count() ?? 0);
 
-            // Load existing role names once (case-insensitive)
             var existingNames = new HashSet<string>(
                 (await _roleQueries.GetAllAsync(ct)).Select(r => r.Name.ToLowerInvariant()));
 
-            // Filter out duplicates coming from DB
             var validDtos = request.Roles
                 .Where(r => !existingNames.Contains(r.Name.ToLowerInvariant()))
                 .ToList();
 
-            // If nothing valid, return failure early
             if (!validDtos.Any())
             {
                 _logger.LogWarning("{Code}: {Message}. IncomingCount={Count}",
@@ -63,13 +61,20 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
                 return Result<PartialResult<Role, string>>.Failure(RoleErrors.NoValidRolesCreated);
             }
 
+            var allRequiredPermissionIds = validDtos
+                .Where(r => r.PermissionIds != null)
+                .SelectMany(r => r.PermissionIds!)
+                .Distinct()
+                .ToList();
+
+            var allPermissions = await _permissionRepository.GetByIdsAsync(allRequiredPermissionIds, ct);
+            var permissionMap = allPermissions.ToDictionary(p => p.Id);
+
             var successes = new List<Role>();
             var failures = new List<string>();
 
-            // Iterate sequentially to keep EF DbContext safety and simple error tracing
             foreach (var dto in validDtos)
             {
-                // If client didn't supply permission ids, treat as validation failure (or decide to allow empty)
                 if (dto.PermissionIds == null || !dto.PermissionIds.Any())
                 {
                     _logger.LogWarning("{Code}: {Message}. Role={RoleName}",
@@ -81,23 +86,34 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
                     continue;
                 }
 
-                // Load permissions from DB (application layer does I/O)
-                var validPermissions = (await _permissionQueries.GetByIdsAsync(dto.PermissionIds, ct)).ToList();
+                var rolePermissions = new List<Permission>();
+                var missingPermissions = false;
 
-                if (!validPermissions.Any())
+                foreach (var pId in dto.PermissionIds)
                 {
-                    _logger.LogWarning("{Code}: {Message}. Role={RoleName} ProvidedCount={Count}",
+                    if (permissionMap.TryGetValue(pId, out var permissionInstance))
+                    {
+                        rolePermissions.Add(permissionInstance);
+                    }
+                    else
+                    {
+                        missingPermissions = true;
+                        break;
+                    }
+                }
+
+                if (missingPermissions)
+                {
+                    _logger.LogWarning("{Code}: {Message}. Role={RoleName}",
                         RoleLogs.CreateRoles_NoValidPermissionFound.Code,
                         RoleLogs.CreateRoles_NoValidPermissionFound.Message,
-                        dto.Name,
-                        dto.PermissionIds.Count());
+                        dto.Name);
 
                     failures.Add($"{dto.Name}: {PermissionErrors.PermissionNotFound.Code}");
                     continue;
                 }
 
-                // Delegate pure domain composition to service (synchronous domain work assumed)
-                var result = _createRoleWithPermissionsService.Handle(dto.Name, dto.Description, validPermissions);
+                var result = _createRoleWithPermissionsService.Handle(dto.Name, dto.Description, rolePermissions);
 
                 if (result.IsSuccess)
                 {
@@ -118,10 +134,9 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
                 }
             }
 
-            // Persist successful roles (if any)
             if (successes.Any())
             {
-                await _roleCommands.AddRangeAsync(successes, ct);
+                await _roleRepository.AddRangeAsync(successes, ct);
                 await _uow.CommitAsync(ct);
 
                 _logger.LogInformation("{Code}: {Message}. RolesCreated={Count}",
@@ -136,10 +151,8 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
                     RoleLogs.CreateRoles_NoPersist.Message);
             }
 
-            // Build partial result and return wrapped in Result<T>
             var partial = PartialResult<Role, string>.Create(successes, failures);
 
-            // If nothing succeeded, return Failure to reflect no persisted outcome
             if (!partial.Successes.Any())
                 return Result<PartialResult<Role, string>>.Failure(RoleErrors.NoValidRolesCreated);
 
