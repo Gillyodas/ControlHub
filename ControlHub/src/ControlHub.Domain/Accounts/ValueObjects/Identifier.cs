@@ -8,6 +8,7 @@ namespace ControlHub.Domain.Accounts.ValueObjects
         public IdentifierType Type { get; }
         public string Value { get; }
         public string NormalizedValue { get; }
+        public bool IsDeleted { get; private set; }
 
         private Identifier(IdentifierType type, string value, string normalizedValue)
         {
@@ -26,5 +27,10 @@ namespace ControlHub.Domain.Accounts.ValueObjects
         }
 
         public override string ToString() => $"{Type}:{NormalizedValue}";
+
+        public void Delete()
+        {
+            IsDeleted = true;
+        }
     }
 }

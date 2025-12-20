@@ -82,7 +82,7 @@ namespace ControlHub.Application.Accounts.Commands.ResetPassword
             }
 
             var pass = Password.Create(request.Password, _passwordHasher);
-            if (pass == null)
+            if (pass.IsFailure)
             {
                 _logger.LogError("{Code}: {Message} for AccountId {AccountId}",
                     AccountLogs.ResetPassword_PasswordHashFailed.Code,
@@ -92,7 +92,7 @@ namespace ControlHub.Application.Accounts.Commands.ResetPassword
                 return Result.Failure(AccountErrors.PasswordHashFailed);
             }
 
-            acc.UpdatePassword(pass);
+            acc.UpdatePassword(pass.Value);
             await _uow.CommitAsync();
 
             _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}",

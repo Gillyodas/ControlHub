@@ -1,5 +1,8 @@
-﻿using ControlHub.Domain.Accounts.Interfaces.Security;
+﻿using System.Text.RegularExpressions;
+using ControlHub.Domain.Accounts.Interfaces.Security;
 using ControlHub.Domain.Common;
+using ControlHub.SharedKernel.Accounts;
+using ControlHub.SharedKernel.Results;
 
 namespace ControlHub.Domain.Accounts.ValueObjects
 {
@@ -16,14 +19,36 @@ namespace ControlHub.Domain.Accounts.ValueObjects
 
         public static Password From(byte[] hash, byte[] salt) => new(hash, salt);
 
-        public static Password? Create(string passStr, IPasswordHasher passwordHasher)
+        public static Result<Password> Create(string passStr, IPasswordHasher passwordHasher)
         {
+            if (Password.IsWeak(passStr))
+            {
+                return Result<Password>.Failure(AccountErrors.PasswordIsWeak);
+            }
             var pass = passwordHasher.Hash(passStr);
 
             if (!pass.IsValid())
-                return null;
+                return Result<Password>.Failure(AccountErrors.PasswordHashFailed);
 
-            return pass;
+            return Result<Password>.Success(pass);
+        }
+
+        public static bool IsWeak(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+                return true;
+
+            if (password.Length < 8) return true;
+
+            if (!Regex.IsMatch(password, @"[a-z]")) return true;
+
+            if (!Regex.IsMatch(password, @"[A-Z]")) return true;
+
+            if (!Regex.IsMatch(password, @"[0-9]")) return true;
+
+            if (!Regex.IsMatch(password, @"[\W_]")) return true;
+
+            return false;
         }
 
         protected override IEnumerable<object> GetEqualityComponents()

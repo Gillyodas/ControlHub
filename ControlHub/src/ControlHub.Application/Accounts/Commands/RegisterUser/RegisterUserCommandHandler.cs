@@ -3,6 +3,7 @@ using ControlHub.Application.Accounts.Interfaces;
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.SharedKernel.Accounts;
+using ControlHub.SharedKernel.Common.Errors;
 using ControlHub.SharedKernel.Results;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -53,7 +54,13 @@ namespace ControlHub.Application.Accounts.Commands.RegisterUser
             }
 
             var accId = Guid.NewGuid();
-            var userRoleId = Guid.Parse(_config["RoleSettings:UserRoleId"]);
+
+            var roleIdString = _config["RoleSettings:UserRoleId"];
+            if (!Guid.TryParse(roleIdString, out var userRoleId))
+            {
+                _logger.LogError("Invalid User Role ID configuration: {Value}", roleIdString);
+                return Result<Guid>.Failure(CommonErrors.SystemConfigurationError);
+            }
 
             var accountResult = _accountFactory.CreateWithUserAndIdentifier(
                 accId,

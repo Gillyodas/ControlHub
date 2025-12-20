@@ -9,12 +9,12 @@ namespace ControlHub.Infrastructure.Tokens.Repositories
 {
     public class TokenRepository : ITokenRepository
     {
-        private readonly AppDbContext _context;
+        private readonly AppDbContext _db;
         private readonly ILogger<TokenRepository> _logger;
 
-        public TokenRepository(AppDbContext context, ILogger<TokenRepository> logger)
+        public TokenRepository(AppDbContext db, ILogger<TokenRepository> logger)
         {
-            _context = context;
+            _db = db;
             _logger = logger;
         }
 
@@ -22,7 +22,7 @@ namespace ControlHub.Infrastructure.Tokens.Repositories
         {
             try
             {
-                await _context.Tokens.AddAsync(token, cancellationToken);
+                await _db.Tokens.AddAsync(token, cancellationToken);
             }
             catch (DbUpdateException ex)
             {
@@ -36,11 +36,21 @@ namespace ControlHub.Infrastructure.Tokens.Repositories
             }
         }
 
+        public async Task<Token?> GetByIdAsync(Guid tokenId, CancellationToken cancellationToken)
+        {
+            return await _db.Tokens.Where(t => t.Id == tokenId).SingleOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<Token>> GetTokensByAccountIdAsync(Guid accId, CancellationToken cancellationToken)
+        {
+            return await _db.Tokens.Where(t => t.AccountId == accId).ToListAsync(cancellationToken);
+        }
+
         public async Task SaveChangesAsync(CancellationToken cancellationToken)
         {
             try
             {
-                await _context.SaveChangesAsync(cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateConcurrencyException ex)
             {

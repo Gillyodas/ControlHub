@@ -1,29 +1,52 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
+using ControlHub.Infrastructure.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging; // Use ILogger
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace ControlHub.Infrastructure.Tokens
 {
-    // Lớp này sẽ tự động được gọi bởi AddJwtBearer
-    public class ConfigureJwtBearerOptions : IConfigureOptions<JwtBearerOptions>
+    // ⚠️ CRITICAL: Must be IConfigureNamedOptions to support named schemes like "Bearer"
+    public class ConfigureJwtBearerOptions : IConfigureNamedOptions<JwtBearerOptions>
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<ConfigureJwtBearerOptions> _logger;
 
-        public ConfigureJwtBearerOptions(IConfiguration configuration)
+        public ConfigureJwtBearerOptions(IConfiguration configuration, ILogger<ConfigureJwtBearerOptions> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
+        // 1. This method is called by the framework for Named Options
+        public void Configure(string? name, JwtBearerOptions options)
+        {
+            // Only configure if the scheme matches "Bearer" (JwtBearerDefaults.AuthenticationScheme)
+            // or if name is null (global default)
+            if (string.IsNullOrEmpty(name) || name == JwtBearerDefaults.AuthenticationScheme)
+            {
+                Configure(options);
+            }
+        }
+
+        // 2. Main configuration logic
         public void Configure(JwtBearerOptions options)
         {
-            string issuer = _configuration["Jwt:Issuer"]
-                ?? throw new InvalidOperationException("Jwt:Issuer is missing.");
-            string audience = _configuration["Jwt:Audience"]
-                ?? throw new InvalidOperationException("Jwt:Audience is missing.");
-            string key = _configuration["Jwt:Key"]
-                ?? throw new InvalidOperationException("Jwt:Key is missing.");
+            var issuer = _configuration["Jwt:Issuer"];
+            var audience = _configuration["Jwt:Audience"];
+            var key = _configuration["Jwt:Key"];
+
+            // Fail Fast: Check for missing config immediately to avoid cryptic "Signature validation failed" errors later
+            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience))
+            {
+                _logger.LogError("❌ [JWT Config] Missing configuration in appsettings.json. Check Jwt:Issuer, Jwt:Audience, Jwt:Key.");
+                throw new InvalidOperationException("JWT Configuration is missing.");
+            }
+
+            _logger.LogInformation("🔐 [JWT Config] Successfully loaded. Issuer: {Issuer}", issuer);
 
             options.TokenValidationParameters = new TokenValidationParameters
             {

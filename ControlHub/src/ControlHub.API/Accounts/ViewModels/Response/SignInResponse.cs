@@ -2,10 +2,10 @@
 {
     public class SignInResponse
     {
-        public Guid accountId { get; set; }
-        public string username { get; set; } = null!;
-        public string accessToken { get; set; } = null!;
-        public string refreshToken { get; set; } = null!;
-        public string? message { get; set; }
+        public Guid AccountId { get; set; }
+        public string Username { get; set; } = null!;
+        public string AccessToken { get; set; } = null!;
+        public string RefreshToken { get; set; } = null!;
+        public string? Message { get; set; }
     }
 }

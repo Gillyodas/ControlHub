@@ -6,5 +6,7 @@ namespace ControlHub.Application.Tokens.Interfaces.Repositories
     {
         Task AddAsync(Token token, CancellationToken cancellationToken);
         Task SaveChangesAsync(CancellationToken cancellationToken);
+        Task<Token?> GetByIdAsync(Guid tokenId, CancellationToken cancellationToken);
+        Task<IEnumerable<Token>> GetTokensByAccountIdAsync(Guid accId, CancellationToken cancellationToken);
     }
 }

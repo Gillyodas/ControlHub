@@ -1,7 +1,8 @@
-﻿using ControlHub.API.Roles.ViewModels.Requests;
+﻿using ControlHub.API.Controllers; // BaseApiController
+using ControlHub.API.Roles.ViewModels.Requests;
 using ControlHub.API.Roles.ViewModels.Responses;
 using ControlHub.Application.Roles.Commands.CreateRoles;
-using ControlHub.Application.Roles.Commands.SetRolePermissions;
+using ControlHub.Application.Roles.Commands.SetRolePermissions; // Đổi tên namespace nếu bạn đã đổi tên command thành AddPermissionsForRole
 using ControlHub.Domain.Permissions;
 using ControlHub.Domain.Roles;
 using ControlHub.SharedKernel.Results;
@@ -13,30 +14,27 @@ namespace ControlHub.API.Roles
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class RoleController : ControllerBase
+    public class RoleController : BaseApiController
     {
-        private readonly IMediator _mediator;
-        public RoleController(IMediator mediator)
+        public RoleController(IMediator mediator) : base(mediator)
         {
-            _mediator = mediator;
         }
 
-        [AllowAnonymous]
-        //[Authorize(Policy = "Permission:role.add_permissions")]
+        [Authorize(Policy = "Permission:role.add_permissions")]
         [HttpPost("update")]
+        [ProducesResponseType(typeof(AddPermissonsForRoleResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> AddPermissionsForRole([FromBody] AddPermissonsForRoleRequest request, CancellationToken cancellationToken)
         {
             var command = new AddPermissonsForRoleCommand(request.RoleId, request.PermissionIds, cancellationToken);
-            var result = await _mediator.Send(command, cancellationToken);
+            var result = await Mediator.Send(command, cancellationToken);
 
             if (result.IsFailure)
             {
-                return BadRequest(new AddPermissonsForRoleResponse
-                {
-                    Message = result.Error.Message
-                });
+                return HandleFailure(result);
             }
 
+            // Xử lý Partial Result
             if (result is Result<PartialResult<Permission, string>> typedResult)
             {
                 var summary = typedResult.Value;
@@ -44,39 +42,34 @@ namespace ControlHub.API.Roles
                 {
                     Message = summary.Failures.Any()
                         ? "Partial success: some permissions failed to add."
-                        : "All permissions add successfully.",
-                    SuccessCount = summary.Successes.Count(),
-                    FailureCount = summary.Failures.Count(),
-                    FailedRoles = summary.Failures
+                        : "All permissions added successfully.",
+                    SuccessCount = summary.Successes.Count, // Count thay vì Count()
+                    FailureCount = summary.Failures.Count,
+                    FailedRoles = summary.Failures // Kiểm tra lại tên property trong Response DTO, có thể nên là FailedPermissions
                 });
             }
 
-            // fallback – nếu handler chỉ trả về Result.Success()
+            // Fallback
             return Ok(new AddPermissonsForRoleResponse
             {
-                Message = "All roles created successfully.",
+                Message = "Permissions updated successfully.",
                 SuccessCount = request.PermissionIds.Count(),
                 FailureCount = 0
             });
         }
 
-        //[Authorize(Policy = "Permission:role.create")]
-        [AllowAnonymous]
+        [Authorize(Policy = "Permission:role.create")]
         [HttpPost("roles")]
+        [ProducesResponseType(typeof(CreateRolesResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateRoles([FromBody] CreateRolesRequest request, CancellationToken ct)
         {
             var command = new CreateRolesCommand(request.Roles);
-            var result = await _mediator.Send(command, ct);
+            var result = await Mediator.Send(command, ct);
 
             if (result.IsFailure)
             {
-
-                return BadRequest(new CreateRolesResponse
-                {
-                    Message = result.Error.Message,
-                    SuccessCount = 0,
-                    FailureCount = request.Roles.Count()
-                });
+                return HandleFailure(result);
             }
 
             if (result is Result<PartialResult<Role, string>> typedResult)
@@ -87,13 +80,12 @@ namespace ControlHub.API.Roles
                     Message = summary.Failures.Any()
                         ? "Partial success: some roles failed to create."
                         : "All roles created successfully.",
-                    SuccessCount = summary.Successes.Count(),
-                    FailureCount = summary.Failures.Count(),
+                    SuccessCount = summary.Successes.Count,
+                    FailureCount = summary.Failures.Count,
                     FailedRoles = summary.Failures
                 });
             }
 
-            // fallback – nếu handler chỉ trả về Result.Success()
             return Ok(new CreateRolesResponse
             {
                 Message = "All roles created successfully.",

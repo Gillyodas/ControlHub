@@ -70,9 +70,12 @@ namespace ControlHub.Infrastructure.Accounts
                 ib.Property(i => i.Type).IsRequired();
                 ib.Property(i => i.Value).IsRequired().HasMaxLength(300);
                 ib.Property(i => i.NormalizedValue).IsRequired().HasMaxLength(300);
+                ib.Property(i => i.IsDeleted).HasDefaultValue(false);
 
                 // Tạo Unique Index trên bảng phụ
-                ib.HasIndex(i => new { i.Type, i.NormalizedValue }).IsUnique();
+                ib.HasIndex(i => new { i.Type, i.NormalizedValue })
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
             });
 
             // Access Mode cho Identifiers

@@ -1,61 +1,89 @@
 ﻿using System.Security.Claims;
-using ControlHub.Application.Permissions.Interfaces;
-using ControlHub.Application.Tokens;
+using ControlHub.Application.Roles.Interfaces.Repositories;
+using ControlHub.Application.Tokens; // Chứa AppClaimTypes
+using ControlHub.Domain.Roles;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace ControlHub.Infrastructure.Authorization.Permissions
 {
     public class PermissionClaimsTransformation : IClaimsTransformation
     {
-        private readonly IPermissionService _permissionService;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<PermissionClaimsTransformation> _logger;
 
         public PermissionClaimsTransformation(
-            IPermissionService permissionService,
+            IServiceProvider serviceProvider,
             ILogger<PermissionClaimsTransformation> logger)
         {
-            _permissionService = permissionService;
+            _serviceProvider = serviceProvider;
             _logger = logger;
         }
 
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
         {
-            // *** LOG CHỦ ĐỘNG ***
-            _logger.LogWarning("--- PermissionClaimsTransformation ĐANG CHẠY ---");
-
+            // 1. Kiểm tra xác thực cơ bản
             if (principal.Identity?.IsAuthenticated != true)
             {
-                _logger.LogWarning("--- User chưa được xác thực, bỏ qua Transform-- - ");
+                // User chưa đăng nhập, không cần làm gì
                 return principal;
             }
 
-            var roleIdClaim = principal.FindFirst(AppClaimTypes.Role);
+            // 2. Kiểm tra xem đã transform chưa (tránh chạy lặp lại)
+            if (principal.HasClaim(c => c.Type == "Permission"))
+            {
+                return principal;
+            }
+
+            // 3. Lấy RoleId từ Claim gốc
+            var roleIdClaim = principal.FindFirst(AppClaimTypes.Role) ?? principal.FindFirst(ClaimTypes.Role);
             if (roleIdClaim == null || !Guid.TryParse(roleIdClaim.Value, out Guid roleId))
             {
-                _logger.LogWarning("--- Không tìm thấy RoleId claim, bỏ qua Transform ---");
+                _logger.LogWarning("--- PermissionClaimsTransformation: Không tìm thấy RoleId hợp lệ trong token. Bỏ qua. ---");
                 return principal;
             }
 
-            _logger.LogInformation("--- Đang lấy permission cho RoleId: {RoleId} ---", roleId);
-            var permissions = await _permissionService.GetPermissionsForRoleIdAsync(roleId, CancellationToken.None);
+            // 4. Truy xuất DB để lấy Permissions
+            using var scope = _serviceProvider.CreateScope();
+            var roleQueries = scope.ServiceProvider.GetRequiredService<IRoleQueries>();
 
-            if (!permissions.Any())
+            var role = await roleQueries.GetByIdAsync(roleId, CancellationToken.None);
+
+            // Case: Role không tồn tại (đã bị xóa?)
+            if (role == null)
             {
-                _logger.LogWarning("--- RoleId: {RoleId} không có permission nào, bỏ qua Transform ---", roleId);
+                _logger.LogWarning("--- PermissionClaimsTransformation: RoleId {RoleId} không tồn tại trong DB. ---", roleId);
                 return principal;
             }
 
-            var permissionsIdentity = new ClaimsIdentity();
-            foreach (var permissionName in permissions)
+            // Case: Role không có quyền nào
+            if (!role.Permissions.Any())
             {
-                permissionsIdentity.AddClaim(new Claim(AppClaimTypes.Permission, permissionName));
+                _logger.LogInformation("--- PermissionClaimsTransformation: Role {RoleName} không có permission nào. ---", role.Name);
+                return principal;
             }
 
-            principal.AddIdentity(permissionsIdentity);
+            // 5. Clone và thêm Claims
+            // Lưu ý: Phải Clone identity, không sửa trực tiếp trên principal gốc để tránh side-effect
+            var cloneIdentity = ((ClaimsIdentity)principal.Identity).Clone();
 
-            _logger.LogInformation("--- ĐÃ THÊM {Count} PERMISSIONS CHO USER ---", permissions.Count());
-            return principal;
+            var permissionCodes = new List<string>();
+
+            foreach (var permission in role.Permissions)
+            {
+                cloneIdentity.AddClaim(new Claim("Permission", permission.Code));
+                permissionCodes.Add(permission.Code);
+            }
+
+            // 6. Log kết quả (Giống PermissionService cũ)
+            _logger.LogInformation(
+                "--- PermissionClaimsTransformation: Đã thêm {Count} quyền cho Role {RoleName}. Danh sách: {Permissions} ---",
+                role.Permissions.Count,
+                role.Name,
+                string.Join(", ", permissionCodes));
+
+            return new ClaimsPrincipal(cloneIdentity);
         }
     }
 }

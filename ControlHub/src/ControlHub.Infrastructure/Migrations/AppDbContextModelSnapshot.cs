@@ -17,6 +17,7 @@ namespace ControlHub.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("ControlHub")
                 .HasAnnotation("ProductVersion", "8.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
@@ -41,7 +42,7 @@ namespace ControlHub.Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Accounts", (string)null);
+                    b.ToTable("Accounts", "ControlHub");
                 });
 
             modelBuilder.Entity("ControlHub.Domain.Outboxs.OutboxMessage", b =>
@@ -76,7 +77,7 @@ namespace ControlHub.Infrastructure.Migrations
                     b.HasIndex("Processed")
                         .HasFilter("[Processed] = 0");
 
-                    b.ToTable("OutboxMessages", (string)null);
+                    b.ToTable("OutboxMessages", "ControlHub");
                 });
 
             modelBuilder.Entity("ControlHub.Domain.Permissions.Permission", b =>
@@ -100,7 +101,7 @@ namespace ControlHub.Infrastructure.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("Permissions", (string)null);
+                    b.ToTable("Permissions", "ControlHub");
                 });
 
             modelBuilder.Entity("ControlHub.Domain.Roles.Role", b =>
@@ -124,7 +125,7 @@ namespace ControlHub.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles", "ControlHub");
                 });
 
             modelBuilder.Entity("ControlHub.Domain.Tokens.Token", b =>
@@ -159,7 +160,7 @@ namespace ControlHub.Infrastructure.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("Tokens");
+                    b.ToTable("Tokens", "ControlHub");
                 });
 
             modelBuilder.Entity("ControlHub.Domain.Users.User", b =>
@@ -183,7 +184,7 @@ namespace ControlHub.Infrastructure.Migrations
                     b.HasIndex("AccId")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users", "ControlHub");
                 });
 
             modelBuilder.Entity("ControlHub.Infrastructure.RolePermissions.RolePermissionEntity", b =>
@@ -198,7 +199,7 @@ namespace ControlHub.Infrastructure.Migrations
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("RolePermissions", (string)null);
+                    b.ToTable("RolePermissions", "ControlHub");
                 });
 
             modelBuilder.Entity("ControlHub.Domain.Accounts.Account", b =>
@@ -220,6 +221,11 @@ namespace ControlHub.Infrastructure.Migrations
 
                             SqlServerPropertyBuilderExtensions.UseIdentityColumn(b1.Property<int>("Id"));
 
+                            b1.Property<bool>("IsDeleted")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("bit")
+                                .HasDefaultValue(false);
+
                             b1.Property<string>("NormalizedValue")
                                 .IsRequired()
                                 .HasMaxLength(300)
@@ -236,9 +242,10 @@ namespace ControlHub.Infrastructure.Migrations
                             b1.HasKey("AccountId", "Id");
 
                             b1.HasIndex("Type", "NormalizedValue")
-                                .IsUnique();
+                                .IsUnique()
+                                .HasFilter("[IsDeleted] = 0");
 
-                            b1.ToTable("AccountIdentifiers", (string)null);
+                            b1.ToTable("AccountIdentifiers", "ControlHub");
 
                             b1.WithOwner()
                                 .HasForeignKey("AccountId");
@@ -261,7 +268,7 @@ namespace ControlHub.Infrastructure.Migrations
 
                             b1.HasKey("AccountId");
 
-                            b1.ToTable("Accounts");
+                            b1.ToTable("Accounts", "ControlHub");
 
                             b1.WithOwner()
                                 .HasForeignKey("AccountId");

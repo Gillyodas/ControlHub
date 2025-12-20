@@ -100,7 +100,16 @@ namespace ControlHub.Domain.Accounts
         {
             IsDeleted = true;
             User?.Delete();
-            // Logic xóa tokens hoặc identifiers nếu cần
+
+            foreach(var token in _tokens)
+            {
+                token.Revoke();
+            }
+
+            foreach(var ident in _identifiers)
+            {
+                ident.Delete();
+            }
         }
 
         public Result UpdatePassword(Password newPass)

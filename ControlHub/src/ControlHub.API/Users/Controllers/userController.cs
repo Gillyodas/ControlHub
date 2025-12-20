@@ -1,4 +1,8 @@
-﻿using ControlHub.API.Users.ViewModels.Request;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using ControlHub.API.Controllers;
+using ControlHub.API.Users.ViewModels.Request;
 using ControlHub.API.Users.ViewModels.Response;
 using ControlHub.Application.Users.Commands.UpdateUsername;
 using MediatR;
@@ -9,26 +13,29 @@ namespace ControlHub.API.Users.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class userController : Controller
+    public class UserController : BaseApiController
     {
-        private readonly IMediator _mediator;
-        public userController(IMediator mediator)
+        public UserController(IMediator mediator) : base(mediator)
         {
-            _mediator = mediator;
         }
 
         [Authorize]
         [HttpPatch("username/{id}")]
+        [ProducesResponseType(typeof(UpdateUsernameResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateUsername(Guid id, [FromBody] UpdateUsernameRequest request, CancellationToken cancellationToken)
         {
             var command = new UpdateUsernameCommand(id, request.Username);
 
-            var result = await _mediator.Send(command, cancellationToken);
+            var result = await Mediator.Send(command, cancellationToken);
 
-            if (!result.IsSuccess)
-                return BadRequest(new UpdateUsernameResponse { message = result.Error.Message });
+            if (result.IsFailure)
+            {
+                return HandleFailure(result);
+            }
 
-            return Ok(new UpdateUsernameResponse { username = result.Value });
+            return Ok(new UpdateUsernameResponse { Username = result.Value }); // Sửa tên property thành PascalCase nếu DTO đã sửa
         }
     }
 }

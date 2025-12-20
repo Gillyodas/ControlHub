@@ -1,5 +1,6 @@
 ﻿using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Domain.Accounts;
+using ControlHub.Domain.Accounts.Enums;
 using ControlHub.Infrastructure.Persistence;
 using ControlHub.SharedKernel.Common.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,13 @@ namespace ControlHub.Infrastructure.Accounts.Repositories
         {
             return await _db.Accounts
                 .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        }
+
+        public async Task<Account?> GetByIdentifierWithoutUserAsync(IdentifierType identifierType, string normalizedValue, CancellationToken cancellationToken)
+        {
+            return await _db.Accounts
+                .Where(a => a.Identifiers.Any(i => i.Type == identifierType && i.NormalizedValue == normalizedValue))
+                .FirstOrDefaultAsync(cancellationToken);
         }
     }
 }
