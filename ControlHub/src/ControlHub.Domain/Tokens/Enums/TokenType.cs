@@ -5,6 +5,7 @@
         ResetPassword = 1,
         VerifyEmail = 2,
         RefreshToken = 3,
-        AccessToken = 4
+        AccessToken = 4,
+        RegisterUser = 5
     }
 }

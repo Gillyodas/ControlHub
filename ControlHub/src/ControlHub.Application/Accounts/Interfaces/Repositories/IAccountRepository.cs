@@ -1,4 +1,5 @@
 ﻿using ControlHub.Domain.Accounts;
+using ControlHub.Domain.Accounts.Enums;
 namespace ControlHub.Application.Accounts.Interfaces.Repositories
 {
     public interface IAccountRepository
@@ -6,6 +7,10 @@ namespace ControlHub.Application.Accounts.Interfaces.Repositories
         Task AddAsync(Account acc, CancellationToken cancellationToken);
         Task<Account?> GetWithoutUserByIdAsync(
             Guid id,
+            CancellationToken cancellationToken);
+        Task<Account?> GetByIdentifierWithoutUserAsync(
+            IdentifierType identifierType,
+            string normalizedValue,
             CancellationToken cancellationToken);
     }
 }

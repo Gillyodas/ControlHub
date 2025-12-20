@@ -1,11 +1,10 @@
 ﻿using ControlHub.Application.Accounts.Interfaces;
 using ControlHub.Domain.Accounts;
 using ControlHub.Domain.Accounts.Enums;
-using ControlHub.Domain.Accounts.Identifiers.Interfaces;
+using ControlHub.Domain.Accounts.Identifiers.Services;
 using ControlHub.Domain.Accounts.Interfaces.Security;
 using ControlHub.Domain.Accounts.ValueObjects;
 using ControlHub.Domain.Users;
-using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;
 
 namespace ControlHub.Infrastructure.Accounts.Factories
@@ -13,14 +12,14 @@ namespace ControlHub.Infrastructure.Accounts.Factories
     public class AccountFactory : IAccountFactory
     {
         private readonly IPasswordHasher _passwordHasher;
-        private readonly IIdentifierValidatorFactory _identifierValidatorFactory;
+        private readonly IdentifierFactory _identifierFactory;
 
         public AccountFactory(
             IPasswordHasher passwordHasher,
-            IIdentifierValidatorFactory identifierValidatorFactory)
+            IdentifierFactory identifierFactory)
         {
             _passwordHasher = passwordHasher;
-            _identifierValidatorFactory = identifierValidatorFactory;
+            _identifierFactory = identifierFactory;
         }
 
         public Result<Maybe<Account>> CreateWithUserAndIdentifier(
@@ -35,18 +34,12 @@ namespace ControlHub.Infrastructure.Accounts.Factories
 
             var account = Account.Create(accountId, pass, roleId);
 
-            var validator = _identifierValidatorFactory.Get(identifierType);
-            if (validator == null)
-                return Result<Maybe<Account>>.Failure(AccountErrors.UnsupportedIdentifierType);
+            var result = _identifierFactory.Create(identifierType, identifierValue);
 
-            var (isValid, normalized, error) = validator.ValidateAndNormalize(identifierValue);
+            if (result.IsFailure)
+                return Result<Maybe<Account>>.Failure(result.Error);
 
-            if (!isValid)
-                return Result<Maybe<Account>>.Failure(error);
-
-            var ident = Identifier.Create(identifierType, identifierValue, normalized);
-
-            var addResult = account.AddIdentifier(ident);
+            var addResult = account.AddIdentifier(result.Value);
             if (!addResult.IsSuccess)
                 return Result<Maybe<Account>>.Failure(addResult.Error);
 

@@ -1,19 +1,31 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
 namespace ControlHub.Infrastructure.Persistence
 {
     public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
     {
+        // Design-time factory phải có constructor rỗng mặc định
         public AppDbContext CreateDbContext(string[] args)
         {
-            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            // 1. Tự build Configuration thủ công (vì không có DI lúc design-time)
+            IConfigurationRoot configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddJsonFile($"appsettings.Development.json", optional: true)
+                .Build();
 
-            // Dùng connection string tạm cho migration
-            // Khi chạy runtime, API sẽ override bằng appsettings.json
-            optionsBuilder.UseSqlServer("Server=localhost;Database=ControlHub;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
+            var builder = new DbContextOptionsBuilder<AppDbContext>();
 
-            return new AppDbContext(optionsBuilder.Options);
+            // 2. Lấy connection string
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+            // 3. Cấu hình DbContext
+            builder.UseSqlServer(connectionString, b =>
+                b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName));
+
+            return new AppDbContext(builder.Options);
         }
     }
 }

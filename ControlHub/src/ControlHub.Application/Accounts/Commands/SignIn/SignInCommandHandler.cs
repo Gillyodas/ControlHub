@@ -4,7 +4,7 @@ using ControlHub.Application.Common.Persistence;
 using ControlHub.Application.Tokens.Interfaces;
 using ControlHub.Application.Tokens.Interfaces.Generate;
 using ControlHub.Application.Tokens.Interfaces.Repositories;
-using ControlHub.Domain.Accounts.Identifiers.Interfaces;
+using ControlHub.Domain.Accounts.Identifiers.Services;
 using ControlHub.Domain.Accounts.Interfaces.Security;
 using ControlHub.Domain.Tokens.Enums;
 using ControlHub.SharedKernel.Accounts;
@@ -19,7 +19,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
     {
         private readonly ILogger<SignInCommandHandler> _logger;
         private readonly IAccountQueries _accountQueries;
-        private readonly IIdentifierValidatorFactory _identifierValidatorFactory;
+        private readonly IdentifierFactory _identifierFactory;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IAccessTokenGenerator _accessTokenGenerator;
         private readonly IRefreshTokenGenerator _refreshTokenGenerator;
@@ -30,7 +30,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
         public SignInCommandHandler(
             ILogger<SignInCommandHandler> logger,
             IAccountQueries accountQueries,
-            IIdentifierValidatorFactory identifierValidatorFactory,
+            IdentifierFactory identifierFactory,
             IPasswordHasher passwordHasher,
             IAccessTokenGenerator accessTokenGenerator,
             IRefreshTokenGenerator refreshTokenGenerator,
@@ -40,7 +40,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
         {
             _logger = logger;
             _accountQueries = accountQueries;
-            _identifierValidatorFactory = identifierValidatorFactory;
+            _identifierFactory = identifierFactory;
             _passwordHasher = passwordHasher;
             _accessTokenGenerator = accessTokenGenerator;
             _refreshTokenGenerator = refreshTokenGenerator;
@@ -56,28 +56,18 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
                 AccountLogs.SignIn_Started.Message,
                 request.Value);
 
-            var validator = _identifierValidatorFactory.Get(request.Type);
-            if (validator == null)
-            {
-                _logger.LogWarning("{Code}: {Message} for Identifier {Value}",
-                    AccountLogs.SignIn_InvalidIdentifier.Code,
-                    AccountLogs.SignIn_InvalidIdentifier.Message,
-                    request.Value);
-                return Result<SignInDTO>.Failure(AccountErrors.UnsupportedIdentifierType);
-            }
-
-            var (isValid, normalized, error) = validator.ValidateAndNormalize(request.Value);
-            if (!isValid)
+            var result = _identifierFactory.Create(request.Type, request.Value);
+            if (result.IsFailure)
             {
                 _logger.LogWarning("{Code}: {Message} for Identifier {Ident}. Error: {Error}",
                     AccountLogs.SignIn_InvalidIdentifier.Code,
                     AccountLogs.SignIn_InvalidIdentifier.Message,
-                    request.Value, error);
-                return Result<SignInDTO>.Failure(error);
+                    request.Value, result.Error);
+                return Result<SignInDTO>.Failure(result.Error);
             }
 
-            var account = await _accountQueries.GetByIdentifierAsync(request.Type, normalized, cancellationToken);
-            if (account is null)
+            var account = await _accountQueries.GetByIdentifierAsync(request.Type, result.Value.NormalizedValue, cancellationToken);
+            if (account is null || account.IsDeleted == true || account.IsActive == false)
             {
                 _logger.LogWarning("{Code}: {Message} for Identifier {Ident}",
                     AccountLogs.SignIn_AccountNotFound.Code,

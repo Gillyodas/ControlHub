@@ -1,7 +1,7 @@
-﻿using ControlHub.API.Permissions.ViewModels.Requests;
+﻿using ControlHub.API.Controllers;
+using ControlHub.API.Permissions.ViewModels.Requests;
 using ControlHub.API.Permissions.ViewModels.Responses;
 using ControlHub.Application.Permissions.Commands.CreatePermissions;
-using ControlHub.Application.Permissions.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,27 +10,26 @@ namespace ControlHub.API.Permissions
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PermissionController : ControllerBase
+    public class PermissionController : BaseApiController
     {
-        private readonly IMediator _mediator;
-        private readonly IPermissionService _permissionService;
-        public PermissionController(IMediator mediator, IPermissionService permissionService)
+        public PermissionController(IMediator mediator) : base(mediator)
         {
-            _mediator = mediator;
-            _permissionService = permissionService;
         }
-        //[Authorize(Policy = "Permission:permission.create")]
-        [AllowAnonymous]
+
+        [Authorize(Policy = "Permission:permission.create")]
         [HttpPost("permissions")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> CreatePermissions([FromBody] CreatePermissionsRequest request, CancellationToken cancellationToken)
         {
             var command = new CreatePermissionsCommand(request.Permissions);
 
-            var result = await _mediator.Send(command);
+            var result = await Mediator.Send(command, cancellationToken); // Truyền cancellationToken
 
             if (result.IsFailure)
             {
-                return BadRequest(new CreatePermissionsResponse { Message = result.Error.Message });
+                return HandleFailure(result);
             }
 
             return Ok();

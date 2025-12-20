@@ -68,6 +68,18 @@ namespace ControlHub.SharedKernel.Accounts
         public static readonly LogCode ChangePassword_UpdateFailed =
             new("Account.ChangePassword.UpdateFailed", "Failed to update password");
 
+        public static readonly LogCode ChangePassword_AccountDeleted =
+            new("Account.ChangePassword.AccountDeleted", "Attempt to change password for a deleted account");
+
+        public static readonly LogCode ChangePassword_AccountDisabled =
+            new("Account.ChangePassword.AccountDisabled", "Attempt to change password for a disabled account");
+
+        public static readonly LogCode ChangePassword_PasswordHashFailed =
+            new("Account.ChangePassword.PasswordHashFailed", "Password hashing failed.");
+
+        public static readonly LogCode ChangePassword_PasswordSameAsOld =
+            new("Account.ChangePassword.PasswordSameAsOld", "New password must not be the same as the current password.");
+
         // ForgotPassword
         public static readonly LogCode ForgotPassword_Started =
             new("Account.ForgotPassword.Started", "Starting forgot password flow");
@@ -80,6 +92,9 @@ namespace ControlHub.SharedKernel.Accounts
 
         public static readonly LogCode ForgotPassword_TokenGenerated =
             new("Account.ForgotPassword.TokenGenerated", "Password reset token generated");
+
+        public static readonly LogCode ForgotPassword_TokenGeneratedFailed =
+            new("Account.ForgotPassword.TokenGeneratedFailed", "Password reset token generated is failed");
 
         public static readonly LogCode ForgotPassword_NotificationSent =
             new("Account.ForgotPassword.NotificationSent", "Password reset notification sent successfully");
@@ -146,5 +161,27 @@ namespace ControlHub.SharedKernel.Accounts
 
         public static readonly LogCode SignOut_Success =
             new("Account.SignOut.Success", "User signed out successfully");
+
+        //Add Identifier
+        public static readonly LogCode AddIdentifier_Started =
+            new("Account.AddIdentifier.Started", "Starting process to add new identifier to account");
+
+        public static readonly LogCode AddIdentifier_AccountNotFound =
+            new("Account.AddIdentifier.NotFound", "Account not found for identifier addition");
+
+        public static readonly LogCode AddIdentifier_AccountDeleted =
+            new("Account.AddIdentifier.Deleted", "Attempt to add identifier to a deleted account");
+
+        public static readonly LogCode AddIdentifier_AccountDisabled =
+            new("Account.AddIdentifier.Disabled", "Attempt to add identifier to a disabled account");
+
+        public static readonly LogCode AddIdentifier_InvalidFormat =
+            new("Account.AddIdentifier.InvalidFormat", "Identifier validation failed via Factory");
+
+        public static readonly LogCode AddIdentifier_FailedToAdd =
+            new("Account.AddIdentifier.Failed", "Domain rejected adding identifier (possibly duplicate in list)");
+
+        public static readonly LogCode AddIdentifier_Success =
+            new("Account.AddIdentifier.Success", "Identifier added to account successfully");
     }
 }

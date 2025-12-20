@@ -2,7 +2,7 @@
 {
     public class UpdateUsernameResponse
     {
-        public string? username { get; set; }
-        public string? message { get; set; }
+        public string? Username { get; set; }
+        public string? Message { get; set; }
     }
 }

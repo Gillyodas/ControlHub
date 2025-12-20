@@ -5,6 +5,7 @@ using ControlHub.Application.Common.Persistence;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Common.Errors;
 using ControlHub.SharedKernel.Common.Logs;
+using ControlHub.SharedKernel.Constants;
 using ControlHub.SharedKernel.Results;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -76,14 +77,21 @@ namespace ControlHub.Application.Accounts.Commands.RegisterSupperAdmin
             }
 
             var accId = Guid.NewGuid();
-            var userRoleId = Guid.Parse(_config["RoleSettings:SuperAdminRoleId"]);
+            var roleIdConfig = _config["RoleSettings:SuperAdminRoleId"];
+            Guid superAdminRoleId;
+            if (!Guid.TryParse(roleIdConfig, out superAdminRoleId))
+            {
+                // 2. Nếu Config thiếu hoặc sai -> Fallback về ID mặc định của thư viện
+                _logger.LogInformation("RoleSettings:SuperAdminRoleId is missing or invalid. Using Default ID.");
+                superAdminRoleId = ControlHubDefaults.Roles.SuperAdminId;
+            }
 
             var accountResult = _accountFactory.CreateWithUserAndIdentifier(
                 accId,
                 request.Value,
                 request.Type,
                 request.Password,
-                userRoleId);
+                superAdminRoleId);
 
             if (!accountResult.IsSuccess)
             {

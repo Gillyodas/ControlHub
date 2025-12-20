@@ -7,8 +7,8 @@ namespace ControlHub.Domain.Accounts.ValueObjects
     public sealed class Email : IEquatable<Email>
     {
         private static readonly Regex _emailRegex =
-            // tối thiểu 2 ký tự sau dấu chấm, chỉ cho phép a-z
-            new(@"^[^@\s]+@[^@\s]+\.[a-z]{2,}$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            new(@"^(\w+(?:[.+\-]\w+)*)@(\w+(?:[.-]\w+)*\.[a-z]{2,})$",
+                RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public string Value { get; }
 

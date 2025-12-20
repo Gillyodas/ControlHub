@@ -28,8 +28,8 @@ namespace ControlHub.SharedKernel.Accounts
         public static readonly Error PasswordRequired =
             new("Account.PasswordRequired", "Password cannot be empty.");
 
-        public static readonly Error PasswordTooShort =
-            new("Account.PasswordTooShort", "Password must be at least 8 characters long.");
+        public static readonly Error PasswordIsWeak =
+            new("Account.PasswordIsWeak", "Password is weak.");
 
         public static readonly Error PasswordMissingUppercase =
             new("Account.PasswordMissingUppercase", "Password must contain at least one uppercase letter.");
@@ -51,6 +51,9 @@ namespace ControlHub.SharedKernel.Accounts
 
         public static readonly Error PasswordIsNotValid =
             new("Account.PasswordIsNotValid", "Password is not valid.");
+
+        public static readonly Error PasswordTooShort =
+            new("Account.PasswordTooShort", "Password is too short.");
 
         public static readonly Error PasswordSameAsOld =
             new("Account.PasswordSameAsOld", "New password must not be the same as the current password.");
@@ -85,5 +88,7 @@ namespace ControlHub.SharedKernel.Accounts
         public static readonly Error RoleRequired =
             new("Account.RoleRequired", "Account required role");
 
+        public static readonly Error AccountDeleted = Error.Failure(
+        "Account.Deleted", "The account has been deleted and cannot perform this action.");
     }
 }
