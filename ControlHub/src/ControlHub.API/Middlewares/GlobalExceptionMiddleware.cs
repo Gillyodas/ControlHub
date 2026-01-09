@@ -32,6 +32,13 @@ public class GlobalExceptionMiddleware
                 throw;
             }
 
+            if (context.Response.HttpContext?.RequestServices == null)
+            {
+                _logger.LogWarning(ex, "HttpContext is disposed, cannot write response. Path: {Path}, TraceId: {TraceId}",
+                    context.Request.Path, context.TraceIdentifier);
+                throw;
+            }
+
             var (status, type, title, code) = MapExceptionToProblem(ex);
 
             _logger.LogError(ex,

@@ -45,28 +45,5 @@ namespace ControlHub.Infrastructure.Tokens.Repositories
         {
             return await _db.Tokens.Where(t => t.AccountId == accId).ToListAsync(cancellationToken);
         }
-
-        public async Task SaveChangesAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                await _db.SaveChangesAsync(cancellationToken);
-            }
-            catch (DbUpdateConcurrencyException ex)
-            {
-                _logger.LogError(ex, "Concurrency conflict during Token SaveChanges");
-                throw new RepositoryConcurrencyException("Concurrency conflict while saving tokens.", ex);
-            }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "Database update error during Token SaveChanges");
-                throw new RepositoryException("Database update error while saving tokens.", ex);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error during Token SaveChanges");
-                throw new RepositoryException("Unexpected error during token save operation.", ex);
-            }
-        }
     }
 }

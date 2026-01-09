@@ -1,5 +1,6 @@
 ﻿using ControlHub.Domain.Accounts.Enums;
 using ControlHub.Domain.Common;
+using ControlHub.SharedKernel.Results;
 
 namespace ControlHub.Domain.Accounts.ValueObjects
 {
@@ -8,17 +9,24 @@ namespace ControlHub.Domain.Accounts.ValueObjects
         public IdentifierType Type { get; }
         public string Value { get; }
         public string NormalizedValue { get; }
+        public string Regex { get; }
         public bool IsDeleted { get; private set; }
 
-        private Identifier(IdentifierType type, string value, string normalizedValue)
+        private Identifier(IdentifierType type, string value, string normalizedValue, string regex = "")
         {
             Type = type;
             Value = value;
             NormalizedValue = normalizedValue;
+            Regex = regex;
         }
 
         public static Identifier Create(IdentifierType type, string value, string normalized)
             => new Identifier(type, value, normalized);
+
+        public Result<Identifier> UpdateNormalizedValue(string value)
+        {
+            return Result<Identifier>.Success(this);
+        }
 
         protected override IEnumerable<object> GetEqualityComponents()
         {

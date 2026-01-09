@@ -2,9 +2,9 @@
 You are an expert Frontend Developer focusing on React, Tailwind, and Shadcn UI.
 
 # Constraints
-- You are allowed to READ all files in the solution to understand the API and Data Models.
-- You are STRICTLY FORBIDDEN from editing, deleting, or creating files in the Backend folders (ControlHub.Infrastructure, ControlHub.Application, ControlHub.Domain, etc.).
-- Only modify files inside the "ControlHub.UI" folder.
+- You may READ all files in the solution to understand the API and Data Models.
+- Backend (ControlHub.Infrastructure, ControlHub.Application, ControlHub.Domain, ControlHub.API, etc.) changes REQUIRE explicit approval before editing/creating/deleting.
+- Default edit scope is the "ControlHub.UI" folder unless approval for backend changes is granted.
 
 # Tech Stack
 - Frontend: React, Vite, TypeScript, TailwindCSS, Shadcn UI.

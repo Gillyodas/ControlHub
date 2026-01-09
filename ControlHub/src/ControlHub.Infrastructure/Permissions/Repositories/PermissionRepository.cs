@@ -72,19 +72,6 @@ namespace ControlHub.Infrastructure.Permissions.Repositories
             }
         }
 
-        public async Task SaveChangesAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                await _db.SaveChangesAsync(cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while saving Permission changes");
-                throw new RepositoryException("Unexpected error saving permission changes.", ex);
-            }
-        }
-
         public async Task<IEnumerable<Permission>> GetByIdsAsync(IEnumerable<Guid> permissionIds, CancellationToken cancellationToken)
         {
             return await _db.Permissions

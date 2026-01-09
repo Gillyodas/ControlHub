@@ -1,6 +1,6 @@
 "use client"
 
-import { LayoutDashboard, Users, ShieldCheck, Settings, ChevronLeft, ChevronRight, Code2 } from "lucide-react"
+import { LayoutDashboard, Users, ShieldCheck, Settings, ChevronLeft, ChevronRight, Code2, Fingerprint, Key } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -13,7 +13,9 @@ interface SidebarProps {
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: Users, label: "User Management", href: "/users" },
-  { icon: ShieldCheck, label: "Roles & Permissions", href: "/roles" },
+  { icon: ShieldCheck, label: "Roles", href: "/roles" },
+  { icon: Key, label: "Permissions", href: "/permissions" },
+  { icon: Fingerprint, label: "Identify", href: "/identify" },
   { icon: Code2, label: "API", href: "/apis" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]

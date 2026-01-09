@@ -63,16 +63,7 @@ namespace ControlHub.API
             builder.Services.AddControlHub(builder.Configuration);
 
             // =========================================================================
-            // 3. API DOCUMENTATION (Swagger)
-            // Swagger là công cụ của tầng API (Presentation). 
-            // Tuy nhiên, phần cấu hình Security Definition (Bearer) nên được gợi ý hoặc cung cấp sẵn.
-            // Ở đây giữ lại để App có thể tùy chỉnh Title/Version.
-            // =========================================================================
-
-            
-
-            // =========================================================================
-            // 4. BUILD & PIPELINE
+            // 3. BUILD & PIPELINE
             // =========================================================================
 
             var app = builder.Build();

@@ -129,7 +129,7 @@ namespace ControlHub.Application.Accounts.Commands.ForgotPassword
                 return Result.Failure(CommonErrors.SystemConfigurationError);
             }
 
-            var resetLink = $"{devBaseUrl}/reset-password?token={domainToken.Value}";
+            var resetLink = $"{devBaseUrl}/control-hub/reset-password?token={domainToken.Value}";
             var payload = new
             {
                 To = request.Value,

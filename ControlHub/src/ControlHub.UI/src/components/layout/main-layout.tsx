@@ -6,9 +6,11 @@ import { Header } from "@/components/dashboard/header"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
+import { useTokenRefresh } from "@/hooks/use-token-refresh"
 
 export function MainLayout() {
   const [collapsed, setCollapsed] = useState(false)
+  useTokenRefresh() // Auto-refresh tokens
 
   return (
     <div className="flex h-screen overflow-hidden bg-black">

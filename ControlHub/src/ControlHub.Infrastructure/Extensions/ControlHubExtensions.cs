@@ -16,7 +16,7 @@ using ControlHub.Application.Tokens.Interfaces.Sender;
 using ControlHub.Application.Users.Interfaces.Repositories;
 using ControlHub.Domain.Accounts.Identifiers.Rules; // Namespace chứa IIdentifierValidator và các Validator cụ thể
 using ControlHub.Domain.Accounts.Identifiers.Services;
-using ControlHub.Domain.Accounts.Interfaces.Security;
+using ControlHub.Domain.Accounts.Security;
 using ControlHub.Domain.Common.Services;
 using ControlHub.Infrastructure.Accounts.Factories;
 using ControlHub.Infrastructure.Accounts.Repositories;
@@ -214,64 +214,6 @@ namespace ControlHub
         /// <summary>
         /// Phục vụ giao diện React Dashboard từ NuGet
         /// </summary>
-        private static void ConfigureGuiMiddleware(IApplicationBuilder app, string guiPath)
-        {
-            var assembly = typeof(ControlHubExtensions).Assembly;
-            // Lấy prefix chuẩn: Namespace của project + thư mục chứa file
-            // Giả sử namespace là ControlHub.Infrastructure và bạn để trong Resources/GUI
-            string resourcePrefix = "ControlHub.Infrastructure.Resources.GUI";
-
-            app.Map(guiPath, builder =>
-            {
-                builder.Run(async context =>
-                {
-                    var path = context.Request.Path.Value?.Trim('/');
-                    if (string.IsNullOrEmpty(path) || !path.Contains('.')) path = "index.html";
-
-                    var allResources = assembly.GetManifestResourceNames();
-
-                    // Chuyển đổi đường dẫn URL thành định dạng Resource Name của .NET
-                    // .NET nhúng file thường đổi '/' hoặc '\' thành '.'
-                    var normalizedPath = path.Replace("/", ".");
-
-                    // Tìm resource có tên kết thúc bằng path được yêu cầu
-                    var actualResource = allResources.FirstOrDefault(r =>
-                        r.EndsWith(normalizedPath, StringComparison.OrdinalIgnoreCase));
-
-                    if (actualResource != null)
-                    {
-                        // Tự động xác định Content-Type chuyên nghiệp hơn
-                        var contentType = GetContentType(path);
-                        context.Response.ContentType = contentType;
-
-                        using var stream = assembly.GetManifestResourceStream(actualResource);
-                        if (stream != null)
-                        {
-                            await stream.CopyToAsync(context.Response.Body);
-                            return;
-                        }
-                    }
-
-                    // Fallback cho Single Page App (React Router)
-                    var indexRes = allResources.FirstOrDefault(r => r.EndsWith("index.html"));
-                    context.Response.ContentType = "text/html";
-                    using var indexStream = assembly.GetManifestResourceStream(indexRes!);
-                    await indexStream.CopyToAsync(context.Response.Body);
-                });
-            });
-        }
-
-        // Hàm bổ trợ để mapping MIME type
-        private static string GetContentType(string path)
-        {
-            if (path.EndsWith(".js")) return "application/javascript";
-            if (path.EndsWith(".css")) return "text/css";
-            if (path.EndsWith(".svg")) return "image/svg+xml";
-            if (path.EndsWith(".png")) return "image/png";
-            if (path.EndsWith(".html")) return "text/html";
-            return "application/octet-stream";
-        }
-
         public static IApplicationBuilder UseControlHub(this IApplicationBuilder app, string guiPath = "/control-hub")
         {
             using (var scope = app.ApplicationServices.CreateScope())
@@ -280,10 +222,74 @@ namespace ControlHub
                 db.Database.Migrate();
                 ControlHubSeeder.SeedAsync(db).Wait();
             }
-
             ConfigureGuiMiddleware(app, guiPath);
-
             return app;
+        }
+        private static void ConfigureGuiMiddleware(IApplicationBuilder app, string guiPath)
+        {
+            var assembly = typeof(ControlHubExtensions).Assembly;
+            string resourcePrefix = "ControlHub.Infrastructure.Resources.GUI";
+            app.Map(guiPath, builder =>
+            {
+                // Handle SPA fallback for all non-API routes
+                builder.Use(async (context, next) =>
+                {
+                    var path = context.Request.Path.Value?.TrimStart('/');
+
+                    // Check if it's an API call or a static file
+                    bool isApiCall = path?.StartsWith("api/", StringComparison.OrdinalIgnoreCase) == true;
+                    bool isStaticFile = path?.Contains('.') == true &&
+                                       !path.EndsWith(".html", StringComparison.OrdinalIgnoreCase);
+
+                    // If it's not an API call and not a static file, serve index.html
+                    if (!isApiCall && !isStaticFile)
+                    {
+                        await ServeIndexHtml(assembly, context);
+                        return;
+                    }
+
+                    await next();
+                });
+                // Handle static files
+                builder.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new EmbeddedFileProvider(assembly, resourcePrefix),
+                    RequestPath = ""
+                });
+                // Final fallback to index.html for SPA routing
+                builder.Run(async context =>
+                {
+                    await ServeIndexHtml(assembly, context);
+                });
+            });
+        }
+        private static async Task ServeIndexHtml(Assembly assembly, HttpContext context)
+        {
+            var indexRes = assembly.GetManifestResourceNames()
+                .FirstOrDefault(r => r.EndsWith("index.html", StringComparison.OrdinalIgnoreCase));
+
+            if (indexRes != null)
+            {
+                context.Response.ContentType = "text/html";
+                using var stream = assembly.GetManifestResourceStream(indexRes);
+                if (stream != null)
+                {
+                    await stream.CopyToAsync(context.Response.Body);
+                    return;
+                }
+            }
+
+            context.Response.StatusCode = 404;
+            await context.Response.WriteAsync("Page not found");
+        }
+        private static string GetContentType(string path)
+        {
+            if (path.EndsWith(".js")) return "application/javascript";
+            if (path.EndsWith(".css")) return "text/css";
+            if (path.EndsWith(".svg")) return "image/svg+xml";
+            if (path.EndsWith(".png")) return "image/png";
+            if (path.EndsWith(".html")) return "text/html";
+            return "application/octet-stream";
         }
     }
 }

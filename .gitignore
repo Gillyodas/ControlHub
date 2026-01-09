@@ -21,6 +21,7 @@ project.assets.json
 
 # Logs
 *.log
+ControlHub/src/ControlHub.API/Logs/
 
 # Others
 *.DS_Store

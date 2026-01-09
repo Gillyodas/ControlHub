@@ -1,4 +1,4 @@
-﻿using ControlHub.Domain.Accounts.Interfaces.Security;
+﻿using ControlHub.Domain.Accounts.Security;
 using ControlHub.Domain.Accounts.ValueObjects;
 using ControlHub.SharedKernel.Accounts;
 using Moq;

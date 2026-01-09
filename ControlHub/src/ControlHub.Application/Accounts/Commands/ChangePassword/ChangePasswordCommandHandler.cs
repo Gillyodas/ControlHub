@@ -1,7 +1,7 @@
 ﻿using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.Application.Tokens.Interfaces.Repositories;
-using ControlHub.Domain.Accounts.Interfaces.Security;
+using ControlHub.Domain.Accounts.Security;
 using ControlHub.Domain.Accounts.ValueObjects;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;

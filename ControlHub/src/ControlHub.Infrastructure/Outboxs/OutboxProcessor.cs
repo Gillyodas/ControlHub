@@ -1,4 +1,5 @@
-﻿using ControlHub.Infrastructure.Persistence;
+﻿using AutoMapper.Features;
+using ControlHub.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -16,7 +17,7 @@ namespace ControlHub.Infrastructure.Outboxs
             _services = services;
             _logger = logger;
         }
-
+        // TODO: Vấn đề: Failed messages chỉ được mark failed, không có retry logic - Mức độ: Minor - Feature gap - Impact: Messages fail sẽ không được xử lý lại tự động
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)

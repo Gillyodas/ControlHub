@@ -10,10 +10,12 @@ namespace ControlHub.API.Controllers
     public abstract class BaseApiController : ControllerBase
     {
         protected readonly IMediator Mediator;
+        private readonly ILogger<BaseApiController> _logger;
 
-        protected BaseApiController(IMediator mediator)
+        protected BaseApiController(IMediator mediator, ILogger<BaseApiController> logger)
         {
             Mediator = mediator;
+            _logger = logger;
         }
 
         /// <summary>
@@ -21,6 +23,11 @@ namespace ControlHub.API.Controllers
         /// </summary>
         protected IActionResult HandleFailure(Result result)
         {
+            if (result.IsSuccess)
+            {
+                throw new InvalidOperationException("Cannot handle failure for a successful result.");
+            }
+
             return result.Error.Type switch
             {
                 ErrorType.Validation => BadRequest(CreateProblemDetails("Validation Error", StatusCodes.Status400BadRequest, result.Error)),
@@ -34,12 +41,27 @@ namespace ControlHub.API.Controllers
 
         private ProblemDetails CreateProblemDetails(string title, int status, Error error)
         {
+            if (status >= 500)
+            {
+                _logger.LogError("Server Error occurred: {ErrorTitle} (Code: {ErrorCode}). Message: {ErrorMessage}",
+                    title, error.Code, error.Message);
+            }
+            else
+            {
+                _logger.LogWarning("Client Error occurred: {ErrorTitle} (Code: {ErrorCode}). Message: {ErrorMessage}",
+                    title, error.Code, error.Message);
+            }
+
             return new ProblemDetails
             {
                 Title = title,
                 Status = status,
                 Detail = error.Message,
-                Extensions = { { "code", error.Code } }
+                Extensions =
+                {
+                    { "code", error.Code },
+                    { "timestamp", DateTime.UtcNow }
+                }
             };
         }
     }

@@ -1,17 +1,19 @@
-﻿using ControlHub.Application.Accounts.DTOs;
+﻿using System.Runtime.ConstrainedExecution;
+using ControlHub.Application.Accounts.DTOs;
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.Application.Tokens.Interfaces;
 using ControlHub.Application.Tokens.Interfaces.Generate;
 using ControlHub.Application.Tokens.Interfaces.Repositories;
 using ControlHub.Domain.Accounts.Identifiers.Services;
-using ControlHub.Domain.Accounts.Interfaces.Security;
+using ControlHub.Domain.Accounts.Security;
 using ControlHub.Domain.Tokens.Enums;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;
 using ControlHub.SharedKernel.Tokens;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ControlHub.Application.Accounts.Commands.SignIn
 {
@@ -97,7 +99,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
 
                 return Result<SignInDTO>.Failure(AccountErrors.InvalidCredentials);
             }
-
+            
             var accessTokenValue = _accessTokenGenerator.Generate(
                 account.Id.ToString(),
                 account.Identifiers.First().ToString(),
