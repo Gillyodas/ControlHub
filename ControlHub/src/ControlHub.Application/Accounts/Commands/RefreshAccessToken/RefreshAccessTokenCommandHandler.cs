@@ -114,9 +114,11 @@ namespace ControlHub.Application.Accounts.Commands.RefreshAccessToken
                 }
 
                 oldAccessToken.MarkAsUsed();
+                oldAccessToken.Revoke();
             }
 
             refreshToken.MarkAsUsed();
+            refreshToken.Revoke();
 
             var newRefreshToken = _tokenFactory.Create(acc.Id, _refreshTokenGenerator.Generate(), TokenType.RefreshToken);
             await _tokenRepository.AddAsync(newRefreshToken, cancellationToken);

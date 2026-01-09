@@ -9,7 +9,7 @@ using ControlHub.Domain.Accounts;
 using ControlHub.Domain.Accounts.Enums;
 using ControlHub.Domain.Accounts.Identifiers.Rules;
 using ControlHub.Domain.Accounts.Identifiers.Services;   // Chứa IdentifierFactory
-using ControlHub.Domain.Accounts.Interfaces.Security;
+using ControlHub.Domain.Accounts.Security;
 using ControlHub.Domain.Accounts.ValueObjects;
 using ControlHub.Domain.Tokens;
 using ControlHub.Domain.Tokens.Enums;

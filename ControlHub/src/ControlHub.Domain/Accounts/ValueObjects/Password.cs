@@ -1,5 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-using ControlHub.Domain.Accounts.Interfaces.Security;
+using ControlHub.Domain.Accounts.Security;
 using ControlHub.Domain.Common;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;

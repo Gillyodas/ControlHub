@@ -5,6 +5,7 @@ import * as api from "./api"
 import type { AuthContextValue } from "./auth-context"
 import { AuthContext } from "./auth-context"
 import { clearAuth, loadAuth, saveAuth } from "./storage"
+import { authApi } from "@/services/api"
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = React.useState<AuthData | null>(() => loadAuth())
@@ -30,10 +31,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [auth?.accessToken],
   )
 
-  const signOut = React.useCallback(() => {
+  const signOut = React.useCallback(async () => {
+    if (auth?.accessToken && auth?.refreshToken) {
+      try {
+        await authApi.signOut(
+          {
+            accessToken: auth.accessToken,
+            refreshToken: auth.refreshToken,
+          },
+          auth.accessToken
+        )
+      } catch (error) {
+        console.error("Failed to sign out from server:", error)
+      }
+    }
     clearAuth()
     setAuth(null)
-  }, [])
+  }, [auth])
 
   const value: AuthContextValue = React.useMemo(
     () => ({
