@@ -1,5 +1,4 @@
-﻿using Microsoft.OpenApi.Models;
-using OpenTelemetry.Exporter;
+﻿using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Prometheus;

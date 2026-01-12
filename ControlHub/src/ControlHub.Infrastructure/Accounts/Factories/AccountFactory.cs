@@ -3,7 +3,6 @@ using ControlHub.Domain.Accounts;
 using ControlHub.Domain.Accounts.Enums;
 using ControlHub.Domain.Accounts.Identifiers.Services;
 using ControlHub.Domain.Accounts.Security;
-using ControlHub.Domain.Accounts.ValueObjects;
 using ControlHub.Domain.Users;
 using ControlHub.SharedKernel.Results;
 

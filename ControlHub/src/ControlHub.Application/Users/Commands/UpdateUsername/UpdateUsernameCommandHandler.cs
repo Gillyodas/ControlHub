@@ -11,21 +11,19 @@ namespace ControlHub.Application.Users.Commands.UpdateUsername
     public class UpdateUsernameCommandHandler : IRequestHandler<UpdateUsernameCommand, Result<string>>
     {
         private readonly ILogger<UpdateUsernameCommandHandler> _logger;
-        private readonly IUserRepository _userCommands;
-        private readonly IAccountQueries _accountQueries;
         private readonly IUnitOfWork _uow;
+        private IUserRepository _userRepository;
 
-        public UpdateUsernameCommandHandler(ILogger<UpdateUsernameCommandHandler> logger, IUserRepository userCommands, IAccountQueries accountQueries, IUnitOfWork uow)
+        public UpdateUsernameCommandHandler(ILogger<UpdateUsernameCommandHandler> logger, IUserRepository userRepo, IUnitOfWork uow)
         {
             _logger = logger;
-            _userCommands = userCommands;
-            _accountQueries = accountQueries;
             _uow = uow;
+            _userRepository = userRepo;
         }
 
         public async Task<Result<string>> Handle(UpdateUsernameCommand request, CancellationToken cancellationToken)
         {
-            var user = await _accountQueries.GetUserById(request.id, cancellationToken);
+            var user = await _userRepository.GetByAccountId(request.id, cancellationToken);
 
             if (user is null)
                 return Result<string>.Failure(UserErrors.NotFound);
@@ -34,6 +32,7 @@ namespace ControlHub.Application.Users.Commands.UpdateUsername
 
             if (!updateResult.IsSuccess)
                 return Result<string>.Failure(updateResult.Error);
+            
 
             await _uow.CommitAsync(cancellationToken);
 

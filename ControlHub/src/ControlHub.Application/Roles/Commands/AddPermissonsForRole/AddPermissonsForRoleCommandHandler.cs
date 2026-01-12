@@ -2,8 +2,6 @@
 using ControlHub.Application.Permissions.Interfaces.Repositories;
 using ControlHub.Application.Roles.Interfaces.Repositories;
 using ControlHub.Domain.Permissions;
-using ControlHub.Domain.Roles;
-using ControlHub.SharedKernel.Common.Logs;
 using ControlHub.SharedKernel.Results;
 using ControlHub.SharedKernel.Roles;
 using MediatR;

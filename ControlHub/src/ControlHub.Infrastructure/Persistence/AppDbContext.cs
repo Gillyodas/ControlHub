@@ -1,4 +1,5 @@
 ﻿using ControlHub.Domain.Accounts;
+using ControlHub.Domain.Accounts.Identifiers;
 using ControlHub.Domain.Outboxs;
 using ControlHub.Domain.Permissions;
 using ControlHub.Domain.Roles;
@@ -29,6 +30,8 @@ namespace ControlHub.Infrastructure.Persistence
 
         // Join Entities
         public DbSet<RolePermissionEntity> RolePermissions { get; set; } = default!;
+
+        public DbSet<IdentifierConfig> IdentifierConfigs { get; set; } = default!;
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

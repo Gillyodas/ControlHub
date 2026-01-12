@@ -45,6 +45,36 @@ namespace ControlHub.Infrastructure.Migrations
                     b.ToTable("Accounts", "ControlHub");
                 });
 
+            modelBuilder.Entity("ControlHub.Domain.Accounts.Identifiers.IdentifierConfig", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IdentifierConfigs", "ControlHub");
+                });
+
             modelBuilder.Entity("ControlHub.Domain.Outboxs.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -280,6 +310,50 @@ namespace ControlHub.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("ControlHub.Domain.Accounts.Identifiers.IdentifierConfig", b =>
+                {
+                    b.OwnsMany("ControlHub.Domain.Accounts.Identifiers.ValidationRule", "Rules", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("ErrorMessage")
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)");
+
+                            b1.Property<Guid>("IdentifierConfigId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<int>("Order")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int")
+                                .HasDefaultValue(0);
+
+                            b1.Property<string>("ParametersJson")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("Type")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("IdentifierConfigId");
+
+                            b1.HasIndex("Order");
+
+                            b1.ToTable("IdentifierValidationRules", "ControlHub");
+
+                            b1.WithOwner()
+                                .HasForeignKey("IdentifierConfigId");
+                        });
+
+                    b.Navigation("Rules");
                 });
 
             modelBuilder.Entity("ControlHub.Domain.Tokens.Token", b =>

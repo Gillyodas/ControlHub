@@ -1,14 +1,10 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using ControlHub.API.Controllers;
+﻿using ControlHub.API.Controllers;
 using ControlHub.API.Users.ViewModels.Request;
 using ControlHub.API.Users.ViewModels.Response;
 using ControlHub.Application.Users.Commands.UpdateUsername;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ControlHub.API.Users.Controllers
 {

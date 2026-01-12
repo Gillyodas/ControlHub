@@ -6,11 +6,9 @@ using ControlHub.Application.Tokens.Interfaces;
 using ControlHub.Application.Tokens.Interfaces.Repositories;
 using ControlHub.Domain.Tokens;
 using ControlHub.Domain.Tokens.Enums;
-using ControlHub.SharedKernel.Results;
 using ControlHub.SharedKernel.Tokens;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 
 namespace ControlHub.Application.Tests.AccountsTests
 {

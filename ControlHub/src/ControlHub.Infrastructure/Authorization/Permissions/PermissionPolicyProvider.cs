@@ -1,4 +1,3 @@
-using ControlHub.Infrastructure.Permissions.AuthZ;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 

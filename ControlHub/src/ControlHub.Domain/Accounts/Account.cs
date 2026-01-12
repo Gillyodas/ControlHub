@@ -101,12 +101,12 @@ namespace ControlHub.Domain.Accounts
             IsDeleted = true;
             User?.Delete();
 
-            foreach(var token in _tokens)
+            foreach (var token in _tokens)
             {
                 token.Revoke();
             }
 
-            foreach(var ident in _identifiers)
+            foreach (var ident in _identifiers)
             {
                 ident.Delete();
             }

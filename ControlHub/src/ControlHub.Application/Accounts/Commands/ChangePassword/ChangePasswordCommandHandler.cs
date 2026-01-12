@@ -50,7 +50,7 @@ namespace ControlHub.Application.Accounts.Commands.ChangePassword
                 return Result.Failure(AccountErrors.AccountNotFound);
             }
 
-            if(acc.IsDeleted)
+            if (acc.IsDeleted)
             {
                 _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
                     AccountLogs.ChangePassword_AccountDeleted.Code,
@@ -60,7 +60,7 @@ namespace ControlHub.Application.Accounts.Commands.ChangePassword
                 return Result.Failure(AccountErrors.AccountDeleted);
             }
 
-            if(!acc.IsActive)
+            if (!acc.IsActive)
             {
                 _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
                     AccountLogs.ChangePassword_AccountDisabled.Code,

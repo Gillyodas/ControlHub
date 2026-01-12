@@ -6,6 +6,7 @@ import type { IdentifierType, RegisterRole } from "@/auth/types"
 import { detectIdentifierType, validateIdentifierValue } from "@/auth/validators"
 import { Eye, EyeOff } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { getActiveIdentifierConfigs, type IdentifierConfigDto } from "@/services/api/identifiers"
 
 type Mode = "signin" | "register"
 
@@ -31,6 +32,7 @@ export function AuthView() {
 
   const [mode, setMode] = React.useState<Mode>("signin")
   const [submitting, setSubmitting] = React.useState(false)
+  const [activeIdentifiers, setActiveIdentifiers] = React.useState<IdentifierConfigDto[]>([])
 
   const [signinValue, setSigninValue] = React.useState("")
   const [signinPassword, setSigninPassword] = React.useState("")
@@ -48,6 +50,18 @@ export function AuthView() {
   const [error, setError] = React.useState<string | null>(null)
 
   const [touched, setTouched] = React.useState<{ [k: string]: boolean }>({})
+
+  React.useEffect(() => {
+    async function loadActiveIdentifiers() {
+      try {
+        const configs = await getActiveIdentifierConfigs()
+        setActiveIdentifiers(configs)
+      } catch (err) {
+        console.error("Failed to load active identifiers:", err)
+      }
+    }
+    loadActiveIdentifiers()
+  }, [])
 
   const regIdentifyError = React.useMemo(() => {
     return validateIdentifierValue(regType, regValue)

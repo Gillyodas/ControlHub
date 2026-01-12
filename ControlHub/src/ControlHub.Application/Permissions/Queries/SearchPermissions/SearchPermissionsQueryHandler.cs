@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ControlHub.Application.Common.DTOs;
+﻿using ControlHub.Application.Common.DTOs;
 using ControlHub.Application.Permissions.Interfaces.Repositories;
 using ControlHub.Domain.Permissions;
 using ControlHub.SharedKernel.Permissions;
