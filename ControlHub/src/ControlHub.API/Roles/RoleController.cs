@@ -11,7 +11,6 @@ using ControlHub.SharedKernel.Results;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ControlHub.API.Roles
 {
@@ -20,7 +19,7 @@ namespace ControlHub.API.Roles
     public class RoleController : BaseApiController
     {
         private readonly ILogger<RoleController> _logger;
-        
+
         public RoleController(IMediator mediator, ILogger<RoleController> logger) : base(mediator, logger)
         {
             _logger = logger;

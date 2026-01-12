@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using ControlHub.Application.Accounts.Commands.ForgotPassword;
+﻿using ControlHub.Application.Accounts.Commands.ForgotPassword;
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.Application.OutBoxs.Repositories;
@@ -16,12 +15,10 @@ using ControlHub.Domain.Tokens;
 using ControlHub.Domain.Tokens.Enums;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Common.Errors;
-using ControlHub.SharedKernel.Results;
 using ControlHub.SharedKernel.Tokens;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 
 namespace ControlHub.Application.Tests.AccountsTests
 {

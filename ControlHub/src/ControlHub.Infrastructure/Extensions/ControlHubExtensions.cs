@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Text;
 using ControlHub.Application.Accounts.Interfaces;
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Behaviors;
@@ -107,6 +106,9 @@ namespace ControlHub
 
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserQueries, UserQueries>();
+
+            // 6. Identifier Configuration Services
+            services.AddScoped<IIdentifierConfigRepository, IdentifierConfigRepository>();
 
             // 6. Domain Services & Identifiers
             services.AddScoped<IdentifierFactory>();

@@ -1,9 +1,6 @@
-﻿using ControlHub.Application.Emails.Interfaces;
+﻿using System.Net.Mail;
 using ControlHub.Infrastructure.Emails;
 using Microsoft.Extensions.Configuration;
-using System.Net;
-using System.Net.Mail;
-using Xunit;
 
 namespace ControlHub.Infrastructure.Tests.Emails
 {

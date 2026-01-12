@@ -155,3 +155,67 @@ api.interceptors.response.use(
     }
   },
 )
+
+// Helper functions for API calls
+export async function fetchJson<T>(url: string, options: {
+  method?: string
+  body?: unknown
+  accessToken?: string
+  headers?: Record<string, string>
+}): Promise<T> {
+  const config: AxiosRequestConfig = {
+    method: options.method || "GET",
+    url: `${API_BASE}${url}`,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  }
+
+  if (options.accessToken) {
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${options.accessToken}`,
+    }
+  }
+
+  if (options.body) {
+    config.data = options.body
+  }
+
+  try {
+    const response = await api.request<T>(config)
+    return response.data
+  } catch (error: unknown) {
+    // Parse validation errors from backend
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response?: { data?: { errors?: Record<string, unknown>; title?: string } } }
+      
+      if (axiosError.response?.data?.errors) {
+        const validationErrors = axiosError.response.data.errors
+        const errorMessages = Object.entries(validationErrors)
+          .map(([field, messages]) => {
+            const msgs = Array.isArray(messages) ? messages : [messages]
+            return `${field}: ${msgs.join(", ")}`
+          })
+          .join("; ")
+        throw new Error(errorMessages)
+      }
+      
+      if (axiosError.response?.data?.title) {
+        throw new Error(axiosError.response.data.title)
+      }
+    }
+    
+    throw error
+  }
+}
+
+export async function fetchVoid(url: string, options: {
+  method?: string
+  body?: unknown
+  accessToken?: string
+  headers?: Record<string, string>
+}): Promise<void> {
+  await fetchJson(url, options)
+}

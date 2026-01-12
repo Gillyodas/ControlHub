@@ -1,8 +1,6 @@
-﻿using System.Linq;
-using ControlHub.Application.Common.DTOs;
+﻿using ControlHub.Application.Common.DTOs;
 using ControlHub.Application.Permissions.Interfaces.Repositories;
 using ControlHub.Domain.Permissions;
-using ControlHub.Domain.Roles;
 using ControlHub.Infrastructure.Persistence;
 using ControlHub.SharedKernel.Utils;
 using Microsoft.EntityFrameworkCore;

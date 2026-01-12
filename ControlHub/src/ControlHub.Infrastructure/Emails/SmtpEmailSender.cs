@@ -19,10 +19,10 @@ namespace ControlHub.Infrastructure.Emails
             // Validate input parameters
             if (string.IsNullOrWhiteSpace(to))
                 throw new ArgumentException("To email address is required", nameof(to));
-            
+
             if (string.IsNullOrWhiteSpace(subject))
                 throw new ArgumentException("Subject is required", nameof(subject));
-            
+
             if (string.IsNullOrWhiteSpace(body))
                 throw new ArgumentException("Body is required", nameof(body));
 
@@ -47,13 +47,13 @@ namespace ControlHub.Infrastructure.Emails
             // Validate required configuration values
             if (string.IsNullOrWhiteSpace(host))
                 throw new ArgumentNullException("Smtp:Host", "SMTP host is required");
-            
+
             if (string.IsNullOrWhiteSpace(username))
                 throw new ArgumentNullException("Smtp:Username", "SMTP username is required");
-            
+
             if (string.IsNullOrWhiteSpace(password))
                 throw new ArgumentNullException("Smtp:Password", "SMTP password is required");
-            
+
             if (string.IsNullOrWhiteSpace(from))
                 throw new ArgumentNullException("Smtp:From", "SMTP from address is required");
 
@@ -92,7 +92,7 @@ namespace ControlHub.Infrastructure.Emails
             // Validate subject and body length (reasonable limits)
             if (subject.Length > 1000)
                 throw new ArgumentException("Subject is too long (max 1000 characters)");
-            
+
             if (body.Length > 1000000) // 1MB limit
                 throw new ArgumentException("Body is too long (max 1MB)");
 

@@ -1,5 +1,4 @@
-﻿using System.Runtime.ConstrainedExecution;
-using ControlHub.Application.Accounts.DTOs;
+﻿using ControlHub.Application.Accounts.DTOs;
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.Application.Tokens.Interfaces;
@@ -13,7 +12,6 @@ using ControlHub.SharedKernel.Results;
 using ControlHub.SharedKernel.Tokens;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ControlHub.Application.Accounts.Commands.SignIn
 {
@@ -28,6 +26,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
         private readonly ITokenFactory _tokenFactory;
         private readonly ITokenRepository _tokenRepository;
         private readonly IUnitOfWork _uow;
+        private readonly IIdentifierConfigRepository _identifierConfigRepository;
 
         public SignInCommandHandler(
             ILogger<SignInCommandHandler> logger,
@@ -38,7 +37,8 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             IRefreshTokenGenerator refreshTokenGenerator,
             ITokenFactory tokenFactory,
             ITokenRepository tokenRepository,
-            IUnitOfWork uow)
+            IUnitOfWork uow,
+            IIdentifierConfigRepository identifierConfigRepository)
         {
             _logger = logger;
             _accountQueries = accountQueries;
@@ -49,6 +49,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             _tokenFactory = tokenFactory;
             _tokenRepository = tokenRepository;
             _uow = uow;
+            _identifierConfigRepository = identifierConfigRepository;
         }
 
         public async Task<Result<SignInDTO>> Handle(SignInCommand request, CancellationToken cancellationToken)
@@ -57,6 +58,8 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
                 AccountLogs.SignIn_Started.Code,
                 AccountLogs.SignIn_Started.Message,
                 request.Value);
+
+            var varIdentConfig = await _identifierConfigRepository.GetByNameAsync(request.Name, cancellationToken);
 
             var result = _identifierFactory.Create(request.Type, request.Value);
             if (result.IsFailure)
@@ -99,7 +102,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
 
                 return Result<SignInDTO>.Failure(AccountErrors.InvalidCredentials);
             }
-            
+
             var accessTokenValue = _accessTokenGenerator.Generate(
                 account.Id.ToString(),
                 account.Identifiers.First().ToString(),

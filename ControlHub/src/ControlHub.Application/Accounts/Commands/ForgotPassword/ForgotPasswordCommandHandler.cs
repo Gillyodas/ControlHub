@@ -5,7 +5,6 @@ using ControlHub.Application.OutBoxs.Repositories;
 using ControlHub.Application.Tokens.Interfaces;
 using ControlHub.Application.Tokens.Interfaces.Generate;
 using ControlHub.Application.Tokens.Interfaces.Repositories;
-using ControlHub.Domain.Accounts.Identifiers.Rules;
 using ControlHub.Domain.Accounts.Identifiers.Services;
 using ControlHub.Domain.Outboxs;
 using ControlHub.Domain.Tokens.Enums;

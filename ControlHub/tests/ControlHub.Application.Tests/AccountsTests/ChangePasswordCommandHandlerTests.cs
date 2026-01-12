@@ -5,12 +5,8 @@ using ControlHub.Application.Tokens.Interfaces.Repositories;
 using ControlHub.Domain.Accounts;
 using ControlHub.Domain.Accounts.Security;
 using ControlHub.Domain.Accounts.ValueObjects;
-using ControlHub.SharedKernel.Accounts;
-using ControlHub.SharedKernel.Common.Errors;
-using ControlHub.SharedKernel.Results;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 
 namespace ControlHub.Application.Tests.AccountsTests
 {

@@ -12,12 +12,17 @@ namespace ControlHub.Domain.Accounts.ValueObjects
         public string Regex { get; }
         public bool IsDeleted { get; private set; }
 
-        private Identifier(IdentifierType type, string value, string normalizedValue, string regex = "")
+        private Identifier(IdentifierType type, string value, string normalizedValue, string regex)
         {
             Type = type;
             Value = value;
             NormalizedValue = normalizedValue;
-            Regex = regex;
+            Regex = regex ?? "";
+        }
+
+        private Identifier(IdentifierType type, string value, string normalizedValue)
+            : this(type, value, normalizedValue, "")
+        {
         }
 
         public static Identifier Create(IdentifierType type, string value, string normalized)

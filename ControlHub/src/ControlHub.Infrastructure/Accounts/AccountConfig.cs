@@ -1,5 +1,4 @@
 ﻿using ControlHub.Domain.Accounts;
-using ControlHub.Domain.Tokens;
 using ControlHub.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

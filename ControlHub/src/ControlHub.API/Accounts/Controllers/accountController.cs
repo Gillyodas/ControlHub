@@ -1,5 +1,4 @@
 ﻿using ControlHub.API.Accounts.ViewModels.Request;
-using ControlHub.API.Accounts.ViewModels.Response;
 using ControlHub.API.Controllers;
 using ControlHub.Application.Accounts.Commands.ChangePassword;
 using ControlHub.Application.Accounts.Commands.ForgotPassword;
@@ -8,7 +7,6 @@ using ControlHub.Infrastructure.Authorization.Requirements;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ControlHub.API.Accounts.Controllers
 {
@@ -18,7 +16,7 @@ namespace ControlHub.API.Accounts.Controllers
     {
         private readonly IAuthorizationService _authorizationService;
         private readonly ILogger<AccountController> _logger;
-        
+
         public AccountController(IMediator mediator, IAuthorizationService authorizationService, ILogger<AccountController> logger)
             : base(mediator, logger)
         {

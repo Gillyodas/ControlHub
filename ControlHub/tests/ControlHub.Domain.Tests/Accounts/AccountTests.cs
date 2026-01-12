@@ -4,7 +4,6 @@ using ControlHub.Domain.Accounts.ValueObjects;
 using ControlHub.Domain.Users;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Users; // Chứa UserErrors
-using Xunit;
 
 namespace ControlHub.Domain.Tests.Accounts
 {

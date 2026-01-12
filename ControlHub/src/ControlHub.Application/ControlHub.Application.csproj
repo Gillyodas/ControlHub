@@ -21,7 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Accounts\Queries\" />
     <Folder Include="Accounts\Services\" />
   </ItemGroup>
 

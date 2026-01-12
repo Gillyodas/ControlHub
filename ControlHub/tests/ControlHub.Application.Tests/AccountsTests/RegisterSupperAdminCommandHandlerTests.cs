@@ -13,7 +13,6 @@ using ControlHub.SharedKernel.Results;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 
 namespace ControlHub.Application.Tests.AccountsTests
 {

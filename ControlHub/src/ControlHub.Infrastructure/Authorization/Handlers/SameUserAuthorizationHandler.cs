@@ -19,7 +19,7 @@ namespace ControlHub.Infrastructure.Authorization.Handlers
             if (Guid.TryParse(currentUserIdStr, out var currentUserId))
             {
                 //Logic mở rộng: Admin luôn được phép
-                 if (context.User.IsInRole("supper_admin"))
+                if (context.User.IsInRole("supper_admin"))
                 {
                     context.Succeed(requirement);
                     return Task.CompletedTask;

@@ -1,6 +1,5 @@
 ﻿using ControlHub.Application.Common.DTOs;
 using ControlHub.Domain.Permissions;
-using ControlHub.Domain.Roles;
 
 namespace ControlHub.Application.Permissions.Interfaces.Repositories
 {

@@ -1,0 +1,12 @@
+{
+  "name": "Test Identifier Config",
+  "description": "Testing identifier configuration creation",
+  "rules": [
+    {
+      "type": 1,
+      "parameters": {},
+      "errorMessage": null,
+      "order": 0
+    }
+  ]
+}

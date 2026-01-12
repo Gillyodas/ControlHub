@@ -18,7 +18,7 @@ namespace ControlHub.Infrastructure.Tokens.Generate
                 new Claim(JwtRegisteredClaimNames.Sub, accountId),
         
                 // "NameIdentifier" là chuẩn của .NET Identity để định danh User ID
-                new Claim(ClaimTypes.NameIdentifier, accountId), 
+                new Claim(ClaimTypes.NameIdentifier, accountId),
 
                 new Claim(ClaimTypes.Name, identifier),
 

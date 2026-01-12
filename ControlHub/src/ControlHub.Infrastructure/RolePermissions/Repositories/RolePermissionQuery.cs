@@ -1,9 +1,6 @@
 ﻿using AutoMapper;
-using ControlHub.Application.Roles.DTOs;
 using ControlHub.Application.Roles.Interfaces.Repositories;
-using ControlHub.Domain.Roles;
 using ControlHub.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 
 namespace ControlHub.Infrastructure.RolePermissions.Repositories
 {

@@ -2,7 +2,6 @@
 using ControlHub.SharedKernel.Common.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.FileSystemGlobbing.Internal;
 using Microsoft.Extensions.Logging;
 
 namespace ControlHub.Infrastructure.Persistence
@@ -15,15 +14,15 @@ namespace ControlHub.Infrastructure.Persistence
 
         public UnitOfWork(AppDbContext dbContext, ILogger<UnitOfWork> logger)
         {
-                _dbContext = dbContext;
-                _logger = logger;
+            _dbContext = dbContext;
+            _logger = logger;
         }
 
         public bool HasActiveTransaction => _currentTransaction != null;
 
         public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct = default)
         {
-            if(_currentTransaction != null)
+            if (_currentTransaction != null)
             {
                 throw new InvalidOperationException("Transaction already started. Nested transactions not supported.");
             }
@@ -60,7 +59,7 @@ namespace ControlHub.Infrastructure.Persistence
 
                 return changes;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Transaction failed. Rolling back...");
                 await SafeRollbackAsync(transaction, ct);
@@ -128,13 +127,13 @@ namespace ControlHub.Infrastructure.Persistence
             {
                 return await _dbContext.SaveChangesAsync(ct);
             }
-            catch(DbUpdateConcurrencyException ex)
+            catch (DbUpdateConcurrencyException ex)
             {
                 _logger.LogError(ex, "Concurrency conflict detected");
                 throw new RepositoryConcurrencyException(
                     "A concurrency conflict occurred.", ex);
             }
-            catch(DbUpdateException ex)
+            catch (DbUpdateException ex)
             {
                 _logger.LogError(ex, "Database update error");
                 throw new RepositoryException(

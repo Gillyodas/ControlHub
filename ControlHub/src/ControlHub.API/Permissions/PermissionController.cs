@@ -1,6 +1,5 @@
 ﻿using ControlHub.API.Controllers;
 using ControlHub.API.Permissions.ViewModels.Requests;
-using ControlHub.API.Permissions.ViewModels.Responses;
 using ControlHub.Application.Common.DTOs;
 using ControlHub.Application.Permissions.Commands.CreatePermissions;
 using ControlHub.Application.Permissions.Queries.SearchPermissions;
@@ -8,7 +7,6 @@ using ControlHub.Domain.Permissions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ControlHub.API.Permissions
 {

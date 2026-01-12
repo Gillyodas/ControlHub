@@ -1,6 +1,5 @@
 ﻿using ControlHub.Domain.Accounts.ValueObjects;
 using ControlHub.SharedKernel.Accounts;
-using Xunit;
 
 namespace ControlHub.Domain.Tests.Accounts.ValueObjects
 {

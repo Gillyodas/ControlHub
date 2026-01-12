@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ControlHub.Application.Common.DTOs
+﻿namespace ControlHub.Application.Common.DTOs
 {
     // DTO dùng chung cho tất cả các API phân trang
     public class PagedResult<T>
