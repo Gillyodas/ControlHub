@@ -19,7 +19,7 @@ namespace ControlHub.Infrastructure.Roles.Repositories
         public async Task<Role?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             return await _db.Roles
-                .AsNoTracking()
+                .AsNoTrackingWithIdentityResolution()
                 .Include(r => r.Permissions)
                 .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
         }
@@ -27,7 +27,7 @@ namespace ControlHub.Infrastructure.Roles.Repositories
         public async Task<IEnumerable<Role>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _db.Roles
-                .AsNoTracking()
+                .AsNoTrackingWithIdentityResolution()
                 .Include(r => r.Permissions)
                 .ToListAsync(cancellationToken);
         }
@@ -35,7 +35,7 @@ namespace ControlHub.Infrastructure.Roles.Repositories
         public async Task<IEnumerable<Role>> SearchByNameAsync(string name, CancellationToken cancellationToken)
         {
             return await _db.Roles
-                .AsNoTracking()
+                .AsNoTrackingWithIdentityResolution()
                 .Where(r => EF.Functions.Like(r.Name, $"%{name}%"))
                 .Include(r => r.Permissions)
                 .ToListAsync(cancellationToken);

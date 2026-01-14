@@ -256,6 +256,11 @@ namespace ControlHub.Infrastructure.Migrations
                                 .HasColumnType("bit")
                                 .HasDefaultValue(false);
 
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)");
+
                             b1.Property<string>("NormalizedValue")
                                 .IsRequired()
                                 .HasMaxLength(300)
@@ -271,7 +276,7 @@ namespace ControlHub.Infrastructure.Migrations
 
                             b1.HasKey("AccountId", "Id");
 
-                            b1.HasIndex("Type", "NormalizedValue")
+                            b1.HasIndex("Name", "NormalizedValue")
                                 .IsUnique()
                                 .HasFilter("[IsDeleted] = 0");
 

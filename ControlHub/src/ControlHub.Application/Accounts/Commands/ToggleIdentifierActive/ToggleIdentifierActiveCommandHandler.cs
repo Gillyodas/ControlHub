@@ -21,11 +21,13 @@ namespace ControlHub.Application.Accounts.Commands.ToggleIdentifierActive
 
         public async Task<Result> Handle(ToggleIdentifierActiveCommand request, CancellationToken cancellationToken)
         {
-            var config = await _repository.GetByIdAsync(request.Id, cancellationToken);
-            if (config == null)
+            var configResult = await _repository.GetByIdAsync(request.Id, cancellationToken);
+            if (configResult.IsFailure)
             {
-                return Result.Failure(new Error("IdentifierConfig.NotFound", "Identifier configuration not found"));
+                return Result.Failure(configResult.Error);
             }
+
+            var config = configResult.Value;
 
             if (request.IsActive)
             {

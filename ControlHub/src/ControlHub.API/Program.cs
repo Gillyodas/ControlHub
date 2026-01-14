@@ -70,6 +70,13 @@ namespace ControlHub.API
             app.UseMiddleware<GlobalExceptionMiddleware>();
             app.MapMetrics(); // Prometheus Endpoint
 
+            // CORS Configuration
+            app.UseCors(policy => policy
+                .WithOrigins("http://localhost:3000", "http://localhost:3000/control-hub")
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

@@ -2,6 +2,7 @@
 using ControlHub.API.Users.ViewModels.Request;
 using ControlHub.API.Users.ViewModels.Response;
 using ControlHub.Application.Users.Commands.UpdateUsername;
+using ControlHub.Domain.Permissions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,7 @@ namespace ControlHub.API.Users.Controllers
             _logger = logger;
         }
 
-        [Authorize]
+        [Authorize(Policy = "Permission:users.update_username")]
         [HttpPatch("users/{id}/username")]
         [ProducesResponseType(typeof(UpdateUsernameResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

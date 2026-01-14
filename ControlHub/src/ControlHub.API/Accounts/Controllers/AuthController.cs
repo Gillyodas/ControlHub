@@ -7,6 +7,7 @@ using ControlHub.Application.Accounts.Commands.RegisterAdmin;
 using ControlHub.Application.Accounts.Commands.RegisterSupperAdmin;
 using ControlHub.Application.Accounts.Commands.SignIn;
 using ControlHub.Application.Accounts.Commands.SignOut;
+using ControlHub.Domain.Permissions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,7 +44,7 @@ namespace ControlHub.API.Accounts.Controllers
             });
         }
 
-        [Authorize(Policy = "Permission:account.register_admin")]
+        [Authorize(Policy = Policies.CanCreateUser)]
         [HttpPost("admins/register")]
         public async Task<IActionResult> RegisterAdmin([FromBody] RegisterAdminRequest request, CancellationToken ct)
         {

@@ -222,7 +222,18 @@ namespace ControlHub
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 db.Database.Migrate();
-                ControlHubSeeder.SeedAsync(db).Wait();
+                
+                try
+                {
+                    ControlHubSeeder.SeedAsync(db).Wait();
+                    Console.WriteLine("✅ ControlHub seeding completed successfully!");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"❌ ControlHub seeding failed: {ex.Message}");
+                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                    throw;
+                }
             }
             ConfigureGuiMiddleware(app, guiPath);
             return app;

@@ -24,8 +24,8 @@ namespace ControlHub.Application.Accounts.Commands.CreateIdentifier
         }
         public async Task<Result<Guid>> Handle(CreateIdentifierConfigCommand request, CancellationToken cancellationToken)
         {
-            var existing = await _identifierConfigRepository.GetByNameAsync(request.Name, cancellationToken);
-            if (existing != null)
+            var existingResult = await _identifierConfigRepository.GetByNameAsync(request.Name, cancellationToken);
+            if (existingResult.IsSuccess)
             {
                 return Result<Guid>.Failure(Error.Conflict("CONFLICT", "Identifier name already exists"));
             }
@@ -39,7 +39,12 @@ namespace ControlHub.Application.Accounts.Commands.CreateIdentifier
                 if (result.IsFailure) return Result<Guid>.Failure(result.Error);
             }
 
-            await _identifierConfigRepository.AddAsync(config, cancellationToken);
+            var addResult = await _identifierConfigRepository.AddAsync(config, cancellationToken);
+            if (addResult.IsFailure)
+            {
+                return Result<Guid>.Failure(addResult.Error);
+            }
+
             await _uow.CommitAsync(cancellationToken);
 
             return Result<Guid>.Success(config.Id);
