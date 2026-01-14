@@ -66,13 +66,14 @@ namespace ControlHub.Infrastructure.Accounts
                 ib.WithOwner().HasForeignKey("AccountId"); // FK trỏ về Account
 
                 // Map các property của Identifier
+                ib.Property(i => i.Name).IsRequired().HasMaxLength(100);
                 ib.Property(i => i.Type).IsRequired();
                 ib.Property(i => i.Value).IsRequired().HasMaxLength(300);
                 ib.Property(i => i.NormalizedValue).IsRequired().HasMaxLength(300);
                 ib.Property(i => i.IsDeleted).HasDefaultValue(false);
 
-                // Tạo Unique Index trên bảng phụ
-                ib.HasIndex(i => new { i.Type, i.NormalizedValue })
+                // Tạo Unique Index trên bảng phụ - sử dụng Name thay vì Type
+                ib.HasIndex(i => new { i.Name, i.NormalizedValue })
                 .IsUnique()
                 .HasFilter("[IsDeleted] = 0");
             });

@@ -22,17 +22,19 @@ namespace ControlHub.Application.Accounts.Commands.UpdateIdentifierConfig
 
         public async Task<Result> Handle(UpdateIdentifierConfigCommand request, CancellationToken cancellationToken)
         {
-            var config = await _repository.GetByIdAsync(request.Id, cancellationToken);
-            if (config == null)
+            var configResult = await _repository.GetByIdAsync(request.Id, cancellationToken);
+            if (configResult.IsFailure)
             {
-                return Result.Failure(new Error("IdentifierConfig.NotFound", "Identifier configuration not found"));
+                return Result.Failure(configResult.Error);
             }
+
+            var config = configResult.Value;
 
             // Check if name is being changed and if new name already exists
             if (config.Name != request.Name)
             {
-                var existingConfig = await _repository.GetByNameAsync(request.Name, cancellationToken);
-                if (existingConfig != null && existingConfig.Id != config.Id)
+                var existingResult = await _repository.GetByNameAsync(request.Name, cancellationToken);
+                if (existingResult.IsSuccess && existingResult.Value.Id != config.Id)
                 {
                     return Result.Failure(new Error("IdentifierConfig.DuplicateName", "An identifier configuration with this name already exists"));
                 }

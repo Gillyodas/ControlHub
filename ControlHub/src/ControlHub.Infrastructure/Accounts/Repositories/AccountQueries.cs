@@ -53,6 +53,15 @@ namespace ControlHub.Infrastructure.Accounts.Repositories
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
+        public async Task<Account?> GetByIdentifierNameAsync(string identifierName, string normalizedValue, CancellationToken cancellationToken)
+        {
+            return await _db.Accounts
+                .AsNoTracking()
+                .Include(a => a.User)
+                .Where(a => a.Identifiers.Any(i => i.Name == identifierName && i.NormalizedValue == normalizedValue))
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         public async Task<User?> GetUserById(Guid id, CancellationToken cancellationToken)
         {
             return await _db.Users

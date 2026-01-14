@@ -10,11 +10,17 @@ import { getActiveIdentifierConfigs, type IdentifierConfigDto } from "@/services
 
 type Mode = "signin" | "register"
 
-const IDENTIFIER_OPTIONS: Array<{ label: string; value: IdentifierType }> = [
-  { label: "Email", value: 0 },
-  { label: "Phone number", value: 1 },
-  { label: "Username", value: 2 },
-]
+// Map from API response to IdentifierType values
+function mapIdentifierType(name: string): IdentifierType {
+  switch (name.toLowerCase()) {
+    case 'email': return 0
+    case 'phone': return 1
+    case 'username': return 2
+    case 'employeeid': return 2 // Map EmployeeID to Username type for now
+    case 'age': return 99 // Custom type for Age
+    default: return 0 // Default to Email
+  }
+}
 
 const ROLE_OPTIONS: RegisterRole[] = ["User", "Admin", "SupperAdmin"]
 
@@ -269,9 +275,9 @@ export function AuthView() {
                   onBlur={() => setTouched((p) => ({ ...p, regType: true }))}
                   className={inputClassName(false)}
                 >
-                  {IDENTIFIER_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="bg-zinc-950">
-                      {opt.label}
+                  {activeIdentifiers.map((config) => (
+                    <option key={config.id} value={mapIdentifierType(config.name)} className="bg-zinc-950">
+                      {config.name}
                     </option>
                   ))}
                 </select>

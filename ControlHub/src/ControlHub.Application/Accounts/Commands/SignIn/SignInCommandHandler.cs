@@ -1,4 +1,4 @@
-﻿using ControlHub.Application.Accounts.DTOs;
+using ControlHub.Application.Accounts.DTOs;
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.Application.Tokens.Interfaces;
@@ -26,7 +26,6 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
         private readonly ITokenFactory _tokenFactory;
         private readonly ITokenRepository _tokenRepository;
         private readonly IUnitOfWork _uow;
-        private readonly IIdentifierConfigRepository _identifierConfigRepository;
 
         public SignInCommandHandler(
             ILogger<SignInCommandHandler> logger,
@@ -37,8 +36,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             IRefreshTokenGenerator refreshTokenGenerator,
             ITokenFactory tokenFactory,
             ITokenRepository tokenRepository,
-            IUnitOfWork uow,
-            IIdentifierConfigRepository identifierConfigRepository)
+            IUnitOfWork uow)
         {
             _logger = logger;
             _accountQueries = accountQueries;
@@ -49,7 +47,6 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             _tokenFactory = tokenFactory;
             _tokenRepository = tokenRepository;
             _uow = uow;
-            _identifierConfigRepository = identifierConfigRepository;
         }
 
         public async Task<Result<SignInDTO>> Handle(SignInCommand request, CancellationToken cancellationToken)
@@ -58,8 +55,6 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
                 AccountLogs.SignIn_Started.Code,
                 AccountLogs.SignIn_Started.Message,
                 request.Value);
-
-            var varIdentConfig = await _identifierConfigRepository.GetByNameAsync(request.Name, cancellationToken);
 
             var result = _identifierFactory.Create(request.Type, request.Value);
             if (result.IsFailure)

@@ -23,9 +23,13 @@ namespace ControlHub.Application.Accounts.Queries.GetIdentifierConfigs
             GetIdentifierConfigsQuery request,
             CancellationToken ct)
         {
-            var configs = await _repo.GetActiveConfigsAsync(ct);
+            var configsResult = await _repo.GetActiveConfigsAsync(ct);
+            if (configsResult.IsFailure)
+            {
+                return Result<List<IdentifierConfigDto>>.Failure(configsResult.Error);
+            }
 
-            var dtos = configs.Select(c => new IdentifierConfigDto(
+            var dtos = configsResult.Value.Select(c => new IdentifierConfigDto(
                 c.Id,
                 c.Name,
                 c.Description,
