@@ -86,12 +86,13 @@ namespace ControlHub.Application.Accounts.Commands.RegisterSupperAdmin
                 superAdminRoleId = ControlHubDefaults.Roles.SuperAdminId;
             }
 
-            var accountResult = _accountFactory.CreateWithUserAndIdentifier(
+            var accountResult = await _accountFactory.CreateWithUserAndIdentifierAsync(
                 accId,
                 request.Value,
                 request.Type,
                 request.Password,
-                superAdminRoleId);
+                superAdminRoleId,
+                identifierConfigId: request.IdentifierConfigId);
 
             if (!accountResult.IsSuccess)
             {

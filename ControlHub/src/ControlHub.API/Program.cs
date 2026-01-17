@@ -79,8 +79,13 @@ namespace ControlHub.API
 
             if (app.Environment.IsDevelopment())
             {
+                app.UseStaticFiles(); // Serve static files like CSS
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(options =>
+                {
+                    options.InjectStylesheet("/custom-swagger.css");
+                    options.RoutePrefix = "swagger";
+                });
             }
 
             app.UseHttpsRedirection();

@@ -65,6 +65,7 @@ export async function signIn(req: SignInRequest): Promise<AuthData> {
     value: req.value,
     password: req.password,
     type: req.type,
+    identifierConfigId: req.identifierConfigId,
   })
 
   return data
@@ -72,13 +73,19 @@ export async function signIn(req: SignInRequest): Promise<AuthData> {
 
 export async function register(role: RegisterRole, req: RegisterRequest, options?: { masterKey?: string; accessToken?: string }) {
   if (role === "User") {
-    return postJson<{ accountId: string | number; message: string }>("/api/Auth/users/register", req)
+    return postJson<{ accountId: string | number; message: string }>("/api/Auth/users/register", {
+      ...req,
+      identifierConfigId: req.identifierConfigId,
+    })
   }
 
   if (role === "Admin") {
     return postJson<{ accountId: string | number; message: string }>(
       "/api/Auth/admins/register",
-      req,
+      {
+        ...req,
+        identifierConfigId: req.identifierConfigId,
+      },
       options?.accessToken,
     )
   }

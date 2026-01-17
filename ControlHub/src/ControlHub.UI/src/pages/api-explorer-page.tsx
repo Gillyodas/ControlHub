@@ -1,164 +1,248 @@
-import { useState } from "react"
-import { Code2, ChevronDown, ChevronRight } from "lucide-react"
+import { useState, useMemo } from "react"
+import { ChevronDown, ChevronRight, Lock, Globe, Search, Copy, Check, Terminal } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { useTranslation } from "react-i18next"
 
 interface ApiEndpoint {
   path: string
   method: string
-  description: string
+  descriptionKey: string
   controller: string
   requiresAuth: boolean
 }
 
 interface ApiGroup {
-  name: string
+  nameKey: string
   endpoints: ApiEndpoint[]
 }
 
-// Hardcoded API endpoints from backend
-const API_ENDPOINTS: ApiGroup[] = [
+const API_GROUPS: ApiGroup[] = [
   {
-    name: "Authentication",
+    nameKey: "identityAuth",
     endpoints: [
-      { path: "/api/Auth/login", method: "POST", description: "User login with credentials", controller: "AuthController", requiresAuth: false },
-      { path: "/api/Auth/register", method: "POST", description: "Register new user account", controller: "AuthController", requiresAuth: false },
-      { path: "/api/Auth/register-admin", method: "POST", description: "Register admin account", controller: "AuthController", requiresAuth: true },
-      { path: "/api/Auth/refresh-token", method: "POST", description: "Refresh access token", controller: "AuthController", requiresAuth: false },
-      { path: "/api/Auth/forgot-password", method: "POST", description: "Request password reset", controller: "AuthController", requiresAuth: false },
-      { path: "/api/Auth/reset-password", method: "POST", description: "Reset password with token", controller: "AuthController", requiresAuth: false },
-      { path: "/api/Auth/change-password", method: "POST", description: "Change user password", controller: "AuthController", requiresAuth: true },
+      { path: "/api/Auth/login", method: "POST", descriptionKey: "login", controller: "AuthController", requiresAuth: false },
+      { path: "/api/Auth/register", method: "POST", descriptionKey: "register", controller: "AuthController", requiresAuth: false },
+      { path: "/api/Auth/register-admin", method: "POST", descriptionKey: "registerAdmin", controller: "AuthController", requiresAuth: true },
+      { path: "/api/Auth/refresh-token", method: "POST", descriptionKey: "refreshToken", controller: "AuthController", requiresAuth: false },
+      { path: "/api/Auth/forgot-password", method: "POST", descriptionKey: "forgotPassword", controller: "AuthController", requiresAuth: false },
+      { path: "/api/Auth/reset-password", method: "POST", descriptionKey: "resetPassword", controller: "AuthController", requiresAuth: false },
+      { path: "/api/Auth/change-password", method: "POST", descriptionKey: "changePassword", controller: "AuthController", requiresAuth: true },
     ]
   },
   {
-    name: "User Management",
+    nameKey: "userHeuristics",
     endpoints: [
-      { path: "/api/User/users/{id}/username", method: "PATCH", description: "Update username for a user", controller: "UserController", requiresAuth: true },
+      { path: "/api/User/users/{id}/username", method: "PATCH", descriptionKey: "updateUsername", controller: "UserController", requiresAuth: true },
     ]
   },
   {
-    name: "Role Management",
+    nameKey: "roleProtocols",
     endpoints: [
-      { path: "/api/Role", method: "GET", description: "Get all roles", controller: "RoleController", requiresAuth: true },
-      { path: "/api/Role/{id}", method: "GET", description: "Get role by ID", controller: "RoleController", requiresAuth: true },
-      { path: "/api/Role", method: "POST", description: "Create new role", controller: "RoleController", requiresAuth: true },
-      { path: "/api/Role/{id}", method: "PUT", description: "Update role", controller: "RoleController", requiresAuth: true },
-      { path: "/api/Role/{id}", method: "DELETE", description: "Delete role", controller: "RoleController", requiresAuth: true },
+      { path: "/api/Role", method: "GET", descriptionKey: "getRoles", controller: "RoleController", requiresAuth: true },
+      { path: "/api/Role/{id}", method: "GET", descriptionKey: "getRole", controller: "RoleController", requiresAuth: true },
+      { path: "/api/Role", method: "POST", descriptionKey: "createRole", controller: "RoleController", requiresAuth: true },
+      { path: "/api/Role/{id}", method: "PUT", descriptionKey: "updateRole", controller: "RoleController", requiresAuth: true },
+      { path: "/api/Role/{id}", method: "DELETE", descriptionKey: "deleteRole", controller: "RoleController", requiresAuth: true },
     ]
   },
   {
-    name: "Permission Management",
+    nameKey: "permissionsHub",
     endpoints: [
-      { path: "/api/Permission", method: "GET", description: "Get all permissions", controller: "PermissionController", requiresAuth: true },
-      { path: "/api/Permission/{id}", method: "GET", description: "Get permission by ID", controller: "PermissionController", requiresAuth: true },
-      { path: "/api/Permission", method: "POST", description: "Create new permission", controller: "PermissionController", requiresAuth: true },
+      { path: "/api/Permission", method: "GET", descriptionKey: "getPermissions", controller: "PermissionController", requiresAuth: true },
+      { path: "/api/Permission/{id}", method: "GET", descriptionKey: "getPermission", controller: "PermissionController", requiresAuth: true },
+      { path: "/api/Permission", method: "POST", descriptionKey: "createPermission", controller: "PermissionController", requiresAuth: true },
     ]
   },
   {
-    name: "Identifier Configuration",
+    nameKey: "identifierGates",
     endpoints: [
-      { path: "/api/Identifier", method: "GET", description: "Get all identifier configurations", controller: "IdentifierController", requiresAuth: true },
-      { path: "/api/Identifier", method: "POST", description: "Create new identifier configuration", controller: "IdentifierController", requiresAuth: true },
+      { path: "/api/Identifier", method: "GET", descriptionKey: "getIdentifiers", controller: "IdentifierController", requiresAuth: true },
+      { path: "/api/Identifier", method: "POST", descriptionKey: "createIdentifier", controller: "IdentifierController", requiresAuth: true },
     ]
   },
 ]
 
 export default function ApiExplorerPage() {
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    new Set(API_ENDPOINTS.map(g => g.name))
-  )
+  const { t } = useTranslation()
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set([API_GROUPS[0].nameKey]))
+  const [searchQuery, setSearchQuery] = useState("")
+  const [copiedPath, setCopiedPath] = useState<string | null>(null)
 
-  const toggleGroup = (groupName: string) => {
+  const toggleGroup = (groupKey: string) => {
     const newExpanded = new Set(expandedGroups)
-    if (newExpanded.has(groupName)) {
-      newExpanded.delete(groupName)
+    if (newExpanded.has(groupKey)) {
+      newExpanded.delete(groupKey)
     } else {
-      newExpanded.add(groupName)
+      newExpanded.add(groupKey)
     }
     setExpandedGroups(newExpanded)
   }
 
-  const getMethodColor = (method: string) => {
+  const handleCopy = (path: string) => {
+    navigator.clipboard.writeText(`https://localhost:7110${path}`)
+    setCopiedPath(path)
+    setTimeout(() => setCopiedPath(null), 2000)
+  }
+
+  const getMethodStyles = (method: string) => {
     switch (method) {
-      case "GET": return "bg-blue-900 text-blue-300"
-      case "POST": return "bg-green-900 text-green-300"
-      case "PUT": return "bg-yellow-900 text-yellow-300"
-      case "PATCH": return "bg-orange-900 text-orange-300"
-      case "DELETE": return "bg-red-900 text-red-300"
-      default: return "bg-gray-700 text-gray-300"
+      case "GET": return "bg-blue-500/10 text-blue-400 border-blue-500/20"
+      case "POST": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+      case "PUT": return "bg-amber-500/10 text-amber-400 border-amber-500/20"
+      case "PATCH": return "bg-purple-500/10 text-purple-400 border-purple-500/20"
+      case "DELETE": return "bg-rose-500/10 text-rose-400 border-rose-500/20"
+      default: return "bg-sidebar-accent text-muted-foreground border-sidebar-border"
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <Code2 className="w-8 h-8 text-blue-500" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-100">API Explorer</h1>
-            <p className="text-gray-400 text-sm">Browse and explore available API endpoints</p>
-          </div>
-        </div>
+  const totalProtocols = useMemo(() => API_GROUPS.reduce((sum, g) => sum + g.endpoints.length, 0), [])
 
-        <div className="space-y-4">
-          {API_ENDPOINTS.map((group) => (
-            <div key={group.name} className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div>
+          <h1 className="text-4xl font-extrabold tracking-tight bg-[var(--vibrant-gradient)] bg-clip-text text-transparent italic">
+            {t('apiExplorer.title')}
+          </h1>
+          <p className="text-muted-foreground mt-2 text-lg">
+            {t('apiExplorer.description')}
+          </p>
+        </div>
+        <div className="relative group w-full md:w-96">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-muted-foreground/50 group-focus-within:text-sidebar-primary transition-colors">
+            <Search className="w-4 h-4" />
+          </div>
+          <input
+            type="text"
+            placeholder={t('apiExplorer.searchPlaceholder')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 bg-sidebar/40 backdrop-blur-md border border-sidebar-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sidebar-primary/50 transition-all font-medium"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6">
+        {API_GROUPS.map((group) => {
+          const filteredEndpoints = group.endpoints.filter(e => {
+            const desc = t(`apiExplorer.endpoints.${e.descriptionKey}`)
+            return e.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              desc.toLowerCase().includes(searchQuery.toLowerCase())
+          })
+
+          if (searchQuery && filteredEndpoints.length === 0) return null
+
+          return (
+            <div key={group.nameKey} className="group/group overflow-hidden rounded-2xl border border-sidebar-border/40 bg-sidebar/10 backdrop-blur-sm transition-all hover:border-sidebar-border/80 shadow-sm hover:shadow-2xl hover:shadow-sidebar-primary/5">
               <button
-                onClick={() => toggleGroup(group.name)}
-                className="w-full flex items-center justify-between p-4 hover:bg-gray-750 transition-colors"
+                onClick={() => toggleGroup(group.nameKey)}
+                className="w-full flex items-center justify-between p-5 bg-sidebar-accent/5 hover:bg-sidebar-accent/20 transition-all text-left"
               >
-                <div className="flex items-center gap-3">
-                  {expandedGroups.has(group.name) ? (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <ChevronRight className="w-5 h-5 text-gray-400" />
-                  )}
-                  <h2 className="text-lg font-semibold text-gray-100">{group.name}</h2>
-                  <span className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded-full">
-                    {group.endpoints.length} endpoint{group.endpoints.length !== 1 ? "s" : ""}
-                  </span>
+                <div className="flex items-center gap-4">
+                  <div className={cn(
+                    "p-2 rounded-xl transition-all duration-300",
+                    expandedGroups.has(group.nameKey) ? "bg-sidebar-primary/20 text-sidebar-primary shadow-[0_0_15px_rgba(var(--sidebar-primary),0.2)]" : "bg-sidebar-accent/50 text-muted-foreground"
+                  )}>
+                    <Terminal className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black tracking-tight text-foreground">{t(`apiExplorer.groups.${group.nameKey}`)}</h2>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mt-0.5">
+                      {t('apiExplorer.activeNodes', { count: filteredEndpoints.length })}
+                    </p>
+                  </div>
                 </div>
+                {expandedGroups.has(group.nameKey) ? (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground/50 group-hover:text-foreground transition-colors" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-muted-foreground/50 group-hover:text-foreground transition-colors" />
+                )}
               </button>
 
-              {expandedGroups.has(group.name) && (
-                <div className="border-t border-gray-700">
-                  {group.endpoints.map((endpoint, index) => (
+              <div className={cn(
+                "transition-all duration-500 ease-in-out",
+                expandedGroups.has(group.nameKey) ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+              )}>
+                <div className="p-4 space-y-3 bg-gradient-to-b from-sidebar-accent/5 to-transparent">
+                  {filteredEndpoints.map((endpoint, index) => (
                     <div
                       key={index}
-                      className="p-4 border-b border-gray-700 last:border-b-0 hover:bg-gray-750 transition-colors"
+                      className="group/endpoint relative p-4 bg-sidebar/40 backdrop-blur-md rounded-xl border border-sidebar-border shadow-sm hover:border-sidebar-primary/50 transition-all duration-300 hover:translate-x-1"
                     >
-                      <div className="flex items-start gap-3">
-                        <span className={`px-2 py-1 rounded text-xs font-mono font-semibold ${getMethodColor(endpoint.method)}`}>
+                      <div className="flex flex-col md:flex-row md:items-center gap-4">
+                        <Badge variant="outline" className={cn(
+                          "w-20 justify-center h-8 font-black uppercase text-[10px] tracking-tighter transition-all group-hover/endpoint:scale-105",
+                          getMethodStyles(endpoint.method)
+                        )}>
                           {endpoint.method}
-                        </span>
-                        <div className="flex-1">
-                          <code className="text-sm text-blue-400 font-mono">{endpoint.path}</code>
-                          <p className="text-gray-400 text-sm mt-1">{endpoint.description}</p>
-                          <div className="flex items-center gap-3 mt-2">
-                            <span className="text-xs text-gray-500">
-                              Controller: <span className="text-gray-400">{endpoint.controller}</span>
-                            </span>
+                        </Badge>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <code className="text-sm font-black font-mono text-sidebar-primary break-all selection:bg-sidebar-primary/20 selection:text-white">
+                              {endpoint.path}
+                            </code>
                             {endpoint.requiresAuth && (
-                              <span className="px-2 py-0.5 bg-yellow-900 text-yellow-300 text-xs rounded">
-                                🔒 Auth Required
-                              </span>
+                              <Badge variant="warning" className="h-5 px-1.5 font-black uppercase text-[8px] bg-amber-500/10 text-amber-400 border-amber-500/20">
+                                <Lock className="w-2.5 h-2.5 mr-1" /> {t('apiExplorer.authGate')}
+                              </Badge>
                             )}
                           </div>
+                          <p className="text-muted-foreground text-sm leading-relaxed max-w-2xl font-medium italic opacity-80">
+                            {t(`apiExplorer.endpoints.${endpoint.descriptionKey}`)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 self-end md:self-center">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="h-8 px-3 rounded-lg font-bold text-[10px] border border-sidebar-border bg-sidebar-accent/20 hover:bg-sidebar-accent/50"
+                            onClick={() => handleCopy(endpoint.path)}
+                          >
+                            {copiedPath === endpoint.path ? (
+                              <><Check className="w-3.5 h-3.5 mr-2 text-emerald-400" /> {t('apiExplorer.copied')}</>
+                            ) : (
+                              <><Copy className="w-3.5 h-3.5 mr-2" /> {t('apiExplorer.replicate')}</>
+                            )}
+                          </Button>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
-          ))}
-        </div>
+          )
+        })}
+      </div>
 
-        <div className="mt-6 p-4 bg-gray-800 border border-gray-700 rounded-lg">
-          <h3 className="text-sm font-semibold text-gray-100 mb-2">API Information</h3>
-          <div className="space-y-1 text-xs text-gray-400">
-            <p>• Base URL: <code className="text-blue-400">https://localhost:7110</code></p>
-            <p>• Authentication: Bearer Token (JWT)</p>
-            <p>• Content-Type: application/json</p>
-            <p>• Total Endpoints: {API_ENDPOINTS.reduce((sum, g) => sum + g.endpoints.length, 0)}</p>
+      <div className="p-8 bg-sidebar/30 backdrop-blur-md border border-sidebar-border rounded-3xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+          <Globe className="w-32 h-32" />
+        </div>
+        <h3 className="text-lg font-black tracking-tight text-foreground flex items-center gap-2 mb-6">
+          <Terminal className="w-5 h-5 text-sidebar-primary" />
+          {t('apiExplorer.networkBriefing')}
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t('apiExplorer.targetHost')}</span>
+            <p className="font-mono text-sm text-sidebar-primary font-bold">https://localhost:7110</p>
+          </div>
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t('apiExplorer.authProtocol')}</span>
+            <p className="font-bold text-sm text-foreground">{t('apiExplorer.jwtBearerSequence')}</p>
+          </div>
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t('apiExplorer.dataFormat')}</span>
+            <p className="font-bold text-sm text-foreground">{t('apiExplorer.standardizedJson')}</p>
+          </div>
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t('apiExplorer.nexusDensity')}</span>
+            <p className="font-bold text-sm text-foreground">
+              {t('apiExplorer.protocols', { count: totalProtocols })}
+            </p>
           </div>
         </div>
       </div>

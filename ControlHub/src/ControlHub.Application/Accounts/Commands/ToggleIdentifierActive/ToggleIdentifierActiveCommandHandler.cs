@@ -1,4 +1,4 @@
-using ControlHub.Application.Accounts.Interfaces.Repositories;
+using AppIdentifierConfigRepository = ControlHub.Application.Accounts.Interfaces.Repositories.IIdentifierConfigRepository;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.SharedKernel.Common.Errors;
 using ControlHub.SharedKernel.Results;
@@ -8,11 +8,11 @@ namespace ControlHub.Application.Accounts.Commands.ToggleIdentifierActive
 {
     public class ToggleIdentifierActiveCommandHandler : IRequestHandler<ToggleIdentifierActiveCommand, Result>
     {
-        private readonly IIdentifierConfigRepository _repository;
+        private readonly AppIdentifierConfigRepository _repository;
         private readonly IUnitOfWork _unitOfWork;
 
         public ToggleIdentifierActiveCommandHandler(
-            IIdentifierConfigRepository repository,
+            AppIdentifierConfigRepository repository,
             IUnitOfWork unitOfWork)
         {
             _repository = repository;

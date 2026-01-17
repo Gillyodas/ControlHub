@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { usersApi } from "@/services/api"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 interface UpdateUsernameDialogProps {
   userId: string
@@ -23,6 +24,7 @@ export function UpdateUsernameDialog({
   onOpenChange,
   onSuccess,
 }: UpdateUsernameDialogProps) {
+  const { t } = useTranslation()
   const [username, setUsername] = useState(currentUsername)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -30,18 +32,18 @@ export function UpdateUsernameDialog({
     e.preventDefault()
 
     if (username.trim() === currentUsername) {
-      toast.info("Username is the same as current")
+      toast.info(t('users.usernameSameError'))
       return
     }
 
     setIsLoading(true)
     try {
       const result = await usersApi.updateUsername(userId, { username: username.trim() }, accessToken)
-      toast.success("Username updated successfully")
+      toast.success(t('users.updateUsernameSuccess'))
       onSuccess(result.username)
       onOpenChange(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update username")
+      toast.error(error instanceof Error ? error.message : t('users.updateFailed'))
     } finally {
       setIsLoading(false)
     }
@@ -51,28 +53,28 @@ export function UpdateUsernameDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Update Username</DialogTitle>
-          <DialogDescription>Change your username</DialogDescription>
+          <DialogTitle>{t('users.updateUsername')}</DialogTitle>
+          <DialogDescription>{t('users.updateUsernameDescription')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="username">New Username</Label>
+              <Label htmlFor="username">{t('users.newUsername')}</Label>
               <Input
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter new username"
+                placeholder={t('users.newUsernamePlaceholder')}
                 required
               />
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Updating..." : "Update Username"}
+              {isLoading ? t('users.updating') : t('users.updateUsername')}
             </Button>
           </DialogFooter>
         </form>

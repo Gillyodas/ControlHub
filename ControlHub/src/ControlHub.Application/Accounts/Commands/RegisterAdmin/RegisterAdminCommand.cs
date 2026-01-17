@@ -4,5 +4,5 @@ using MediatR;
 
 namespace ControlHub.Application.Accounts.Commands.RegisterAdmin
 {
-    public sealed record RegisterAdminCommand(string Value, IdentifierType Type, string Password) : IRequest<Result<Guid>>;
+    public sealed record RegisterAdminCommand(string Value, IdentifierType Type, string Password, Guid? IdentifierConfigId = null) : IRequest<Result<Guid>>;
 }

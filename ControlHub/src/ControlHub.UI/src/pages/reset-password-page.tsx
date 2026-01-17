@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import * as api from "@/auth/api"
 import { Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 function inputClassName(hasError: boolean) {
   return [
@@ -17,6 +18,7 @@ export function ResetPasswordPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const tokenFromUrl = searchParams.get("token") || ""
+  const { t } = useTranslation()
 
   const [token, setToken] = React.useState(tokenFromUrl)
   const [password, setPassword] = React.useState("")
@@ -35,25 +37,25 @@ export function ResetPasswordPage() {
   }, [tokenFromUrl])
 
   const tokenError = React.useMemo(() => {
-    if (!token.trim()) return "Token is required"
+    if (!token.trim()) return t('auth.validation.tokenRequired')
     return null
-  }, [token])
+  }, [token, t])
 
   const passwordError = React.useMemo(() => {
-    if (!password.trim()) return "Password is required"
-    if (password.length < 8) return "Password must be at least 8 characters"
-    if (!/[a-z]/.test(password)) return "Password must include a lowercase letter"
-    if (!/[A-Z]/.test(password)) return "Password must include an uppercase letter"
-    if (!/[0-9]/.test(password)) return "Password must include a number"
-    if (!/[\W_]/.test(password)) return "Password must include a special character"
+    if (!password.trim()) return t('auth.validation.passwordRequired')
+    if (password.length < 8) return t('auth.validation.passwordMinLength')
+    if (!/[a-z]/.test(password)) return t('auth.validation.passwordLowercase')
+    if (!/[A-Z]/.test(password)) return t('auth.validation.passwordUppercase')
+    if (!/[0-9]/.test(password)) return t('auth.validation.passwordNumber')
+    if (!/[\W_]/.test(password)) return t('auth.validation.passwordSpecial')
     return null
-  }, [password])
+  }, [password, t])
 
   const confirmError = React.useMemo(() => {
-    if (!confirmPassword.trim()) return "Confirm password is required"
-    if (confirmPassword !== password) return "Passwords do not match"
+    if (!confirmPassword.trim()) return t('auth.validation.confirmPasswordRequired')
+    if (confirmPassword !== password) return t('auth.validation.passwordsDoNotMatch')
     return null
-  }, [confirmPassword, password])
+  }, [confirmPassword, password, t])
 
   const canSubmit = !tokenError && !passwordError && !confirmError
 
@@ -64,43 +66,61 @@ export function ResetPasswordPage() {
 
     try {
       await api.resetPassword({ token, password })
-      toast.success("Password has been reset successfully")
+      toast.success(t('settings.changePasswordSuccess'))
       setSuccess(true)
       setTimeout(() => {
         navigate("/login")
       }, 2000)
     } catch (err) {
       const error = err as Error
-      setError(error.message || "Failed to reset password. Please try again.")
-      toast.error(error.message || "Failed to reset password")
+      setError(error.message || t('errors.generic'))
+      toast.error(error.message || t('errors.generic'))
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (success) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6">
-        <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6 text-center">
-          <h1 className="text-2xl font-bold text-zinc-100">Password Reset Successful</h1>
-          <p className="text-zinc-400 mt-2">Your password has been reset successfully.</p>
-          <Button onClick={() => navigate('/login')} className="mt-4 w-full">
-            Back to Login
-          </Button>
-        </div>
+  const SuccessView = (
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px]" />
       </div>
-    )
-  }
+      <div className="w-full max-w-md rounded-2xl border border-sidebar-border bg-sidebar/80 backdrop-blur-xl shadow-2xl relative z-10 overflow-hidden p-8 text-center">
+        <h1 className="text-2xl font-bold text-zinc-100">{t('auth.passwordResetSuccess')}</h1>
+        <p className="text-muted-foreground mt-2">{t('auth.passwordResetSuccessMessage')}</p>
+        <Button
+          variant="vibrant"
+          onClick={() => navigate('/login')}
+          className="mt-6 w-full font-bold py-6 rounded-xl"
+        >
+          {t('auth.backToLogin')}
+        </Button>
+      </div>
+    </div>
+  )
+
+  if (success) return SuccessView
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 overflow-hidden">
-        <div className="p-6">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-zinc-100">Reset Password</h1>
-            <p className="text-zinc-400">Enter your new password below</p>
-          </div>
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Decorative gradients */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px]" />
+      </div>
 
+      <div className="w-full max-w-md rounded-2xl border border-sidebar-border bg-sidebar/80 backdrop-blur-xl shadow-2xl relative z-10 overflow-hidden">
+        <div className="p-8 border-b border-sidebar-border text-center">
+          <h1 className="text-3xl font-extrabold bg-[var(--vibrant-gradient)] bg-clip-text text-transparent">
+            ControlHub
+          </h1>
+          <p className="text-muted-foreground mt-2 font-medium">
+            {t('auth.resetPassword')}
+          </p>
+        </div>
+
+        <div className="p-8">
           {error && (
             <div className="mb-4 rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
               {error}
@@ -109,9 +129,9 @@ export function ResetPasswordPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!tokenFromUrl && (
-              <div className="space-y-2">
-                <label htmlFor="token" className="text-sm font-medium text-zinc-300">
-                  Reset Token
+              <div className="space-y-1">
+                <label htmlFor="token" className="text-sm text-zinc-300">
+                  {t('auth.resetToken')}
                 </label>
                 <input
                   id="token"
@@ -120,17 +140,17 @@ export function ResetPasswordPage() {
                   onChange={(e) => setToken(e.target.value)}
                   onBlur={() => setTouched(t => ({ ...t, token: true }))}
                   className={inputClassName(!!tokenError && (touched.token || submitting))}
-                  placeholder="Enter reset token"
+                  placeholder={t('auth.resetTokenPlaceholder')}
                 />
                 {tokenError && (touched.token || submitting) && (
-                  <p className="text-sm text-red-500 mt-1">{tokenError}</p>
+                  <p className="text-xs text-red-500 mt-1">{tokenError}</p>
                 )}
               </div>
             )}
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-zinc-300">
-                New Password
+            <div className="space-y-1">
+              <label htmlFor="password" className="text-sm text-zinc-300">
+                {t('auth.newPassword')}
               </label>
               <div className="relative">
                 <input
@@ -143,7 +163,7 @@ export function ResetPasswordPage() {
                     inputClassName(!!passwordError && (touched.password || submitting)),
                     "pr-10"
                   ].join(" ")}
-                  placeholder="Enter new password"
+                  placeholder={t('auth.newPasswordPlaceholder')}
                 />
                 <button
                   type="button"
@@ -154,13 +174,13 @@ export function ResetPasswordPage() {
                 </button>
               </div>
               {passwordError && (touched.password || submitting) && (
-                <p className="text-sm text-red-500 mt-1">{passwordError}</p>
+                <p className="text-xs text-red-500 mt-1">{passwordError}</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-zinc-300">
-                Confirm Password
+            <div className="space-y-1">
+              <label htmlFor="confirmPassword" className="text-sm text-zinc-300">
+                {t('auth.confirmPassword')}
               </label>
               <div className="relative">
                 <input
@@ -173,7 +193,7 @@ export function ResetPasswordPage() {
                     inputClassName(!!confirmError && (touched.confirmPassword || submitting)),
                     "pr-10"
                   ].join(" ")}
-                  placeholder="Confirm new password"
+                  placeholder={t('auth.confirmPasswordPlaceholder')}
                 />
                 <button
                   type="button"
@@ -184,34 +204,35 @@ export function ResetPasswordPage() {
                 </button>
               </div>
               {confirmError && (touched.confirmPassword || submitting) && (
-                <p className="text-sm text-red-500 mt-1">{confirmError}</p>
+                <p className="text-xs text-red-500 mt-1">{confirmError}</p>
               )}
             </div>
 
             <Button
               type="submit"
-              className="w-full mt-4"
+              variant="vibrant"
+              className="w-full mt-2 text-white font-bold py-6 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
               disabled={!canSubmit || submitting}
             >
-              {submitting ? "Resetting Password..." : "Reset Password"}
+              {submitting ? t('auth.resettingPassword') : t('auth.resetPassword')}
             </Button>
 
             <div className="flex justify-between pt-2">
               <Button
                 type="button"
                 variant="link"
-                className="text-zinc-400 hover:text-zinc-200 px-0"
+                className="text-zinc-400 hover:text-white px-0"
                 onClick={() => navigate('/login')}
               >
-                Back to Login
+                {t('auth.backToLogin')}
               </Button>
               <Button
                 type="button"
                 variant="link"
-                className="text-zinc-400 hover:text-zinc-200 px-0"
+                className="text-zinc-400 hover:text-white px-0"
                 onClick={() => navigate('/forgot-password')}
               >
-                Request New Token
+                {t('auth.requestNewToken')}
               </Button>
             </div>
           </form>

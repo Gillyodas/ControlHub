@@ -1,41 +1,77 @@
 ﻿using ControlHub.Domain.Accounts.Enums;
 using ControlHub.Domain.Accounts.Identifiers.Rules;
+using ControlHub.Domain.Accounts.Identifiers;
 using ControlHub.Domain.Accounts.ValueObjects;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;
+using ControlHub.SharedKernel.Common.Errors;
 
 namespace ControlHub.Domain.Accounts.Identifiers.Services
 {
     public class IdentifierFactory
     {
         private readonly IEnumerable<IIdentifierValidator> _validators;
+        private readonly IIdentifierConfigRepository _configRepository;
+        private readonly DynamicIdentifierValidator _dynamicValidator;
 
-        public IdentifierFactory(IEnumerable<IIdentifierValidator> validators)
+        public IdentifierFactory(
+            IEnumerable<IIdentifierValidator> validators,
+            IIdentifierConfigRepository configRepository,
+            DynamicIdentifierValidator dynamicValidator)
         {
             _validators = validators;
+            _configRepository = configRepository;
+            _dynamicValidator = dynamicValidator;
         }
 
-        public Result<Identifier> Create(IdentifierType type, string rawValue)
+        public async Task<Result<Identifier>> CreateAsync(
+            IdentifierType type, 
+            string rawValue, 
+            Guid? configId = null,
+            CancellationToken ct = default)
         {
-            // 1. Tìm Chiến lược (Strategy) phù hợp
+            // 1. If we have a specific config ID, use dynamic validation
+            if (configId.HasValue)
+            {
+                var configResult = await _configRepository.GetByIdAsync(configId.Value, ct);
+                if (configResult.IsFailure)
+                    return Result<Identifier>.Failure(Error.NotFound("IdentifierConfig.NotFound", "Identifier configuration not found"));
+
+                var config = configResult.Value;
+
+                var validationResult = _dynamicValidator.ValidateAndNormalize(rawValue, config);
+                if (validationResult.IsFailure)
+                    return Result<Identifier>.Failure(validationResult.Error);
+
+                return Result<Identifier>.Success(Identifier.CreateWithName(type, config!.Name, rawValue, validationResult.Value));
+            }
+
+            // 2. Fallback to strategy-based validation for standard types (Email, Phone, Username)
             var validator = _validators.FirstOrDefault(v => v.Type == type);
-
             if (validator == null)
-            {
-                // Logic nghiệp vụ: Không hỗ trợ loại này
                 return Result<Identifier>.Failure(AccountErrors.UnsupportedIdentifierType);
-            }
 
-            // 2. Thực thi Validate & Normalize
             var (isValid, normalized, error) = validator.ValidateAndNormalize(rawValue);
-
             if (!isValid)
-            {
                 return Result<Identifier>.Failure(error!);
-            }
 
-            // 3. Tạo Value Object (Entity)
-            // Lưu ý: Identifier.Create giờ chỉ nên được gọi từ đây để đảm bảo an toàn
+            return Result<Identifier>.Success(Identifier.Create(type, rawValue, normalized));
+        }
+
+        // Keep synchronous version for backward compatibility where possible, but it won't support dynamic configs
+        public Result<Identifier> Create(IdentifierType type, string rawValue, Guid? configId = null)
+        {
+            if (configId.HasValue)
+                throw new InvalidOperationException("Dynamic identifier creation requires async call.");
+
+            var validator = _validators.FirstOrDefault(v => v.Type == type);
+            if (validator == null)
+                return Result<Identifier>.Failure(AccountErrors.UnsupportedIdentifierType);
+
+            var (isValid, normalized, error) = validator.ValidateAndNormalize(rawValue);
+            if (!isValid)
+                return Result<Identifier>.Failure(error!);
+
             return Result<Identifier>.Success(Identifier.Create(type, rawValue, normalized));
         }
     }

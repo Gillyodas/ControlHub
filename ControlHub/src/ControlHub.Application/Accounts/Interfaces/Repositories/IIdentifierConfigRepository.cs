@@ -1,14 +1,8 @@
 ﻿using ControlHub.Domain.Accounts.Identifiers;
-using ControlHub.SharedKernel.Results;
 
 namespace ControlHub.Application.Accounts.Interfaces.Repositories
 {
-    public interface IIdentifierConfigRepository
+    public interface IIdentifierConfigRepository : Domain.Accounts.Identifiers.IIdentifierConfigRepository
     {
-        Task<Result<IdentifierConfig>> GetByIdAsync(Guid id, CancellationToken ct);
-        Task<Result<IdentifierConfig>> GetByNameAsync(string name, CancellationToken ct);
-        Task<Result<IEnumerable<IdentifierConfig>>> GetActiveConfigsAsync(CancellationToken ct);
-        Task<Result<IEnumerable<IdentifierConfig>>> GetDeactiveConfigsAsync(CancellationToken ct);
-        Task<Result> AddAsync(IdentifierConfig config, CancellationToken ct);
     }
 }

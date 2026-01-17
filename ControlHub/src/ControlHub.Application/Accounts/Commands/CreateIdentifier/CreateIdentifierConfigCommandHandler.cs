@@ -1,4 +1,4 @@
-﻿using ControlHub.Application.Accounts.Interfaces.Repositories;
+﻿using AppIdentifierConfigRepository = ControlHub.Application.Accounts.Interfaces.Repositories.IIdentifierConfigRepository;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.Domain.Accounts.Identifiers;
 using ControlHub.SharedKernel.Common.Errors;
@@ -10,11 +10,11 @@ namespace ControlHub.Application.Accounts.Commands.CreateIdentifier
 {
     public class CreateIdentifierConfigCommandHandler : IRequestHandler<CreateIdentifierConfigCommand, Result<Guid>>
     {
-        private readonly IIdentifierConfigRepository _identifierConfigRepository;
+        private readonly AppIdentifierConfigRepository _identifierConfigRepository;
         private readonly IUnitOfWork _uow;
         private readonly ILogger<CreateIdentifierConfigCommandHandler> _logger;
         public CreateIdentifierConfigCommandHandler(
-            IIdentifierConfigRepository identifierConfigRepository,
+            AppIdentifierConfigRepository identifierConfigRepository,
             IUnitOfWork uow,
             ILogger<CreateIdentifierConfigCommandHandler> logger)
         {

@@ -1,4 +1,4 @@
-using ControlHub.Application.Accounts.Interfaces.Repositories;
+using AppIdentifierConfigRepository = ControlHub.Application.Accounts.Interfaces.Repositories.IIdentifierConfigRepository;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.Domain.Accounts.Identifiers;
 using ControlHub.SharedKernel.Common.Errors;
@@ -9,11 +9,11 @@ namespace ControlHub.Application.Accounts.Commands.UpdateIdentifierConfig
 {
     public class UpdateIdentifierConfigCommandHandler : IRequestHandler<UpdateIdentifierConfigCommand, Result>
     {
-        private readonly IIdentifierConfigRepository _repository;
+        private readonly AppIdentifierConfigRepository _repository;
         private readonly IUnitOfWork _unitOfWork;
 
         public UpdateIdentifierConfigCommandHandler(
-            IIdentifierConfigRepository repository,
+            AppIdentifierConfigRepository repository,
             IUnitOfWork unitOfWork)
         {
             _repository = repository;

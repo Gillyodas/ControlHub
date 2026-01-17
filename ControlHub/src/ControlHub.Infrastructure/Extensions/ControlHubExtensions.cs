@@ -109,8 +109,11 @@ namespace ControlHub
 
             // 6. Identifier Configuration Services
             services.AddScoped<IIdentifierConfigRepository, IdentifierConfigRepository>();
+            services.AddScoped<Domain.Accounts.Identifiers.IIdentifierConfigRepository>(sp => 
+                sp.GetRequiredService<IIdentifierConfigRepository>());
 
             // 6. Domain Services & Identifiers
+            services.AddScoped<DynamicIdentifierValidator>();
             services.AddScoped<IdentifierFactory>();
 
             // --- CẬP NHẬT: Đăng ký các triển khai Validator ---
@@ -180,7 +183,31 @@ namespace ControlHub
                 {
                     Title = "ControlHub Identity API",
                     Version = "v1",
-                    Description = "Identity & Access Management provided by ControlHub NuGet"
+                    Description = @"Identity & Access Management provided by ControlHub NuGet
+
+<a href='https://localhost:7110/control-hub/index.html' class='my-custom-button'>🚀 Open ControlHub Dashboard</a>
+
+<style>
+.my-custom-button {
+    display: inline-block;
+    background-color: #007bff;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    margin: 10px 0;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.my-custom-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+}
+</style>"
                 });
 
                 // Cấu hình ổ khóa JWT (Bearer)
