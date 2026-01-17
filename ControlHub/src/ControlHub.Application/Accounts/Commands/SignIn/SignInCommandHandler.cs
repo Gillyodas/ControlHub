@@ -56,7 +56,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
                 AccountLogs.SignIn_Started.Message,
                 request.Value);
 
-            var result = _identifierFactory.Create(request.Type, request.Value);
+            var result = await _identifierFactory.CreateAsync(request.Type, request.Value, request.IdentifierConfigId, cancellationToken);
             if (result.IsFailure)
             {
                 _logger.LogWarning("{Code}: {Message} for Identifier {Ident}. Error: {Error}",

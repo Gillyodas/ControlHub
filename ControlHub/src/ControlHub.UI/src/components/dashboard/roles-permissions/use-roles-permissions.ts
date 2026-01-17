@@ -1,6 +1,7 @@
 import * as React from "react"
 import { initialPermissions, initialRoles } from "./data"
 import type { Permission, PermissionDraft, Role, RoleDraft } from "./types"
+import { useTranslation } from "react-i18next"
 
 type NotifyFn = (input: { title: string; description?: string; variant?: "success" | "error" | "info" }) => void
 
@@ -10,6 +11,7 @@ type UseRolesPermissionsOptions = {
 }
 
 export function useRolesPermissions({ notify, accessToken }: UseRolesPermissionsOptions) {
+  const { t } = useTranslation()
   const [roles, setRoles] = React.useState<Role[]>(() => initialRoles)
   const [permissions, setPermissions] = React.useState<Permission[]>(() => initialPermissions)
 
@@ -44,13 +46,13 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
   const [debouncedPermissionsSearchTerm, setDebouncedPermissionsSearchTerm] = React.useState(permissionsSearchTerm)
 
   React.useEffect(() => {
-    const t = window.setTimeout(() => setDebouncedRolesSearchTerm(rolesSearchTerm), 300)
-    return () => window.clearTimeout(t)
+    const timer = window.setTimeout(() => setDebouncedRolesSearchTerm(rolesSearchTerm), 300)
+    return () => window.clearTimeout(timer)
   }, [rolesSearchTerm])
 
   React.useEffect(() => {
-    const t = window.setTimeout(() => setDebouncedPermissionsSearchTerm(permissionsSearchTerm), 300)
-    return () => window.clearTimeout(t)
+    const timer = window.setTimeout(() => setDebouncedPermissionsSearchTerm(permissionsSearchTerm), 300)
+    return () => window.clearTimeout(timer)
   }, [permissionsSearchTerm])
 
   React.useEffect(() => {
@@ -59,44 +61,44 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
     let cancelled = false
     setLoadingRoles(true)
 
-    ;(async () => {
-      try {
-        const mod = await import("@/rbac/api")
-        const res = await mod.getRoles(accessToken, {
-          pageIndex: rolesPageIndex,
-          pageSize: rolesPageSize,
-          searchTerm: debouncedRolesSearchTerm.trim() ? debouncedRolesSearchTerm.trim() : undefined,
-        })
+      ; (async () => {
+        try {
+          const mod = await import("@/rbac/api")
+          const res = await mod.getRoles(accessToken, {
+            pageIndex: rolesPageIndex,
+            pageSize: rolesPageSize,
+            searchTerm: debouncedRolesSearchTerm.trim() ? debouncedRolesSearchTerm.trim() : undefined,
+          })
 
-        if (cancelled) return
+          if (cancelled) return
 
-        const nextRoles: Role[] = (res.items ?? []).map((r) => ({
-          id: r.id,
-          name: r.name,
-          description: r.description,
-          permissionIds: (r.permissions ?? []).map((p) => p.id),
-        }))
+          const nextRoles: Role[] = (res.items ?? []).map((r) => ({
+            id: r.id,
+            name: r.name,
+            description: r.description,
+            permissionIds: (r.permissions ?? []).map((p) => p.id),
+          }))
 
-        setRoles(nextRoles)
-        setRolesTotalCount(res.totalCount ?? 0)
-        setRolesTotalPages(res.totalPages ?? 1)
-        setLoadingRoles(false)
+          setRoles(nextRoles)
+          setRolesTotalCount(res.totalCount ?? 0)
+          setRolesTotalPages(res.totalPages ?? 1)
+          setLoadingRoles(false)
 
-        const map = new Map<string, string[]>()
-        for (const r of nextRoles) {
-          map.set(r.id, [...r.permissionIds])
+          const map = new Map<string, string[]>()
+          for (const r of nextRoles) {
+            map.set(r.id, [...r.permissionIds])
+          }
+          rolePermissionsSnapshotRef.current = map
+        } catch (e) {
+          if (cancelled) return
+          setLoadingRoles(false)
+          notify({
+            title: t('roles.loadFailed'),
+            description: e instanceof Error ? e.message : String(e),
+            variant: "error",
+          })
         }
-        rolePermissionsSnapshotRef.current = map
-      } catch (e) {
-        if (cancelled) return
-        setLoadingRoles(false)
-        notify({
-          title: "Load roles failed",
-          description: e instanceof Error ? e.message : String(e),
-          variant: "error",
-        })
-      }
-    })()
+      })()
 
     return () => {
       cancelled = true
@@ -104,10 +106,11 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
   }, [
     accessToken,
     debouncedRolesSearchTerm,
-    notify,
     rolesPageIndex,
     rolesPageSize,
     rolesReloadToken,
+    t,
+    notify
   ])
 
   React.useEffect(() => {
@@ -116,37 +119,37 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
     let cancelled = false
     setLoadingPermissions(true)
 
-    ;(async () => {
-      try {
-        const mod = await import("@/rbac/api")
-        const res = await mod.getPermissions(accessToken, {
-          pageIndex: permissionsPageIndex,
-          pageSize: permissionsPageSize,
-          searchTerm: debouncedPermissionsSearchTerm.trim() ? debouncedPermissionsSearchTerm.trim() : undefined,
-        })
+      ; (async () => {
+        try {
+          const mod = await import("@/rbac/api")
+          const res = await mod.getPermissions(accessToken, {
+            pageIndex: permissionsPageIndex,
+            pageSize: permissionsPageSize,
+            searchTerm: debouncedPermissionsSearchTerm.trim() ? debouncedPermissionsSearchTerm.trim() : undefined,
+          })
 
-        if (cancelled) return
+          if (cancelled) return
 
-        const nextPermissions: Permission[] = (res.items ?? []).map((p) => ({
-          id: p.id,
-          code: p.code,
-          description: p.description,
-        }))
+          const nextPermissions: Permission[] = (res.items ?? []).map((p) => ({
+            id: p.id,
+            code: p.code,
+            description: p.description,
+          }))
 
-        setPermissions(nextPermissions)
-        setPermissionsTotalCount(res.totalCount ?? 0)
-        setPermissionsTotalPages(res.totalPages ?? 1)
-        setLoadingPermissions(false)
-      } catch (e) {
-        if (cancelled) return
-        setLoadingPermissions(false)
-        notify({
-          title: "Load permissions failed",
-          description: e instanceof Error ? e.message : String(e),
-          variant: "error",
-        })
-      }
-    })()
+          setPermissions(nextPermissions)
+          setPermissionsTotalCount(res.totalCount ?? 0)
+          setPermissionsTotalPages(res.totalPages ?? 1)
+          setLoadingPermissions(false)
+        } catch (e) {
+          if (cancelled) return
+          setLoadingPermissions(false)
+          notify({
+            title: t('permissions.loadFailed'),
+            description: e instanceof Error ? e.message : String(e),
+            variant: "error",
+          })
+        }
+      })()
 
     return () => {
       cancelled = true
@@ -154,10 +157,11 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
   }, [
     accessToken,
     debouncedPermissionsSearchTerm,
-    notify,
     permissionsPageIndex,
     permissionsPageSize,
     permissionsReloadToken,
+    t,
+    notify
   ])
 
   React.useEffect(() => {
@@ -244,12 +248,20 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
 
     const missing = normalized.find((d) => !d.name || !d.description || !d.permissionIds.length)
     if (missing) {
-      notify({ title: "Invalid role", description: "Name, description and permissions are required.", variant: "error" })
+      notify({
+        title: t('roles.invalidRole'),
+        description: t('roles.roleRequiredFields'),
+        variant: "error"
+      })
       return
     }
 
     if (!accessToken) {
-      notify({ title: "Not authenticated", description: "Please login again.", variant: "error" })
+      notify({
+        title: t('roles.notAuthenticated'),
+        description: t('roles.pleaseLogin'),
+        variant: "error"
+      })
       return
     }
 
@@ -258,18 +270,22 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
       const mod = await import("@/rbac/api")
       const res = await mod.createRoles(normalized, accessToken)
       notify({
-        title: res.message || "Roles created",
+        title: res.message || t('roles.created'),
         description: `Success: ${res.successCount}. Failed: ${res.failureCount}.`,
         variant: res.failureCount ? "info" : "success",
       })
       setRoleDrafts([])
       bumpRolesReloadToken()
     } catch (e) {
-      notify({ title: "Create roles failed", description: e instanceof Error ? e.message : String(e), variant: "error" })
+      notify({
+        title: t('roles.createFailed'),
+        description: e instanceof Error ? e.message : String(e),
+        variant: "error"
+      })
     } finally {
       setSavingRoles(false)
     }
-  }, [accessToken, notify, roleDrafts])
+  }, [accessToken, notify, roleDrafts, t])
 
   const confirmAddPermissions = React.useCallback(async () => {
     if (!permissionDrafts.length) return
@@ -281,12 +297,16 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
 
     const missing = normalized.find((d) => !d.code)
     if (missing) {
-      notify({ title: "Permission code is required", variant: "error" })
+      notify({ title: t('permissions.codeRequired'), variant: "error" })
       return
     }
 
     if (!accessToken) {
-      notify({ title: "Not authenticated", description: "Please login again.", variant: "error" })
+      notify({
+        title: t('roles.notAuthenticated'),
+        description: t('roles.pleaseLogin'),
+        variant: "error"
+      })
       return
     }
 
@@ -294,22 +314,26 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
     try {
       const mod = await import("@/rbac/api")
       await mod.createPermissions(normalized, accessToken)
-      notify({ title: "Permissions created", description: `Created: ${normalized.length}`, variant: "success" })
+      notify({ title: t('permissions.created'), description: `Created: ${normalized.length}`, variant: "success" })
       setPermissionDrafts([])
       setPermissionsDirty(false)
       bumpPermissionsReloadToken()
     } catch (e) {
-      notify({ title: "Create permissions failed", description: e instanceof Error ? e.message : String(e), variant: "error" })
+      notify({
+        title: t('permissions.createFailed'),
+        description: e instanceof Error ? e.message : String(e),
+        variant: "error"
+      })
     } finally {
       setSavingPermissions(false)
     }
-  }, [accessToken, notify, permissionDrafts])
+  }, [accessToken, notify, permissionDrafts, t])
 
   const updateRoles = React.useCallback(async () => {
     setSavingRoles(true)
     try {
       if (!accessToken) {
-        throw new Error("Not authenticated")
+        throw new Error(t('roles.notAuthenticated'))
       }
 
       const snapshot = rolePermissionsSnapshotRef.current
@@ -325,13 +349,17 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
 
       if (!updates.length) {
         setRolesDirty(false)
-        notify({ title: "No changes", variant: "info" })
+        notify({ title: t('roles.noChanges'), variant: "info" })
         return
       }
 
       const hasRemovals = updates.some((u) => u.removed.length)
       if (hasRemovals) {
-        notify({ title: "Remove is not supported", description: "Backend currently only supports adding permissions.", variant: "info" })
+        notify({
+          title: t('roles.removeNotSupported'),
+          description: t('roles.removeNotSupportedDesc'),
+          variant: "info"
+        })
       }
 
       const mod = await import("@/rbac/api")
@@ -345,13 +373,21 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
       }
 
       setRolesDirty(false)
-      notify({ title: "Roles updated", description: "Permissions added successfully.", variant: "success" })
+      notify({
+        title: t('roles.updated'),
+        description: t('roles.permissionsAdded'),
+        variant: "success"
+      })
     } catch (e) {
-      notify({ title: "Update failed", description: e instanceof Error ? e.message : "API call failed.", variant: "error" })
+      notify({
+        title: t('roles.updateFailed'),
+        description: e instanceof Error ? e.message : t('roles.apiError'),
+        variant: "error"
+      })
     } finally {
       setSavingRoles(false)
     }
-  }, [accessToken, notify, roles])
+  }, [accessToken, notify, roles, t])
 
   const updatePermissions = React.useCallback(async () => {
     await confirmAddPermissions()
@@ -369,7 +405,11 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
     rolesSearchTerm,
     setRolesSearchTerm: (v: string) => {
       if (rolesDirty) {
-        notify({ title: "Unsaved changes", description: "Please Update roles before searching/navigating.", variant: "info" })
+        notify({
+          title: t('roles.unsavedChanges'),
+          description: t('roles.unsavedChangesSearchDesc'),
+          variant: "info"
+        })
         return
       }
       setRolesSearchTerm(v)
@@ -382,14 +422,22 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
     loadingRoles,
     setRolesPageIndex: (v: number) => {
       if (rolesDirty) {
-        notify({ title: "Unsaved changes", description: "Please Update roles before changing page.", variant: "info" })
+        notify({
+          title: t('roles.unsavedChanges'),
+          description: t('roles.unsavedChangesPageDesc'),
+          variant: "info"
+        })
         return
       }
       setRolesPageIndex(v)
     },
     setRolesPageSize: (v: number) => {
       if (rolesDirty) {
-        notify({ title: "Unsaved changes", description: "Please Update roles before changing page size.", variant: "info" })
+        notify({
+          title: t('roles.unsavedChanges'),
+          description: t('roles.unsavedChangesPageDesc'),
+          variant: "info"
+        })
         return
       }
       setRolesPageSize(v)
@@ -399,7 +447,11 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
     permissionsSearchTerm,
     setPermissionsSearchTerm: (v: string) => {
       if (permissionsDirty) {
-        notify({ title: "Unsaved changes", description: "Please Update permissions before searching/navigating.", variant: "info" })
+        notify({
+          title: t('roles.unsavedChanges'),
+          description: t('permissions.unsavedChangesSearchDesc'),
+          variant: "info"
+        })
         return
       }
       setPermissionsSearchTerm(v)
@@ -412,14 +464,22 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
     loadingPermissions,
     setPermissionsPageIndex: (v: number) => {
       if (permissionsDirty) {
-        notify({ title: "Unsaved changes", description: "Please Update permissions before changing page.", variant: "info" })
+        notify({
+          title: t('roles.unsavedChanges'),
+          description: t('permissions.unsavedChangesPageDesc'),
+          variant: "info"
+        })
         return
       }
       setPermissionsPageIndex(v)
     },
     setPermissionsPageSize: (v: number) => {
       if (permissionsDirty) {
-        notify({ title: "Unsaved changes", description: "Please Update permissions before changing page size.", variant: "info" })
+        notify({
+          title: t('roles.unsavedChanges'),
+          description: t('permissions.unsavedChangesPageDesc'),
+          variant: "info"
+        })
         return
       }
       setPermissionsPageSize(v)

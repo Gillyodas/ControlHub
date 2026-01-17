@@ -1,5 +1,5 @@
 using ControlHub.Application.Accounts.DTOs;
-using ControlHub.Application.Accounts.Interfaces.Repositories;
+using AppIdentifierConfigRepository = ControlHub.Application.Accounts.Interfaces.Repositories.IIdentifierConfigRepository;
 using ControlHub.Domain.Accounts.Identifiers;
 using ControlHub.SharedKernel.Results;
 using MediatR;
@@ -8,9 +8,9 @@ namespace ControlHub.Application.Accounts.Queries.GetActiveIdentifierConfigs
 {
     public class GetActiveIdentifierConfigsQueryHandler : IRequestHandler<GetActiveIdentifierConfigsQuery, Result<List<IdentifierConfigDto>>>
     {
-        private readonly IIdentifierConfigRepository _repository;
+        private readonly AppIdentifierConfigRepository _repository;
 
-        public GetActiveIdentifierConfigsQueryHandler(IIdentifierConfigRepository repository)
+        public GetActiveIdentifierConfigsQueryHandler(AppIdentifierConfigRepository repository)
         {
             _repository = repository;
         }

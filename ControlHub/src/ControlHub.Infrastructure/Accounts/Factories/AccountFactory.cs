@@ -21,19 +21,20 @@ namespace ControlHub.Infrastructure.Accounts.Factories
             _identifierFactory = identifierFactory;
         }
 
-        public Result<Maybe<Account>> CreateWithUserAndIdentifier(
+        public async Task<Result<Maybe<Account>>> CreateWithUserAndIdentifierAsync(
             Guid accountId,
             string identifierValue,
             IdentifierType identifierType,
             string rawPassword,
             Guid roleId,
-            string? username = "No name")
+            string? username = "No name",
+            Guid? identifierConfigId = null)
         {
             var pass = _passwordHasher.Hash(rawPassword);
 
             var account = Account.Create(accountId, pass, roleId);
 
-            var result = _identifierFactory.Create(identifierType, identifierValue);
+            var result = await _identifierFactory.CreateAsync(identifierType, identifierValue, identifierConfigId);
 
             if (result.IsFailure)
                 return Result<Maybe<Account>>.Failure(result.Error);

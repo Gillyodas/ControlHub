@@ -1,35 +1,40 @@
-import React, { useState, useEffect, useCallback } from "react"
-import { Plus, Edit, Eye, EyeOff, Power, Save, X } from "lucide-react"
-import { 
-  getActiveIdentifierConfigs, 
-  createIdentifierConfig, 
-  toggleIdentifierActive, 
+import React, { useState, useEffect, useCallback, useMemo } from "react"
+import { Plus, Edit, Eye, EyeOff, Power, Save, X, Fingerprint, Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  getActiveIdentifierConfigs,
+  createIdentifierConfig,
+  toggleIdentifierActive,
   updateIdentifierConfig,
-  ValidationRuleType, 
-  type IdentifierConfigDto, 
-  type CreateIdentifierConfigCommand, 
-  type ValidationRuleDto 
+  ValidationRuleType,
+  type IdentifierConfigDto,
+  type CreateIdentifierConfigCommand,
+  type ValidationRuleDto
 } from "@/services/api/identifiers"
 import { useAuth } from "@/auth/use-auth"
-
-const VALIDATION_RULE_TYPES = [
-  { value: ValidationRuleType.Required, label: "Required" },
-  { value: ValidationRuleType.MinLength, label: "Min Length" },
-  { value: ValidationRuleType.MaxLength, label: "Max Length" },
-  { value: ValidationRuleType.Pattern, label: "Pattern" },
-  { value: ValidationRuleType.Email, label: "Email" },
-  { value: ValidationRuleType.Phone, label: "Phone" },
-  { value: ValidationRuleType.Range, label: "Range" },
-  { value: ValidationRuleType.Custom, label: "Custom" },
-]
+import { useTranslation } from "react-i18next"
 
 export default function IdentifiersPage() {
+  const { t } = useTranslation()
   const { auth } = useAuth()
   const [configs, setConfigs] = useState<IdentifierConfigDto[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [includeDeactivated, setIncludeDeactivated] = useState(false)
+
+  const validationRuleTypes = useMemo(() => [
+    { value: ValidationRuleType.Required, label: t('identifiers.validationRuleTypes.required') },
+    { value: ValidationRuleType.MinLength, label: t('identifiers.validationRuleTypes.minLength') },
+    { value: ValidationRuleType.MaxLength, label: t('identifiers.validationRuleTypes.maxLength') },
+    { value: ValidationRuleType.Pattern, label: t('identifiers.validationRuleTypes.pattern') },
+    { value: ValidationRuleType.Email, label: t('identifiers.validationRuleTypes.email') },
+    { value: ValidationRuleType.Phone, label: t('identifiers.validationRuleTypes.phone') },
+    { value: ValidationRuleType.Range, label: t('identifiers.validationRuleTypes.range') },
+    { value: ValidationRuleType.Custom, label: t('identifiers.validationRuleTypes.custom') },
+  ], [t])
 
   const loadConfigs = useCallback(async () => {
     try {
@@ -38,12 +43,12 @@ export default function IdentifiersPage() {
       setConfigs(data)
       setError(null)
     } catch (err) {
-      setError("Failed to load configurations")
+      setError(t('identifiers.failedToLoad'))
       console.error(err)
     } finally {
       setLoading(false)
     }
-  }, [includeDeactivated])
+  }, [includeDeactivated, t])
 
   useEffect(() => {
     loadConfigs()
@@ -56,78 +61,90 @@ export default function IdentifiersPage() {
       setShowCreateModal(false)
       loadConfigs()
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to create configuration"
+      const errorMessage = err instanceof Error ? err.message : t('identifiers.failedToCreate')
       setError(errorMessage)
       throw err
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-100">Identifier Configurations</h1>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Create Configuration
-          </button>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-4xl font-extrabold tracking-tight bg-[var(--vibrant-gradient)] bg-clip-text text-transparent italic">
+            {t('identifiers.title')}
+          </h1>
+          <p className="text-muted-foreground mt-2 text-lg">
+            {t('identifiers.description')}
+          </p>
         </div>
-
-        <div className="flex items-center gap-4 mb-6">
-          <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer bg-sidebar-accent/50 px-4 h-12 rounded-xl border border-sidebar-border hover:bg-sidebar-accent transition-colors">
             <input
               type="checkbox"
               checked={includeDeactivated}
               onChange={(e) => setIncludeDeactivated(e.target.checked)}
-              className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+              className="w-4 h-4 rounded border-sidebar-border text-sidebar-primary focus:ring-sidebar-primary bg-background"
             />
-            Show deactivated configurations
+            {t('identifiers.showOffline')}
           </label>
-          {includeDeactivated && (
-            <span className="text-xs text-gray-500">
-              Showing {configs.filter(c => !c.isActive).length} deactivated configurations
-            </span>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 bg-[var(--vibrant-gradient)] text-white px-6 h-12 rounded-xl font-bold shadow-xl shadow-sidebar-primary/20 hover:opacity-90 transition-all active:scale-95"
+          >
+            <Plus className="w-5 h-5" />
+            {t('identifiers.newProtocol')}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm font-medium animate-in slide-in-from-top-2">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="h-10 w-10 border-4 border-sidebar-primary/20 border-t-sidebar-primary rounded-full animate-spin" />
+          <p className="text-muted-foreground font-bold tracking-widest text-xs uppercase animate-pulse">{t('identifiers.syncingMatrix')}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {configs.map((config) => (
+            <IdentifierConfigCard
+              key={config.id}
+              config={config}
+              onUpdate={loadConfigs}
+              validationRuleTypes={validationRuleTypes}
+            />
+          ))}
+          {configs.length === 0 && (
+            <div className="col-span-full py-20 text-center border-2 border-dashed border-sidebar-border rounded-2xl bg-sidebar/20 backdrop-blur-sm">
+              <h3 className="text-xl font-bold text-muted-foreground italic">{t('identifiers.noProtocols')}</h3>
+              <p className="text-muted-foreground/60 mt-1">{t('identifiers.noProtocolsDescription')}</p>
+            </div>
           )}
         </div>
+      )}
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-900 border border-red-700 rounded-lg text-red-200">
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <p className="mt-2 text-gray-400">Loading...</p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {configs.map((config) => (
-              <IdentifierConfigCard 
-                key={config.id} 
-                config={config} 
-                onUpdate={loadConfigs}
-              />
-            ))}
-          </div>
-        )}
-
-        {showCreateModal && (
-          <CreateConfigModal
-            onClose={() => setShowCreateModal(false)}
-            onSubmit={handleCreateConfig}
-          />
-        )}
-      </div>
+      {showCreateModal && (
+        <CreateConfigModal
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateConfig}
+          validationRuleTypes={validationRuleTypes}
+        />
+      )}
     </div>
   )
 }
 
-function IdentifierConfigCard({ config, onUpdate }: { config: IdentifierConfigDto; onUpdate: () => void }) {
+function IdentifierConfigCard({ config, onUpdate, validationRuleTypes }: {
+  config: IdentifierConfigDto
+  onUpdate: () => void
+  validationRuleTypes: { value: number; label: string }[]
+}) {
+  const { t } = useTranslation()
   const { auth } = useAuth()
   const [expanded, setExpanded] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -155,79 +172,109 @@ function IdentifierConfigCard({ config, onUpdate }: { config: IdentifierConfigDt
 
   return (
     <>
-      <div className={`bg-gray-800 rounded-lg shadow-sm border p-4 ${
-        config.isActive 
-          ? "border-gray-700" 
-          : "border-gray-600 opacity-75"
-      }`}>
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className={`text-lg font-semibold ${
-                config.isActive ? "text-gray-100" : "text-gray-400"
-              }`}>{config.name}</h3>
-              {!config.isActive && (
-                <span className="px-2 py-1 bg-gray-600 text-gray-300 text-xs rounded-full">
-                  Deactivated
-                </span>
-              )}
-            </div>
-            <p className="text-gray-400 text-sm mt-1">{config.description}</p>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="text-gray-500 text-xs">
-                {config.rules.length} rule{config.rules.length !== 1 ? "s" : ""}
-              </span>
-            </div>
-          </div>
-          <div className="flex gap-2 items-center">
-            <button
-              onClick={handleToggleActive}
-              disabled={isToggling}
-              className={`p-2 rounded-lg transition-colors ${
-                isActive 
-                  ? "text-green-400 hover:text-green-300 hover:bg-green-900" 
-                  : "text-gray-500 hover:text-gray-400 hover:bg-gray-700"
-              } ${isToggling ? "opacity-50 cursor-not-allowed" : ""}`}
-              title={isActive ? "Active - Click to deactivate" : "Inactive - Click to activate"}
-            >
-              <Power className="w-5 h-5" />
-            </button>
-            
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              {expanded ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-            <button 
-              onClick={() => setShowEditModal(true)}
-              className="p-2 text-gray-400 hover:text-gray-200 hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+      <div className={cn(
+        "group relative bg-sidebar/40 backdrop-blur-md rounded-2xl border transition-all duration-300 hover:shadow-2xl hover:shadow-sidebar-primary/10",
+        config.isActive
+          ? "border-sidebar-border"
+          : "border-sidebar-border/50 opacity-60 grayscale-[0.5]"
+      )}>
+        {isActive && (
+          <div className="absolute inset-0 bg-gradient-to-br from-sidebar-primary/5 to-transparent rounded-2xl pointer-events-none" />
+        )}
 
-        {expanded && (
-          <div className="mt-4 pt-4 border-t border-gray-700">
-            <h4 className="font-medium text-gray-100 mb-3">Validation Rules:</h4>
-            <div className="space-y-2">
+        <div className="p-6">
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className={cn(
+                  "text-xl font-bold tracking-tight transition-colors",
+                  config.isActive ? "text-foreground" : "text-muted-foreground"
+                )}>
+                  {config.name}
+                </h3>
+                {config.isActive ? (
+                  <Badge variant="success" className="h-5 px-1.5 font-bold uppercase text-[9px]">{t('identifiers.live')}</Badge>
+                ) : (
+                  <Badge variant="outline" className="h-5 px-1.5 font-bold uppercase text-[9px]">{t('identifiers.offline')}</Badge>
+                )}
+              </div>
+              <p className="text-muted-foreground text-sm mt-1.5 leading-relaxed line-clamp-2">
+                {config.description || t('identifiers.noProtocolsDescription')}
+              </p>
+
+              <div className="flex items-center gap-4 mt-4">
+                <div className="flex items-center gap-1.5">
+                  <Fingerprint className="w-3.5 h-3.5 text-sidebar-primary" />
+                  <span className="text-muted-foreground font-bold text-[10px] uppercase tracking-wider">
+                    {config.rules.length} {config.rules.length !== 1 ? t('identifiers.logicGates') : t('identifiers.logicGate')}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleToggleActive}
+                disabled={isToggling}
+                className={cn(
+                  "p-2.5 rounded-xl transition-all duration-300 border shadow-sm",
+                  isActive
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+                    : "bg-sidebar-accent/50 text-muted-foreground border-sidebar-border hover:bg-sidebar-accent"
+                )}
+              >
+                {isToggling ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Power className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 mt-6 pt-6 border-t border-sidebar-border/30">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExpanded(!expanded)}
+              className="flex-1 rounded-lg font-bold text-xs h-9 border-sidebar-border"
+            >
+              {expanded ? (
+                <><EyeOff className="w-3.5 h-3.5 mr-2" /> {t('identifiers.hideMatrix')}</>
+              ) : (
+                <><Eye className="w-3.5 h-3.5 mr-2" /> {t('identifiers.viewMatrix')}</>
+              )}
+            </Button>
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={() => setShowEditModal(true)}
+              className="rounded-lg h-9 w-9 border border-sidebar-border"
+            >
+              <Edit className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+
+          {expanded && (
+            <div className="mt-4 space-y-2 animate-in slide-in-from-top-2 duration-300">
               {config.rules.map((rule, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                <div key={index} className="flex items-center justify-between p-3 bg-sidebar-accent/50 rounded-xl border border-sidebar-border/50">
                   <div className="flex-1">
-                    <div className="font-medium text-sm text-gray-100">
-                      {VALIDATION_RULE_TYPES.find(t => t.value === rule.type)?.label || rule.type}
+                    <div className="font-bold text-[11px] uppercase tracking-wider text-foreground">
+                      {validationRuleTypes.find(t => t.value === rule.type)?.label || rule.type}
                     </div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      {rule.errorMessage || "Default error message"}
+                    <div className="text-[11px] text-muted-foreground mt-0.5 italic">
+                      {rule.errorMessage || t('identifiers.standardValidation')}
                     </div>
                   </div>
-                  <div className="text-xs text-gray-500">Order: {rule.order}</div>
+                  <div className="text-[10px] font-mono text-sidebar-primary/60 bg-sidebar-primary/5 px-2 py-0.5 rounded-full border border-sidebar-primary/10">
+                    O#{rule.order}
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {showEditModal && (
@@ -235,13 +282,19 @@ function IdentifierConfigCard({ config, onUpdate }: { config: IdentifierConfigDt
           config={config}
           onClose={() => setShowEditModal(false)}
           onSubmit={handleUpdateSuccess}
+          validationRuleTypes={validationRuleTypes}
         />
       )}
     </>
   )
 }
 
-function CreateConfigModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: CreateIdentifierConfigCommand) => Promise<void> }) {
+function CreateConfigModal({ onClose, onSubmit, validationRuleTypes }: {
+  onClose: () => void
+  onSubmit: (data: CreateIdentifierConfigCommand) => Promise<void>
+  validationRuleTypes: { value: number; label: string }[]
+}) {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -258,14 +311,14 @@ function CreateConfigModal({ onClose, onSubmit }: { onClose: () => void; onSubmi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.name || !formData.description) {
-      setError("Please fill in all required fields")
+      setError(t('identifiers.requiredFields'))
       return
     }
 
     if (rules.length === 0) {
-      setError("Please add at least one validation rule")
+      setError(t('identifiers.addAtLeastOneRule'))
       return
     }
 
@@ -277,7 +330,7 @@ function CreateConfigModal({ onClose, onSubmit }: { onClose: () => void; onSubmi
         rules
       })
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to create configuration"
+      const errorMessage = err instanceof Error ? err.message : t('identifiers.failedToCreate')
       setError(errorMessage)
     } finally {
       setSubmitting(false)
@@ -307,52 +360,60 @@ function CreateConfigModal({ onClose, onSubmit }: { onClose: () => void; onSubmi
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
-        <div className="p-6">
-          <h2 className="text-xl font-bold text-gray-100 mb-6">Create Identifier Configuration</h2>
-          
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
+      <div className="bg-sidebar/95 backdrop-blur-xl rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden border border-sidebar-border shadow-2xl flex flex-col">
+        <div className="p-8 border-b border-sidebar-border/50 bg-gradient-to-br from-sidebar-primary/10 to-transparent">
+          <h2 className="text-2xl font-black tracking-tight text-foreground bg-[var(--vibrant-gradient)] bg-clip-text text-transparent italic">
+            {t('identifiers.initializeNewProtocol')}
+          </h2>
+          <p className="text-muted-foreground text-sm mt-1">{t('identifiers.protocolBriefing')}</p>
+        </div>
+
+        <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
           {error && (
-            <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm">
+            <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm font-bold flex items-center gap-2">
+              <span className="h-2 w-2 bg-destructive rounded-full animate-pulse" />
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
+          <form id="create-config-form" onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">{t('identifiers.protocolName')}</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., Employee ID"
+                className="w-full px-4 py-3 bg-sidebar-accent/50 border border-sidebar-border rounded-xl text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-2 focus:ring-sidebar-primary/50 focus:border-sidebar-primary transition-all font-medium"
+                placeholder={t('identifiers.protocolNamePlaceholder')}
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">{t('identifiers.briefingDescription')}</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-sidebar-accent/50 border border-sidebar-border rounded-xl text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-2 focus:ring-sidebar-primary/50 focus:border-sidebar-primary transition-all font-medium"
                 rows={3}
-                placeholder="Describe this identifier configuration"
+                placeholder={t('identifiers.briefingPlaceholder')}
               />
             </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="block text-sm font-medium text-gray-300">Validation Rules</label>
-                <button
+            <div className="pt-4">
+              <div className="flex justify-between items-center mb-4">
+                <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">{t('identifiers.logicMatrixRules')}</label>
+                <Button
                   type="button"
                   onClick={addRule}
-                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg h-8 px-3 border-sidebar-border font-bold text-[10px] uppercase"
                 >
-                  Add Rule
-                </button>
+                  <Plus className="w-3 h-3 mr-1.5" /> {t('identifiers.appendGate')}
+                </Button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {rules.map((rule, index) => (
                   <ValidationRuleEditor
                     key={index}
@@ -360,40 +421,50 @@ function CreateConfigModal({ onClose, onSubmit }: { onClose: () => void; onSubmi
                     onChange={(updatedRule) => updateRule(index, updatedRule)}
                     onRemove={() => removeRule(index)}
                     canRemove={rules.length > 1}
+                    validationRuleTypes={validationRuleTypes}
                   />
                 ))}
               </div>
             </div>
-
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={submitting}
-                className="flex-1 px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {submitting ? "Creating..." : "Create Configuration"}
-              </button>
-            </div>
           </form>
+        </div>
+
+        <div className="p-8 bg-sidebar-accent/20 border-t border-sidebar-border/50 flex gap-4">
+          <Button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            variant="ghost"
+            className="flex-1 rounded-xl h-12 font-bold text-muted-foreground hover:bg-sidebar-accent"
+          >
+            {t('identifiers.abort')}
+          </Button>
+          <Button
+            type="submit"
+            form="create-config-form"
+            disabled={submitting}
+            variant="vibrant"
+            className="flex-[2] rounded-xl h-12 font-black uppercase tracking-widest shadow-xl shadow-sidebar-primary/20"
+          >
+            {submitting ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('identifiers.sequencing')}</>
+            ) : (
+              t('identifiers.deployProtocol')
+            )}
+          </Button>
         </div>
       </div>
     </div>
   )
 }
 
-function EditConfigModal({ config, onClose, onSubmit }: { 
+function EditConfigModal({ config, onClose, onSubmit, validationRuleTypes }: {
   config: IdentifierConfigDto
   onClose: () => void
-  onSubmit: () => void 
+  onSubmit: () => void
+  validationRuleTypes: { value: number; label: string }[]
 }) {
+  const { t } = useTranslation()
   const { auth } = useAuth()
   const [formData, setFormData] = useState({
     name: config.name,
@@ -413,14 +484,14 @@ function EditConfigModal({ config, onClose, onSubmit }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.name || !formData.description) {
-      setError("Please fill in all required fields")
+      setError(t('identifiers.requiredFields'))
       return
     }
 
     if (rules.length === 0) {
-      setError("Please add at least one validation rule")
+      setError(t('identifiers.addAtLeastOneRule'))
       return
     }
 
@@ -433,7 +504,7 @@ function EditConfigModal({ config, onClose, onSubmit }: {
       }, auth!.accessToken)
       onSubmit()
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to update configuration"
+      const errorMessage = err instanceof Error ? err.message : t('identifiers.failedToUpdate')
       setError(errorMessage)
     } finally {
       setSubmitting(false)
@@ -463,59 +534,65 @@ function EditConfigModal({ config, onClose, onSubmit }: {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-100">Edit Identifier Configuration</h2>
-            {hasChanges && (
-              <span className="px-3 py-1 bg-yellow-900 text-yellow-300 text-xs rounded-full">
-                Unsaved Changes
-              </span>
-            )}
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
+      <div className="bg-sidebar/95 backdrop-blur-xl rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden border border-sidebar-border shadow-2xl flex flex-col">
+        <div className="p-8 border-b border-sidebar-border/50 bg-gradient-to-br from-sidebar-primary/10 to-transparent flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-black tracking-tight text-foreground bg-[var(--vibrant-gradient)] bg-clip-text text-transparent italic">
+              {t('identifiers.recodeProtocol')}
+            </h2>
+            <p className="text-muted-foreground text-sm mt-1">{t('identifiers.modifyLogicGates')}</p>
           </div>
-          
+          {hasChanges && (
+            <Badge variant="warning" className="animate-pulse bg-amber-500/20 text-amber-400 border-amber-500/30">
+              {t('identifiers.unsyncedChanges')}
+            </Badge>
+          )}
+        </div>
+
+        <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
           {error && (
-            <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm">
+            <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm font-bold flex items-center gap-2">
+              <span className="h-2 w-2 bg-destructive rounded-full animate-pulse" />
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
+          <form id="edit-config-form" onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">{t('identifiers.protocolName')}</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., Employee ID"
+                className="w-full px-4 py-3 bg-sidebar-accent/50 border border-sidebar-border rounded-xl text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-2 focus:ring-sidebar-primary/50 focus:border-sidebar-primary transition-all font-medium"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">{t('identifiers.briefingDescription')}</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-sidebar-accent/50 border border-sidebar-border rounded-xl text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-2 focus:ring-sidebar-primary/50 focus:border-sidebar-primary transition-all font-medium"
                 rows={3}
-                placeholder="Describe this identifier configuration"
               />
             </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="block text-sm font-medium text-gray-300">Validation Rules</label>
-                <button
+            <div className="pt-4">
+              <div className="flex justify-between items-center mb-4">
+                <label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">{t('identifiers.logicMatrixRules')}</label>
+                <Button
                   type="button"
                   onClick={addRule}
-                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg h-8 px-3 border-sidebar-border font-bold text-[10px] uppercase"
                 >
-                  Add Rule
-                </button>
+                  <Plus className="w-3 h-3 mr-1.5" /> {t('identifiers.appendGate')}
+                </Button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {rules.map((rule, index) => (
                   <ValidationRuleEditor
                     key={index}
@@ -523,30 +600,40 @@ function EditConfigModal({ config, onClose, onSubmit }: {
                     onChange={(updatedRule) => updateRule(index, updatedRule)}
                     onRemove={() => removeRule(index)}
                     canRemove={rules.length > 1}
+                    validationRuleTypes={validationRuleTypes}
                   />
                 ))}
               </div>
             </div>
-
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={submitting}
-                className="flex-1 px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting || !hasChanges}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                {submitting ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
           </form>
+        </div>
+
+        <div className="p-8 bg-sidebar-accent/20 border-t border-sidebar-border/50 flex gap-4">
+          <Button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            variant="ghost"
+            className="flex-1 rounded-xl h-12 font-bold text-muted-foreground hover:bg-sidebar-accent"
+          >
+            {t('common.cancel')}
+          </Button>
+          <Button
+            type="submit"
+            form="edit-config-form"
+            disabled={submitting || !hasChanges}
+            variant="vibrant"
+            className="flex-[2] rounded-xl h-12 font-black uppercase tracking-widest shadow-xl shadow-sidebar-primary/20 flex items-center justify-center gap-3"
+          >
+            {submitting ? (
+              <><Loader2 className="w-5 h-5 animate-spin" /> {t('identifiers.rewritingMatrix')}</>
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                {t('identifiers.commitProtocol')}
+              </>
+            )}
+          </Button>
         </div>
       </div>
     </div>
@@ -554,26 +641,27 @@ function EditConfigModal({ config, onClose, onSubmit }: {
 }
 
 function PatternTester({ pattern }: { pattern: string }) {
+  const { t } = useTranslation()
   const [testValue, setTestValue] = useState("")
   const [testResult, setTestResult] = useState<{
     isValid: boolean
     error?: string
   } | null>(null)
 
-  const patternExamples = [
-    { name: "Email", pattern: "^[\\w.-]+@[\\w.-]+\\.\\w+$", test: "test@example.com" },
-    { name: "Phone", pattern: "^[\\d\\s\\-\\(\\)]+$", test: "123-456-7890" },
-    { name: "Username", pattern: "^[a-zA-Z0-9_]{3,20}$", test: "user123" },
-    { name: "Password", pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,}$", test: "Password123" },
-    { name: "URL", pattern: "^https?://[\\w\\.-]+\\.[a-zA-Z]{2,}(/.*)?$", test: "https://example.com" },
-    { name: "Numbers only", pattern: "^\\d+$", test: "12345" },
-    { name: "Letters only", pattern: "^[a-zA-Z]+$", test: "abc" },
-    { name: "Alphanumeric", pattern: "^[a-zA-Z0-9]+$", test: "abc123" }
-  ]
+  const patternExamples = useMemo(() => [
+    { name: t('identifiers.examples.email'), pattern: "^[\\w.-]+@[\\w.-]+\\.\\w+$", test: "test@example.com" },
+    { name: t('identifiers.examples.phone'), pattern: "^[\\d\\s\\-\\(\\)]+$", test: "123-456-7890" },
+    { name: t('identifiers.examples.username'), pattern: "^[a-zA-Z0-9_]{3,20}$", test: "user123" },
+    { name: t('identifiers.examples.password'), pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,}$", test: "Password123" },
+    { name: t('identifiers.examples.url'), pattern: "^https?://[\\w\\.-]+\\.[a-zA-Z]{2,}(/.*)?$", test: "https://example.com" },
+    { name: t('identifiers.examples.numbers'), pattern: "^\\d+$", test: "12345" },
+    { name: t('identifiers.examples.letters'), pattern: "^[a-zA-Z]+$", test: "abc" },
+    { name: t('identifiers.examples.alphanumeric'), pattern: "^[a-zA-Z0-9]+$", test: "abc123" }
+  ], [t])
 
   const testPattern = () => {
     if (!pattern) {
-      setTestResult({ isValid: false, error: "Pattern is required" })
+      setTestResult({ isValid: false, error: t('identifiers.patternRequired') })
       return
     }
 
@@ -582,9 +670,9 @@ function PatternTester({ pattern }: { pattern: string }) {
       const isValid = regex.test(testValue)
       setTestResult({ isValid })
     } catch (error) {
-      setTestResult({ 
-        isValid: false, 
-        error: error instanceof Error ? error.message : "Invalid regex pattern" 
+      setTestResult({
+        isValid: false,
+        error: error instanceof Error ? error.message : t('identifiers.invalidRegex')
       })
     }
   }
@@ -595,10 +683,10 @@ function PatternTester({ pattern }: { pattern: string }) {
 
   return (
     <div className="mt-3 p-3 bg-gray-800 rounded-lg border border-gray-600">
-      <div className="text-sm font-medium text-gray-300 mb-2">Pattern Tester</div>
-      
+      <div className="text-sm font-medium text-gray-300 mb-2">{t('identifiers.patternTester')}</div>
+
       <div className="mb-3">
-        <div className="text-xs text-gray-400 mb-1">Quick Examples:</div>
+        <div className="text-xs text-gray-400 mb-1">{t('identifiers.quickExamples')}:</div>
         <div className="flex flex-wrap gap-1">
           {patternExamples.map((example) => (
             <button
@@ -619,7 +707,7 @@ function PatternTester({ pattern }: { pattern: string }) {
           type="text"
           value={testValue}
           onChange={(e) => setTestValue(e.target.value)}
-          placeholder="Enter value to test pattern"
+          placeholder={t('identifiers.testPlaceholder')}
           className="w-full px-2 py-1 bg-gray-600 border border-gray-500 rounded text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
         <button
@@ -627,22 +715,21 @@ function PatternTester({ pattern }: { pattern: string }) {
           onClick={testPattern}
           className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
         >
-          Test Pattern
+          {t('identifiers.testPattern')}
         </button>
-        
+
         {testResult && (
-          <div className={`p-2 rounded text-xs ${
-            testResult.isValid 
-              ? "bg-green-900 text-green-300 border border-green-700" 
-              : "bg-red-900 text-red-300 border border-red-700"
-          }`}>
-            {testResult.isValid ? "✅ Pattern matches!" : `❌ ${testResult.error || "Pattern does not match"}`}
+          <div className={`p-2 rounded text-xs ${testResult.isValid
+            ? "bg-green-900 text-green-300 border border-green-700"
+            : "bg-red-900 text-red-300 border border-red-700"
+            }`}>
+            {testResult.isValid ? `✅ ${t('identifiers.patternMatches')}` : `❌ ${testResult.error || t('identifiers.patternRejection')}`}
           </div>
         )}
 
         {pattern && (
           <div className="mt-2 p-2 bg-gray-700 rounded text-xs">
-            <div className="text-gray-400">Current Pattern:</div>
+            <div className="text-gray-400">{t('identifiers.currentPattern')}:</div>
             <code className="text-blue-400 break-all">{pattern}</code>
           </div>
         )}
@@ -651,17 +738,20 @@ function PatternTester({ pattern }: { pattern: string }) {
   )
 }
 
-function ValidationRuleEditor({ 
-  rule, 
-  onChange, 
+function ValidationRuleEditor({
+  rule,
+  onChange,
   onRemove,
-  canRemove 
-}: { 
+  canRemove,
+  validationRuleTypes
+}: {
   rule: ValidationRuleDto
   onChange: (rule: ValidationRuleDto) => void
   onRemove: () => void
   canRemove: boolean
+  validationRuleTypes: { value: number; label: string }[]
 }) {
+  const { t } = useTranslation()
   const updateRule = (updates: Partial<ValidationRuleDto>) => {
     onChange({ ...rule, ...updates })
   }
@@ -673,15 +763,16 @@ function ValidationRuleEditor({
   }
 
   return (
-    <div className="border border-gray-600 rounded-lg p-4 bg-gray-700">
-      <div className="flex justify-between items-start mb-4">
+    <div className="group relative border border-sidebar-border bg-sidebar-accent/30 rounded-2xl p-6 transition-all hover:bg-sidebar-accent/50">
+      <div className="flex justify-between items-start mb-6 gap-4">
         <div className="flex-1">
+          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-1.5 block">{t('identifiers.gateMechanism')}</label>
           <select
             value={rule.type}
             onChange={(e) => updateRule({ type: Number(e.target.value) as ValidationRuleType, parameters: {} })}
-            className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2.5 bg-background border border-sidebar-border rounded-xl text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-sidebar-primary/50 transition-all appearance-none cursor-pointer"
           >
-            {VALIDATION_RULE_TYPES.map((type) => (
+            {validationRuleTypes.map((type) => (
               <option key={type.value} value={type.value}>
                 {type.label}
               </option>
@@ -692,125 +783,123 @@ function ValidationRuleEditor({
           type="button"
           onClick={onRemove}
           disabled={!canRemove}
-          className={`ml-2 p-2 rounded-lg transition-colors ${
-            canRemove 
-              ? "text-red-400 hover:text-red-300 hover:bg-red-900" 
-              : "text-gray-600 cursor-not-allowed"
-          }`}
+          className={cn(
+            "mt-5 p-2.5 rounded-xl transition-all border",
+            canRemove
+              ? "text-destructive border-destructive/20 bg-destructive/5 hover:bg-destructive/10"
+              : "text-muted-foreground/30 border-sidebar-border bg-transparent opacity-50 cursor-not-allowed"
+          )}
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="space-y-3">
-        <div>
-          <label className="block text-xs font-medium text-gray-300 mb-1">Order</label>
-          <input
-            type="number"
-            value={rule.order}
-            onChange={(e) => updateRule({ order: parseInt(e.target.value) || 0 })}
-            className="w-full px-2 py-1 bg-gray-600 border border-gray-500 rounded text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            min="0"
-          />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('identifiers.sequenceOrder')}</label>
+          <div className="relative">
+            <input
+              type="number"
+              value={rule.order}
+              onChange={(e) => updateRule({ order: parseInt(e.target.value) || 0 })}
+              className="w-full px-4 py-2 bg-background border border-sidebar-border rounded-xl text-sm font-mono text-sidebar-primary focus:outline-none focus:ring-2 focus:ring-sidebar-primary/50 transition-all"
+              min="0"
+            />
+          </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-medium text-gray-300 mb-1">Error Message</label>
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('identifiers.neuralErrorMessage')}</label>
           <input
             type="text"
             value={rule.errorMessage || ""}
             onChange={(e) => updateRule({ errorMessage: e.target.value || null })}
-            className="w-full px-2 py-1 bg-gray-600 border border-gray-500 rounded text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Optional custom error message"
+            className="w-full px-4 py-2 bg-background border border-sidebar-border rounded-xl text-sm italic text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-2 focus:ring-sidebar-primary/50 transition-all"
+            placeholder={t('identifiers.neuralPlaceholder')}
           />
         </div>
 
-        <div>
-          <label className="block text-xs font-medium text-gray-300 mb-1">Parameters</label>
-          {rule.type === ValidationRuleType.Required && (
-            <div className="text-xs text-gray-400">No parameters required</div>
-          )}
+        <div className="md:col-span-2 pt-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-2 block">{t('identifiers.gateParameters')}</label>
 
-          {rule.type === ValidationRuleType.MinLength && (
-            <div>
-              <label className="block text-xs mb-1">Length</label>
-              <input
-                type="number"
-                value={(rule.parameters.length as number) || 0}
-                onChange={(e) => updateParameter("length", parseInt(e.target.value) || 0)}
-                className="w-full px-2 py-1 bg-gray-600 border border-gray-500 rounded text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                min="1"
-              />
-            </div>
-          )}
+          <div className="p-4 bg-background/50 rounded-xl border border-sidebar-border/50">
+            {rule.type === ValidationRuleType.Required && (
+              <div className="text-[10px] text-muted-foreground font-bold flex items-center gap-2">
+                <div className="h-1.5 w-1.5 bg-sidebar-primary rounded-full" />
+                {t('identifiers.noEncryptionKeys')}
+              </div>
+            )}
 
-          {rule.type === ValidationRuleType.MaxLength && (
-            <div>
-              <label className="block text-xs mb-1">Length</label>
-              <input
-                type="number"
-                value={(rule.parameters.length as number) || 0}
-                onChange={(e) => updateParameter("length", parseInt(e.target.value) || 0)}
-                className="w-full px-2 py-1 bg-gray-600 border border-gray-500 rounded text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                min="1"
-              />
-            </div>
-          )}
-
-          {rule.type === ValidationRuleType.Pattern && (
-            <div>
-              <label className="block text-xs mb-1">Pattern</label>
-              <input
-                type="text"
-                value={(rule.parameters.pattern as string) || ""}
-                onChange={(e) => updateParameter("pattern", e.target.value)}
-                className="w-full px-2 py-1 bg-gray-600 border border-gray-500 rounded text-sm font-mono text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Regex pattern"
-              />
-              <PatternTester pattern={(rule.parameters.pattern as string) || ""} />
-            </div>
-          )}
-
-          {rule.type === ValidationRuleType.Range && (
-            <div className="space-y-2">
-              <div>
-                <label className="block text-xs mb-1">Min Value</label>
+            {(rule.type === ValidationRuleType.MinLength || rule.type === ValidationRuleType.MaxLength) && (
+              <div className="flex items-center gap-4">
+                <span className="text-xs font-bold text-muted-foreground uppercase">{rule.type === ValidationRuleType.MinLength ? t('identifiers.minimum') : t('identifiers.maximum')} {t('identifiers.bounds')}:</span>
                 <input
                   type="number"
-                  value={(rule.parameters.min as number) || 0}
-                  onChange={(e) => updateParameter("min", parseFloat(e.target.value) || 0)}
-                  className="w-full px-2 py-1 bg-gray-600 border border-gray-500 rounded text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={(rule.parameters.length as number) || 0}
+                  onChange={(e) => updateParameter("length", parseInt(e.target.value) || 0)}
+                  className="w-24 px-3 py-1.5 bg-background border border-sidebar-border rounded-lg text-sm font-mono text-sidebar-primary focus:outline-none focus:ring-2 focus:ring-sidebar-primary/50 transition-all"
+                  min="1"
                 />
               </div>
-              <div>
-                <label className="block text-xs mb-1">Max Value</label>
-                <input
-                  type="number"
-                  value={(rule.parameters.max as number) || 0}
-                  onChange={(e) => updateParameter("max", parseFloat(e.target.value) || 0)}
-                  className="w-full px-2 py-1 bg-gray-600 border border-gray-500 rounded text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          )}
+            )}
 
-          {rule.type === ValidationRuleType.Custom && (
-            <div>
-              <label className="block text-xs mb-1">Custom Logic</label>
-              <select
-                value={(rule.parameters.customLogic as string) || ""}
-                onChange={(e) => updateParameter("customLogic", e.target.value)}
-                className="w-full px-2 py-1 bg-gray-600 border border-gray-500 rounded text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">Select custom logic</option>
-                <option value="uppercase">Uppercase Only</option>
-                <option value="lowercase">Lowercase Only</option>
-                <option value="alphanumeric">Alphanumeric</option>
-                <option value="numeric">Numeric Only</option>
-                <option value="letters">Letters Only</option>
-              </select>
-            </div>
-          )}
+            {rule.type === ValidationRuleType.Pattern && (
+              <div className="space-y-4">
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-bold text-muted-foreground uppercase">{t('identifiers.regexMatrix')}:</span>
+                  <input
+                    type="text"
+                    value={(rule.parameters.pattern as string) || ""}
+                    onChange={(e) => updateParameter("pattern", e.target.value)}
+                    className="w-full px-4 py-2.5 bg-background border border-sidebar-border rounded-xl text-sm font-mono text-sidebar-primary focus:outline-none focus:ring-2 focus:ring-sidebar-primary/50 transition-all"
+                    placeholder="^[A-Z0-9]+$"
+                  />
+                </div>
+                <PatternTester pattern={(rule.parameters.pattern as string) || ""} />
+              </div>
+            )}
+
+            {rule.type === ValidationRuleType.Range && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{t('identifiers.lowBound')}</span>
+                  <input
+                    type="number"
+                    value={(rule.parameters.min as number) || 0}
+                    onChange={(e) => updateParameter("min", parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 py-1.5 bg-background border border-sidebar-border rounded-lg text-sm font-mono text-sidebar-primary"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{t('identifiers.highBound')}</span>
+                  <input
+                    type="number"
+                    value={(rule.parameters.max as number) || 0}
+                    onChange={(e) => updateParameter("max", parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 py-1.5 bg-background border border-sidebar-border rounded-lg text-sm font-mono text-sidebar-primary"
+                  />
+                </div>
+              </div>
+            )}
+
+            {rule.type === ValidationRuleType.Custom && (
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-muted-foreground uppercase block">{t('identifiers.systemHeuristics')}:</span>
+                <select
+                  value={(rule.parameters.customLogic as string) || ""}
+                  onChange={(e) => updateParameter("customLogic", e.target.value)}
+                  className="w-full px-4 py-2 bg-background border border-sidebar-border rounded-xl text-sm font-bold text-foreground focus:outline-none"
+                >
+                  <option value="">{t('identifiers.selectHeuristic')}</option>
+                  <option value="uppercase">{t('identifiers.uppercaseMatrix')}</option>
+                  <option value="lowercase">{t('identifiers.lowercaseMatrix')}</option>
+                  <option value="alphanumeric">{t('identifiers.alphanumericSequence')}</option>
+                  <option value="numeric">{t('identifiers.pureNumeric')}</option>
+                  <option value="letters">{t('identifiers.pureAlpha')}</option>
+                </select>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils"
 import type { ToastState } from "./types"
+import { useTranslation } from "react-i18next"
 
 type ToastViewProps = {
   toast: ToastState | null
@@ -7,6 +8,7 @@ type ToastViewProps = {
 }
 
 export function ToastView({ toast, onClose }: ToastViewProps) {
+  const { t } = useTranslation()
   if (!toast) return null
 
   const variantClass =
@@ -37,7 +39,7 @@ export function ToastView({ toast, onClose }: ToastViewProps) {
             onClick={onClose}
             className="shrink-0 rounded-md px-2 py-1 text-xs text-zinc-300 hover:bg-white/5 hover:text-zinc-100"
           >
-            Close
+            {t('common.close')}
           </button>
         </div>
       </div>

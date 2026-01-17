@@ -31,7 +31,7 @@ namespace ControlHub.API.Accounts.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterUserRequest request, CancellationToken ct)
         {
-            var command = new RegisterUserCommand(request.Value, request.Type, request.Password);
+            var command = new RegisterUserCommand(request.Value, request.Type, request.Password, request.IdentifierConfigId);
             var result = await Mediator.Send(command, ct);
 
             if (result.IsFailure)
@@ -48,7 +48,7 @@ namespace ControlHub.API.Accounts.Controllers
         [HttpPost("admins/register")]
         public async Task<IActionResult> RegisterAdmin([FromBody] RegisterAdminRequest request, CancellationToken ct)
         {
-            var command = new RegisterAdminCommand(request.Value, request.Type, request.Password);
+            var command = new RegisterAdminCommand(request.Value, request.Type, request.Password, request.IdentifierConfigId);
             var result = await Mediator.Send(command, ct);
 
             if (result.IsFailure)
@@ -65,7 +65,7 @@ namespace ControlHub.API.Accounts.Controllers
         [HttpPost("superadmins/register")]
         public async Task<IActionResult> RegisterSuperAdmin([FromBody] RegisterSupperAdminRequest request, CancellationToken ct)
         {
-            var command = new RegisterSupperAdminCommand(request.Value, request.Type, request.Password, request.MasterKey);
+            var command = new RegisterSupperAdminCommand(request.Value, request.Type, request.Password, request.MasterKey, request.IdentifierConfigId);
             var result = await Mediator.Send(command, ct);
 
             if (result.IsFailure)
@@ -84,7 +84,7 @@ namespace ControlHub.API.Accounts.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> SignIn([FromBody] SignInRequest request, CancellationToken ct)
         {
-            var command = new SignInCommand(request.Value, request.Password, request.Type);
+            var command = new SignInCommand(request.Value, request.Password, request.Type, request.IdentifierConfigId);
             var result = await Mediator.Send(command, ct);
 
             if (result.IsFailure)

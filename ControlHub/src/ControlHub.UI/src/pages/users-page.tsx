@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button"
 import { UpdateUsernameDialog } from "@/components/users/update-username-dialog"
 import { useAuth } from "@/auth/use-auth"
 import { User } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 export function UsersPage() {
+  const { t } = useTranslation()
   const { auth } = useAuth()
   const [updateUsernameOpen, setUpdateUsernameOpen] = useState(false)
   const [username, setUsername] = useState(auth?.username || "")
@@ -16,25 +18,25 @@ export function UsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">User Profile</h1>
-        <p className="text-muted-foreground">Manage your user profile</p>
+        <h1 className="text-3xl font-bold">{t('users.profileTitle')}</h1>
+        <p className="text-muted-foreground">{t('users.profileDescription')}</p>
       </div>
 
       <div className="rounded-lg border p-6 space-y-4">
-        <h2 className="text-xl font-semibold">Profile Information</h2>
+        <h2 className="text-xl font-semibold">{t('users.profileInformation')}</h2>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Username</p>
+              <p className="font-medium">{t('users.username')}</p>
               <p className="text-sm text-muted-foreground">{username}</p>
             </div>
             <Button variant="outline" onClick={() => setUpdateUsernameOpen(true)}>
               <User className="h-4 w-4 mr-2" />
-              Update Username
+              {t('users.updateUsername')}
             </Button>
           </div>
           <div className="pt-3 border-t">
-            <p className="font-medium">Account ID</p>
+            <p className="font-medium">{t('users.accountId')}</p>
             <p className="text-sm text-muted-foreground font-mono">{auth?.accountId}</p>
           </div>
         </div>
@@ -46,7 +48,7 @@ export function UsersPage() {
           currentUsername={username}
           accessToken={auth.accessToken}
           open={updateUsernameOpen}
-          onOpenChange={setUpdateUsernameOpen}
+          onOpenChange={(val) => setUpdateUsernameOpen(val)}
           onSuccess={handleUsernameUpdate}
         />
       )}

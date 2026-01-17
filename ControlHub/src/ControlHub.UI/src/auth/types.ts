@@ -1,4 +1,4 @@
-export type IdentifierType = 0 | 1 | 2 | 99
+export type IdentifierType = 0 | 1 | 2 | 99 | number
 
 export type AuthData = {
   accountId: string | number
@@ -11,6 +11,7 @@ export type SignInRequest = {
   value: string
   password: string
   type: IdentifierType
+  identifierConfigId?: string
 }
 
 export type ForgotPasswordRequest = {
@@ -27,6 +28,7 @@ export type RegisterRequest = {
   value: string
   password: string
   type: IdentifierType
+  identifierConfigId?: string
 }
 
 export type RegisterSuperAdminRequest = RegisterRequest & {

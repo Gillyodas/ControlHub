@@ -61,12 +61,13 @@ namespace ControlHub.Application.Accounts.Commands.RegisterAdmin
                 return Result<Guid>.Failure(CommonErrors.SystemConfigurationError);
             }
 
-            var accountResult = _accountFactory.CreateWithUserAndIdentifier(
+            var accountResult = await _accountFactory.CreateWithUserAndIdentifierAsync(
                 accId,
                 request.Value,
                 request.Type,
                 request.Password,
-                userRoleId);
+                userRoleId,
+                identifierConfigId: request.IdentifierConfigId);
 
             if (!accountResult.IsSuccess)
             {

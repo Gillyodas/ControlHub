@@ -1,4 +1,4 @@
-﻿using ControlHub.Application.Accounts.Interfaces.Repositories;
+﻿using AppIdentifierConfigRepository = ControlHub.Application.Accounts.Interfaces.Repositories.IIdentifierConfigRepository;
 using ControlHub.Domain.Accounts.Identifiers;
 using ControlHub.Infrastructure.Persistence;
 using ControlHub.SharedKernel.Common.Errors;
@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ControlHub.Infrastructure.Accounts.Repositories
 {
-    public class IdentifierConfigRepository : IIdentifierConfigRepository
+    public class IdentifierConfigRepository : AppIdentifierConfigRepository
     {
         private readonly AppDbContext _db;
 

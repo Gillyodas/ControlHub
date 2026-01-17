@@ -7,18 +7,21 @@ import { detectIdentifierType, validateIdentifierValue } from "@/auth/validators
 import { Eye, EyeOff } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { getActiveIdentifierConfigs, type IdentifierConfigDto } from "@/services/api/identifiers"
+import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 type Mode = "signin" | "register"
 
 // Map from API response to IdentifierType values
 function mapIdentifierType(name: string): IdentifierType {
-  switch (name.toLowerCase()) {
+  const normalized = name.toLowerCase()
+  switch (normalized) {
     case 'email': return 0
     case 'phone': return 1
     case 'username': return 2
     case 'employeeid': return 2 // Map EmployeeID to Username type for now
     case 'age': return 99 // Custom type for Age
-    default: return 0 // Default to Email
+    default: return 99 // Default to Custom for any new/unknown identifier types
   }
 }
 
@@ -35,6 +38,7 @@ function inputClassName(hasError: boolean) {
 export function AuthView() {
   const { signIn, register } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const [mode, setMode] = React.useState<Mode>("signin")
   const [submitting, setSubmitting] = React.useState(false)
@@ -44,7 +48,11 @@ export function AuthView() {
   const [signinPassword, setSigninPassword] = React.useState("")
   const [showSigninPassword, setShowSigninPassword] = React.useState(false)
 
+  const [signinIdentifyType, setSigninIdentifyType] = React.useState<IdentifierType>(2) // Default to username for signin
+  const [signinConfigId, setSigninConfigId] = React.useState<string | undefined>(undefined)
+
   const [regType, setRegType] = React.useState<IdentifierType>(0)
+  const [regConfigId, setRegConfigId] = React.useState<string | undefined>(undefined)
   const [regValue, setRegValue] = React.useState("")
   const [regPassword, setRegPassword] = React.useState("")
   const [regConfirmPassword, setRegConfirmPassword] = React.useState("")
@@ -62,6 +70,16 @@ export function AuthView() {
       try {
         const configs = await getActiveIdentifierConfigs()
         setActiveIdentifiers(configs)
+
+        // Initialize default reg types
+        const emailConfig = configs.find(c => c.name.toLowerCase() === 'email')
+        if (emailConfig) {
+          setRegType(0)
+          setRegConfigId(emailConfig.id)
+        } else if (configs.length > 0) {
+          setRegType(mapIdentifierType(configs[0].name))
+          setRegConfigId(configs[0].id)
+        }
       } catch (err) {
         console.error("Failed to load active identifiers:", err)
       }
@@ -74,38 +92,45 @@ export function AuthView() {
   }, [regType, regValue])
 
   const regPasswordError = React.useMemo(() => {
-    if (!regPassword.trim()) return "Password is required"
-    if (regPassword.length < 8) return "Password must be at least 8 characters"
-    if (!/[a-z]/.test(regPassword)) return "Password must include a lowercase letter"
-    if (!/[A-Z]/.test(regPassword)) return "Password must include an uppercase letter"
-    if (!/[0-9]/.test(regPassword)) return "Password must include a number"
-    if (!/[\W_]/.test(regPassword)) return "Password must include a special character"
+    if (!regPassword.trim()) return t('auth.validation.passwordRequired')
+    if (regPassword.length < 8) return t('auth.validation.passwordMinLength')
+    if (!/[a-z]/.test(regPassword)) return t('auth.validation.passwordLowercase')
+    if (!/[A-Z]/.test(regPassword)) return t('auth.validation.passwordUppercase')
+    if (!/[0-9]/.test(regPassword)) return t('auth.validation.passwordNumber')
+    if (!/[\W_]/.test(regPassword)) return t('auth.validation.passwordSpecial')
     return null
-  }, [regPassword])
+  }, [regPassword, t])
 
   const regConfirmError = React.useMemo(() => {
-    if (!regConfirmPassword.trim()) return "Confirm password is required"
-    if (regConfirmPassword !== regPassword) return "Confirm password does not match"
+    if (!regConfirmPassword.trim()) return t('auth.validation.confirmPasswordRequired')
+    if (regConfirmPassword !== regPassword) return t('auth.validation.confirmPasswordMatch')
     return null
-  }, [regConfirmPassword, regPassword])
+  }, [regConfirmPassword, regPassword, t])
 
   const regMasterKeyError = React.useMemo(() => {
     if (regRole !== "SupperAdmin") return null
-    if (!regMasterKey.trim()) return "MasterKey is required"
+    if (!regMasterKey.trim()) return t('auth.validation.masterKeyRequired')
     return null
-  }, [regMasterKey, regRole])
+  }, [regMasterKey, regRole, t])
 
   const canRegister = !regIdentifyError && !regPasswordError && !regConfirmError && !regMasterKeyError
 
-  const signinIdentifyType = React.useMemo(() => detectIdentifierType(signinValue), [signinValue])
+  const detectedSigninType = React.useMemo(() => detectIdentifierType(signinValue), [signinValue])
+
+  // Sync detected type to state for signin if we don't have a manual config selection
+  React.useEffect(() => {
+    if (!signinConfigId) {
+      setSigninIdentifyType(detectedSigninType)
+    }
+  }, [detectedSigninType, signinConfigId])
   const signinIdentifyError = React.useMemo(() => {
-    if (!signinValue.trim()) return "Identify is required"
+    if (!signinValue.trim()) return t('auth.validation.identifyRequired')
     return null
-  }, [signinValue])
+  }, [signinValue, t])
   const signinPasswordError = React.useMemo(() => {
-    if (!signinPassword.trim()) return "Password is required"
+    if (!signinPassword.trim()) return t('auth.validation.passwordRequired')
     return null
-  }, [signinPassword])
+  }, [signinPassword, t])
   const canSignIn = !signinIdentifyError && !signinPasswordError
 
   async function onSubmitSignIn(e: React.FormEvent) {
@@ -117,7 +142,12 @@ export function AuthView() {
 
     setSubmitting(true)
     try {
-      await signIn({ value: signinValue.trim(), password: signinPassword, type: signinIdentifyType })
+      await signIn({
+        value: signinValue.trim(),
+        password: signinPassword,
+        type: signinIdentifyType,
+        identifierConfigId: signinConfigId
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed")
     } finally {
@@ -148,6 +178,7 @@ export function AuthView() {
           type: regType,
           value: regValue.trim(),
           password: regPassword,
+          identifierConfigId: regConfigId
         },
         { masterKey: regRole === "SupperAdmin" ? regMasterKey : undefined },
       )
@@ -168,36 +199,52 @@ export function AuthView() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 overflow-hidden">
-        <div className="p-6 border-b border-zinc-800">
-          <h1 className="text-xl font-semibold text-zinc-100">ControlHub</h1>
-          <p className="text-sm text-zinc-400 mt-1">{mode === "signin" ? "Sign in to continue" : "Create a new account"}</p>
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Decorative gradients */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px]" />
+      </div>
+
+      <div className="w-full max-w-md rounded-2xl border border-sidebar-border bg-sidebar/80 backdrop-blur-xl shadow-2xl relative z-10 overflow-hidden">
+        <div className="p-8 border-b border-sidebar-border text-center">
+          <h1 className="text-3xl font-extrabold bg-[var(--vibrant-gradient)] bg-clip-text text-transparent">
+            ControlHub
+          </h1>
+          <p className="text-muted-foreground mt-2 font-medium">
+            {mode === "signin" ? t('auth.signInTitle') : t('auth.registerTitle')}
+          </p>
         </div>
 
-        <div className="p-6">
-          <div className="flex gap-2 mb-6">
+        <div className="p-8">
+          <div className="grid grid-cols-2 gap-3 mb-8 p-1 bg-background rounded-xl border border-sidebar-border">
             <Button
               type="button"
-              variant={mode === "signin" ? "default" : "secondary"}
-              className={mode === "signin" ? "bg-white text-black hover:bg-zinc-200" : "bg-zinc-800 text-zinc-100 hover:bg-zinc-700"}
+              variant={mode === "signin" ? "vibrant" : "ghost"}
+              className={cn(
+                "rounded-lg font-semibold",
+                mode !== "signin" && "text-muted-foreground hover:text-white"
+              )}
               onClick={() => {
                 setMode("signin")
                 setError(null)
               }}
             >
-              Login
+              {t('auth.login')}
             </Button>
             <Button
               type="button"
-              variant={mode === "register" ? "default" : "secondary"}
-              className={mode === "register" ? "bg-white text-black hover:bg-zinc-200" : "bg-zinc-800 text-zinc-100 hover:bg-zinc-700"}
+              variant={mode === "register" ? "vibrant" : "ghost"}
+              className={cn(
+                "rounded-lg font-semibold",
+                mode !== "register" && "text-muted-foreground hover:text-white"
+              )}
               onClick={() => {
                 setMode("register")
                 setError(null)
               }}
             >
-              Register
+              {t('auth.register')}
             </Button>
           </div>
 
@@ -208,30 +255,32 @@ export function AuthView() {
           {mode === "signin" ? (
             <form onSubmit={onSubmitSignIn} className="space-y-4">
               <div>
-                <label className="block text-sm text-zinc-300 mb-1">Identify</label>
+                <label className="block text-sm text-zinc-300 mb-1">{t('auth.identify')}</label>
                 <input
                   value={signinValue}
                   onChange={(e) => setSigninValue(e.target.value)}
                   onBlur={() => setTouched((p) => ({ ...p, signinValue: true }))}
-                  placeholder="Email / Phone / Username"
+                  placeholder={t('auth.identifyPlaceholder')}
                   className={inputClassName(Boolean(touched.signinValue && signinIdentifyError))}
                 />
                 {touched.signinValue && signinIdentifyError ? (
                   <p className="mt-1 text-xs text-red-300">{signinIdentifyError}</p>
                 ) : (
-                  <p className="mt-1 text-xs text-zinc-500">Detected type: {signinIdentifyType === 0 ? "Email" : signinIdentifyType === 1 ? "Phone" : "Username"}</p>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    {t('auth.detectedType')}: {signinIdentifyType === 0 ? t('auth.email') : signinIdentifyType === 1 ? t('auth.phone') : signinIdentifyType === 2 ? t('auth.username') : `${t('auth.custom')} (${signinIdentifyType})`}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm text-zinc-300 mb-1">Password</label>
+                <label className="block text-sm text-zinc-300 mb-1">{t('auth.password')}</label>
                 <div className="relative">
                   <input
                     value={signinPassword}
                     onChange={(e) => setSigninPassword(e.target.value)}
                     onBlur={() => setTouched((p) => ({ ...p, signinPassword: true }))}
                     type={showSigninPassword ? "text" : "password"}
-                    placeholder="Your password"
+                    placeholder={t('auth.passwordPlaceholder')}
                     className={[inputClassName(Boolean(touched.signinPassword && signinPasswordError)), "pr-10"].join(" ")}
                   />
                   <button
@@ -248,10 +297,11 @@ export function AuthView() {
 
               <Button
                 type="submit"
+                variant="vibrant"
                 disabled={!canSignIn || submitting}
-                className="w-full bg-white text-black hover:bg-zinc-200 disabled:opacity-50"
+                className="w-full text-white font-bold py-6 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                {submitting ? "Signing in..." : "Sign in"}
+                {submitting ? t('auth.signingIn') : t('auth.signIn')}
               </Button>
 
               <div className="flex items-center justify-between">
@@ -261,22 +311,29 @@ export function AuthView() {
                   className="px-0 text-zinc-200"
                   onClick={() => navigate("/forgot-password")}
                 >
-                  Forgot password?
+                  {t('auth.forgotPassword')}
                 </Button>
               </div>
             </form>
           ) : (
             <form onSubmit={onSubmitRegister} className="space-y-4">
               <div>
-                <label className="block text-sm text-zinc-300 mb-1">Identify type</label>
+                <label className="block text-sm text-zinc-300 mb-1">{t('auth.identifyType')}</label>
                 <select
-                  value={regType}
-                  onChange={(e) => setRegType(Number(e.target.value) as IdentifierType)}
+                  value={regConfigId}
+                  onChange={(e) => {
+                    const configId = e.target.value
+                    const config = activeIdentifiers.find(c => c.id === configId)
+                    if (config) {
+                      setRegConfigId(configId)
+                      setRegType(mapIdentifierType(config.name))
+                    }
+                  }}
                   onBlur={() => setTouched((p) => ({ ...p, regType: true }))}
                   className={inputClassName(false)}
                 >
                   {activeIdentifiers.map((config) => (
-                    <option key={config.id} value={mapIdentifierType(config.name)} className="bg-zinc-950">
+                    <option key={config.id} value={config.id} className="bg-zinc-950">
                       {config.name}
                     </option>
                   ))}
@@ -284,7 +341,7 @@ export function AuthView() {
               </div>
 
               <div>
-                <label className="block text-sm text-zinc-300 mb-1">Identify</label>
+                <label className="block text-sm text-zinc-300 mb-1">{t('auth.identify')}</label>
                 <input
                   value={regValue}
                   onChange={(e) => setRegValue(e.target.value)}
@@ -296,7 +353,7 @@ export function AuthView() {
               </div>
 
               <div>
-                <label className="block text-sm text-zinc-300 mb-1">Role</label>
+                <label className="block text-sm text-zinc-300 mb-1">{t('auth.role')}</label>
                 <select
                   value={regRole}
                   onChange={(e) => setRegRole(e.target.value as RegisterRole)}
@@ -310,18 +367,18 @@ export function AuthView() {
                   ))}
                 </select>
                 {regRole === "Admin" ? (
-                  <p className="mt-1 text-xs text-zinc-500">Note: API requires permission policy for Admin registration.</p>
+                  <p className="mt-1 text-xs text-zinc-500">{t('auth.hints.adminRegistration')}</p>
                 ) : null}
               </div>
 
               {regRole === "SupperAdmin" ? (
                 <div>
-                  <label className="block text-sm text-zinc-300 mb-1">MasterKey</label>
+                  <label className="block text-sm text-zinc-300 mb-1">{t('auth.masterKey')}</label>
                   <input
                     value={regMasterKey}
                     onChange={(e) => setRegMasterKey(e.target.value)}
                     onBlur={() => setTouched((p) => ({ ...p, regMasterKey: true }))}
-                    placeholder="MasterKey"
+                    placeholder={t('auth.masterKeyPlaceholder')}
                     className={inputClassName(Boolean(touched.regMasterKey && regMasterKeyError))}
                   />
                   {touched.regMasterKey && regMasterKeyError ? <p className="mt-1 text-xs text-red-300">{regMasterKeyError}</p> : null}
@@ -329,14 +386,14 @@ export function AuthView() {
               ) : null}
 
               <div>
-                <label className="block text-sm text-zinc-300 mb-1">Password</label>
+                <label className="block text-sm text-zinc-300 mb-1">{t('auth.password')}</label>
                 <div className="relative">
                   <input
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     onBlur={() => setTouched((p) => ({ ...p, regPassword: true }))}
                     type={showRegPassword ? "text" : "password"}
-                    placeholder="Password"
+                    placeholder={t('auth.password')}
                     className={[inputClassName(Boolean(touched.regPassword && regPasswordError)), "pr-10"].join(" ")}
                   />
                   <button
@@ -350,19 +407,19 @@ export function AuthView() {
                 </div>
                 {touched.regPassword && regPasswordError ? <p className="mt-1 text-xs text-red-300">{regPasswordError}</p> : null}
                 {!touched.regPassword && !regPasswordError ? (
-                  <p className="mt-1 text-xs text-zinc-500">At least 8 chars, include lower/upper, number, special.</p>
+                  <p className="mt-1 text-xs text-zinc-500">{t('auth.hints.passwordRequirements')}</p>
                 ) : null}
               </div>
 
               <div>
-                <label className="block text-sm text-zinc-300 mb-1">Confirm password</label>
+                <label className="block text-sm text-zinc-300 mb-1">{t('auth.confirmPassword')}</label>
                 <div className="relative">
                   <input
                     value={regConfirmPassword}
                     onChange={(e) => setRegConfirmPassword(e.target.value)}
                     onBlur={() => setTouched((p) => ({ ...p, regConfirmPassword: true }))}
                     type={showRegConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm password"
+                    placeholder={t('auth.confirmPassword')}
                     className={[inputClassName(Boolean(touched.regConfirmPassword && regConfirmError)), "pr-10"].join(" ")}
                   />
                   <button
@@ -379,10 +436,11 @@ export function AuthView() {
 
               <Button
                 type="submit"
+                variant="vibrant"
                 disabled={!canRegister || submitting}
-                className="w-full bg-white text-black hover:bg-zinc-200 disabled:opacity-50"
+                className="w-full text-white font-bold py-6 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                {submitting ? "Creating..." : "Create account"}
+                {submitting ? t('auth.creating') : t('auth.createAccount')}
               </Button>
             </form>
           )}

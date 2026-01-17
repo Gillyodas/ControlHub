@@ -6,12 +6,13 @@ namespace ControlHub.Application.Accounts.Interfaces
 {
     public interface IAccountFactory
     {
-        Result<Maybe<Account>> CreateWithUserAndIdentifier(
+        Task<Result<Maybe<Account>>> CreateWithUserAndIdentifierAsync(
             Guid accountId,
             string identifierValue,
             IdentifierType identifierType,
             string rawPassword,
             Guid roleId,
-            string? username = "No name");
+            string? username = "No name",
+            Guid? identifierConfigId = null);
     }
 }

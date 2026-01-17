@@ -1,21 +1,20 @@
 import * as React from "react"
-import { X } from "lucide-react"
+import { Search, Plus, Trash2, X, MoreHorizontal, GripVertical, ChevronLeft, ChevronRight, Loader2, Save, Undo } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 import type { Permission, Role, RoleDraft } from "./types"
 
 type RolesTableCardProps = {
   roles: Role[]
   permissions: Permission[]
-
   searchTerm: string
-  onSearchTermChange: (value: string) => void
+  onSearchTermChange: (v: string) => void
   pageIndex: number
-  onPageIndexChange: (value: number) => void
+  onPageIndexChange: (v: number) => void
   pageSize: number
-  onPageSizeChange: (value: number) => void
+  onPageSizeChange: (v: number) => void
   totalCount: number
   totalPages: number
   loading: boolean
@@ -30,21 +29,10 @@ type RolesTableCardProps = {
 
   onDraftChange: (index: number, patch: Partial<RoleDraft>) => void
   onRemoveDraft: (index: number) => void
-
   onRemovePermission: (roleId: string, permissionId: string) => void
   onDropPermissionToRole: (roleId: string, permissionId: string) => void
-
   onDropPermissionToDraft: (draftIndex: number, permissionId: string) => void
   onRemovePermissionFromDraft: (draftIndex: number, permissionId: string) => void
-}
-
-function readDroppedPermission(e: React.DragEvent) {
-  return e.dataTransfer.getData("text/plain").trim()
-}
-
-function formatPermissionLabel(permissionId: string, permissionMap: Map<string, Permission>) {
-  const p = permissionMap.get(permissionId)
-  return p?.code ?? permissionId
 }
 
 export function RolesTableCard({
@@ -73,226 +61,302 @@ export function RolesTableCard({
   onDropPermissionToDraft,
   onRemovePermissionFromDraft,
 }: RolesTableCardProps) {
-  const permissionMap = React.useMemo(() => {
-    const map = new Map<string, Permission>()
-    for (const p of permissions) map.set(p.id, p)
-    return map
-  }, [permissions])
+  const { t } = useTranslation()
+  const permissionMap = React.useMemo(() => new Map(permissions.map((p) => [p.id, p])), [permissions])
+
+  const [dragOverRole, setDragOverRole] = React.useState<string | null>(null)
+  const [dragOverDraft, setDragOverDraft] = React.useState<number | null>(null)
+
+  const handleDropToRole = (e: React.DragEvent, roleId: string) => {
+    e.preventDefault()
+    setDragOverRole(null)
+    const permissionId = e.dataTransfer.getData("application/rbac-permission-id")
+    if (permissionId) {
+      onDropPermissionToRole(roleId, permissionId)
+    }
+  }
+
+  const handleDropToDraft = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    setDragOverDraft(null)
+    const permissionId = e.dataTransfer.getData("application/rbac-permission-id")
+    if (permissionId) {
+      onDropPermissionToDraft(index, permissionId)
+    }
+  }
 
   return (
-    <div className="bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden">
-      <div className="p-4 border-b border-zinc-800 flex flex-col gap-3">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-zinc-100">Roles List</h2>
-          <div className="ml-auto text-xs text-zinc-500">
-            {loading ? "Loading..." : `${totalCount} items`}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            value={searchTerm}
-            onChange={(e) => onSearchTermChange(e.target.value)}
-            placeholder="Search roles..."
-            className={cn(
-              "h-8 w-56 rounded-md border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100",
-              "placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-500",
-            )}
-          />
-
-          <select
-            value={String(pageSize)}
-            onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className={cn(
-              "h-8 rounded-md border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100",
-              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-500",
-            )}
-          >
-            {[10, 20, 50, 100].map((n) => (
-              <option key={n} value={String(n)}>
-                {n} / page
-              </option>
-            ))}
-          </select>
-
-          <Button
-            type="button"
-            variant="secondary"
-            className="bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
-            onClick={() => onPageIndexChange(Math.max(1, pageIndex - 1))}
-            disabled={loading || pageIndex <= 1}
-          >
-            Prev
-          </Button>
-          <div className="text-sm text-zinc-300">
-            Page {pageIndex} / {Math.max(1, totalPages)}
-          </div>
-          <Button
-            type="button"
-            variant="secondary"
-            className="bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
-            onClick={() => onPageIndexChange(Math.min(Math.max(1, totalPages), pageIndex + 1))}
-            disabled={loading || pageIndex >= Math.max(1, totalPages)}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-
-      <div className="overflow-auto scrollbar-none max-h-[calc(100vh-260px)]">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-zinc-800 hover:bg-zinc-900">
-              <TableHead className="text-zinc-300 w-12">STT</TableHead>
-              <TableHead className="text-zinc-300 w-20">ID</TableHead>
-              <TableHead className="text-zinc-300 w-28">Role</TableHead>
-              <TableHead className="text-zinc-300">Permissions</TableHead>
-              <TableHead className="text-zinc-300 w-32">Description</TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {roles.map((role, index) => (
-              <TableRow
-                key={role.id}
-                className="border-zinc-800 hover:bg-zinc-800/50"
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault()
-                  const p = readDroppedPermission(e)
-                  if (p) onDropPermissionToRole(role.id, p)
-                }}
+    <div className="flex flex-col h-full bg-sidebar/10 backdrop-blur-md rounded-2xl border border-sidebar-border overflow-hidden shadow-2xl transition-all hover:border-sidebar-border/80">
+      <div className="p-6 border-b border-sidebar-border/40 bg-sidebar-accent/5">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-sidebar-primary/10 text-sidebar-primary rounded-xl shadow-inner">
+                <GripVertical className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black tracking-tight text-foreground uppercase">{t('roles.title')}</h2>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none">{t('roles.matrix')}</span>
+                  <Badge variant="outline" className="h-4 px-1 text-[8px] font-black border-sidebar-border/50 bg-sidebar-accent/30">{totalCount}</Badge>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onStartAdd}
+                className="h-9 px-4 rounded-xl text-xs font-black uppercase tracking-wider bg-sidebar-accent/20 border-sidebar-border hover:bg-sidebar-accent hover:scale-105 transition-all active:scale-95"
               >
-                <TableCell className="text-zinc-400">{(pageIndex - 1) * pageSize + index + 1}</TableCell>
-                <TableCell className="text-zinc-300 font-mono text-xs">{role.id}</TableCell>
-                <TableCell className="text-zinc-100 font-medium text-sm">{role.name}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {role.permissionIds.map((permissionId) => (
-                      <Badge
-                        key={permissionId}
-                        variant="secondary"
-                        className="group relative bg-zinc-800 text-zinc-300 text-xs hover:bg-zinc-700"
-                      >
-                        <span className="pr-5">{formatPermissionLabel(permissionId, permissionMap)}</span>
-                        <button
-                          type="button"
-                          onClick={() => onRemovePermission(role.id, permissionId)}
-                          className={cn(
-                            "absolute right-1 top-1/2 -translate-y-1/2",
-                            "opacity-0 group-hover:opacity-100",
-                            "rounded p-0.5 hover:bg-white/10",
-                          )}
-                          aria-label={`Remove ${formatPermissionLabel(permissionId, permissionMap)} from ${role.name}`}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell className="text-zinc-400 text-xs max-w-[128px] truncate" title={role.description}>
-                  {role.description}
-                </TableCell>
-              </TableRow>
-            ))}
-
-            {roleDrafts.map((draft, draftIndex) => (
-              <TableRow key={`draft-${draftIndex}`} className="border-zinc-800 bg-zinc-950/30">
-                <TableCell className="text-zinc-400">-</TableCell>
-                <TableCell className="text-zinc-500 font-mono text-xs">
-                  (new)
-                  <button
-                    type="button"
-                    onClick={() => onRemoveDraft(draftIndex)}
-                    className="ml-2 inline-flex items-center justify-center rounded p-0.5 hover:bg-white/10"
-                    aria-label="Remove draft"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </TableCell>
-                <TableCell>
-                  <input
-                    value={draft.name}
-                    onChange={(e) => onDraftChange(draftIndex, { name: e.target.value })}
-                    placeholder="Role name"
-                    className={cn(
-                      "h-8 w-full rounded-md border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100",
-                      "placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-500",
-                    )}
-                  />
-                </TableCell>
-                <TableCell
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    const p = readDroppedPermission(e)
-                    if (p) onDropPermissionToDraft(draftIndex, p)
-                  }}
+                <Plus className="w-3.5 h-3.5 mr-2" /> {t('roles.addRole')}
+              </Button>
+              {roleDrafts.length > 0 && (
+                <Button
+                  variant="vibrant"
+                  size="sm"
+                  onClick={onConfirmAdd}
+                  disabled={!canConfirm || saving}
+                  className="h-9 px-4 rounded-xl text-xs font-black uppercase tracking-wider shadow-lg shadow-sidebar-primary/20 hover:scale-105 transition-all active:scale-95"
                 >
-                  <div className="min-h-8 flex flex-wrap gap-1 rounded-md border border-dashed border-zinc-700 p-2">
-                    {draft.permissionIds.length ? null : <span className="text-xs text-zinc-500">Drag permissions here</span>}
-                    {draft.permissionIds.map((permissionId) => (
-                      <Badge
-                        key={permissionId}
-                        variant="secondary"
-                        className="group relative bg-zinc-800 text-zinc-300 text-xs hover:bg-zinc-700"
-                      >
-                        <span className="pr-5">{formatPermissionLabel(permissionId, permissionMap)}</span>
-                        <button
-                          type="button"
-                          onClick={() => onRemovePermissionFromDraft(draftIndex, permissionId)}
-                          className={cn(
-                            "absolute right-1 top-1/2 -translate-y-1/2",
-                            "opacity-0 group-hover:opacity-100",
-                            "rounded p-0.5 hover:bg-white/10",
-                          )}
-                          aria-label={`Remove ${formatPermissionLabel(permissionId, permissionMap)}`}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <input
-                    value={draft.description}
-                    onChange={(e) => onDraftChange(draftIndex, { description: e.target.value })}
-                    placeholder="Description"
-                    className={cn(
-                      "h-8 w-full rounded-md border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100",
-                      "placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-500",
-                    )}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-2" />}
+                  {t('roles.confirmDrafts')}
+                </Button>
+              )}
+              {canUpdate && (
+                <Button
+                  variant="vibrant"
+                  size="sm"
+                  onClick={onUpdate}
+                  disabled={saving}
+                  className="h-9 px-4 rounded-xl text-xs font-black uppercase tracking-wider shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-500 hover:scale-105 transition-all active:scale-95 border-none"
+                >
+                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-2" />}
+                  {t('roles.updateAll')}
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="relative group/search">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-focus-within/search:text-sidebar-primary transition-colors" />
+            <input
+              type="text"
+              placeholder={t('roles.searchPlaceholder')}
+              value={searchTerm}
+              onChange={(e) => onSearchTermChange(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-sidebar-accent/20 border border-sidebar-border/50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sidebar-primary/30 transition-all font-medium placeholder:text-muted-foreground/30"
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="p-4 border-t border-zinc-800 flex items-center gap-2">
-        <Button onClick={onStartAdd} variant="secondary" className="bg-zinc-800 text-zinc-100 hover:bg-zinc-700">
-          Add
-        </Button>
-        <Button
-          onClick={onConfirmAdd}
-          disabled={!canConfirm}
-          variant="secondary"
-          className="bg-zinc-800 text-zinc-100 hover:bg-zinc-700 disabled:opacity-50"
-        >
-          Confirm
-        </Button>
-        <Button
-          onClick={onUpdate}
-          disabled={!canUpdate || saving}
-          className="bg-white text-black hover:bg-zinc-200 disabled:opacity-50"
-        >
-          {saving ? "Updating..." : "Update"}
-        </Button>
-        <div className="ml-auto text-xs text-zinc-500">Tip: drag permission from the right table and drop on a role</div>
+      <div className="flex-1 overflow-auto custom-scrollbar p-1">
+        <table className="w-full text-left border-separate border-spacing-0">
+          <thead className="sticky top-0 z-10 bg-sidebar/95 backdrop-blur-md">
+            <tr>
+              <th className="p-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest border-b border-sidebar-border/30 w-12">{t('table.stt')}</th>
+              <th className="p-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest border-b border-sidebar-border/30">{t('table.role')}</th>
+              <th className="p-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest border-b border-sidebar-border/30">{t('table.permissions')}</th>
+              <th className="p-4 text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest border-b border-sidebar-border/30 w-12"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-sidebar-border/10">
+            {roleDrafts.map((draft, idx) => (
+              <tr
+                key={`draft-${idx}`}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  setDragOverDraft(idx)
+                }}
+                onDragLeave={() => setDragOverDraft(null)}
+                onDrop={(e) => handleDropToDraft(e, idx)}
+                className={cn(
+                  "group/row transition-all duration-300",
+                  dragOverDraft === idx ? "bg-sidebar-primary/10" : "bg-sidebar-primary/5 hover:bg-sidebar-primary/10"
+                )}
+              >
+                <td className="p-4">
+                  <Badge variant="warning" className="h-5 px-1.5 text-[8px] font-black uppercase tracking-tighter shadow-sm animate-pulse">Draft</Badge>
+                </td>
+                <td className="p-4">
+                  <div className="space-y-2">
+                    <input
+                      className="w-full bg-transparent border-none p-0 text-sm font-black text-foreground placeholder:text-muted-foreground/20 focus:ring-0"
+                      placeholder={t('roles.roleNamePlaceholder')}
+                      value={draft.name}
+                      onChange={(e) => onDraftChange(idx, { name: e.target.value })}
+                    />
+                    <input
+                      className="w-full bg-transparent border-none p-0 text-[11px] text-muted-foreground italic placeholder:text-muted-foreground/20 focus:ring-0"
+                      placeholder={t('roles.roleDescriptionPlaceholder')}
+                      value={draft.description}
+                      onChange={(e) => onDraftChange(idx, { description: e.target.value })}
+                    />
+                  </div>
+                </td>
+                <td className="p-4">
+                  <div className="flex flex-wrap gap-1.5 min-h-[40px] p-2 bg-sidebar-accent/10 rounded-xl border border-dashed border-sidebar-border/40 group-hover/row:border-sidebar-primary/30 transition-all">
+                    {draft.permissionIds.map((pid) => (
+                      <Badge
+                        key={pid}
+                        variant="secondary"
+                        className="h-6 gap-1 pl-2 pr-1 rounded-lg border-sidebar-border/50 bg-sidebar/50 text-[10px] font-bold group/badge border shadow-sm"
+                      >
+                        {formatPermissionLabel(pid, permissionMap)}
+                        <button
+                          onClick={() => onRemovePermissionFromDraft(idx, pid)}
+                          className="p-0.5 rounded-md hover:bg-destructive/10 hover:text-destructive text-muted-foreground/50 transition-colors"
+                          aria-label={t('roles.removePermissionAria', { permission: formatPermissionLabel(pid, permissionMap) })}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                    {draft.permissionIds.length === 0 && (
+                      <div className="w-full h-8 flex items-center justify-center text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest italic group-hover/row:text-sidebar-primary/40 transition-colors">
+                        {t('roles.dropPermissionsHere')}
+                      </div>
+                    )}
+                  </div>
+                </td>
+                <td className="p-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onRemoveDraft(idx)}
+                    className="h-8 w-8 rounded-lg text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+
+            {loading ? (
+              [...Array(pageSize)].map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td colSpan={4} className="p-4">
+                    <div className="h-10 bg-sidebar-accent/5 rounded-xl border border-sidebar-border/20"></div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              roles.map((role, idx) => (
+                <tr
+                  key={role.id}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setDragOverRole(role.id)
+                  }}
+                  onDragLeave={() => setDragOverRole(null)}
+                  onDrop={(e) => handleDropToRole(e, role.id)}
+                  className={cn(
+                    "group/row transition-all duration-300 hover:bg-sidebar-accent/10",
+                    dragOverRole === role.id ? "bg-sidebar-primary/10 ring-1 ring-inset ring-sidebar-primary/30" : ""
+                  )}
+                >
+                  <td className="p-4 text-xs font-mono font-bold text-muted-foreground/40">{(pageIndex - 1) * pageSize + idx + 1}</td>
+                  <td className="p-4">
+                    <div className="flex flex-col">
+                      <div className="text-sm font-black text-foreground group-hover/row:text-sidebar-primary transition-colors uppercase tracking-tight">{role.name}</div>
+                      <div className="text-[11px] text-muted-foreground italic line-clamp-1 mt-0.5 opacity-60 group-hover/row:opacity-100 transition-opacity">{role.description}</div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex flex-wrap gap-1.5 min-h-[40px] p-2 bg-transparent transition-all">
+                      {role.permissionIds.map((pid) => (
+                        <Badge
+                          key={pid}
+                          variant="outline"
+                          className="h-6 gap-1 pl-2 pr-1 rounded-lg border-sidebar-border/30 bg-sidebar-accent/5 transition-all hover:bg-sidebar-accent/20 text-[10px] font-bold group/badge shadow-sm"
+                        >
+                          {formatPermissionLabel(pid, permissionMap)}
+                          <button
+                            onClick={() => onRemovePermission(role.id, pid)}
+                            className="p-0.5 rounded-md hover:bg-destructive/10 hover:text-destructive text-muted-foreground/20 group-hover/badge:text-muted-foreground/50 transition-colors"
+                            aria-label={t('roles.removePermissionFromRoleAria', { permission: formatPermissionLabel(pid, permissionMap), role: role.name })}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                      {role.permissionIds.length === 0 && (
+                        <div className="w-full text-center text-[10px] font-black text-muted-foreground/20 uppercase tracking-widest italic group-hover/row:text-sidebar-primary/40 transition-colors">
+                          {t('roles.dropPermissionsHere')}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-sidebar-accent/50 opacity-0 group-hover/row:opacity-100 transition-all">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </td>
+                </tr>
+              ))
+            )}
+            {!loading && roles.length === 0 && roleDrafts.length === 0 && (
+              <tr>
+                <td colSpan={4} className="p-20 text-center">
+                  <div className="inline-flex p-6 bg-sidebar-accent/10 rounded-3xl border border-sidebar-border/20 mb-4">
+                    <Search className="w-10 h-10 text-muted-foreground/20" />
+                  </div>
+                  <div className="text-lg font-black text-muted-foreground/40 uppercase tracking-widest">{t('table.noResults')}</div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="p-4 border-t border-sidebar-border/40 bg-sidebar-accent/5 flex items-center justify-between">
+        <div className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+          {t('table.showingXofY', { current: roles.length, total: totalCount })}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => onPageIndexChange(pageIndex - 1)}
+            disabled={pageIndex <= 1 || loading}
+            className="h-8 w-8 rounded-lg border-sidebar-border hover:bg-sidebar-accent"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <div className="flex items-center gap-1">
+            {[...Array(totalPages)].map((_, i) => (
+              <Button
+                key={i}
+                variant={pageIndex === i + 1 ? "vibrant" : "ghost"}
+                size="sm"
+                onClick={() => onPageIndexChange(i + 1)}
+                className={cn(
+                  "h-8 w-8 rounded-lg text-xs font-black p-0",
+                  pageIndex === i + 1 ? "shadow-md shadow-sidebar-primary/20" : "text-muted-foreground/60"
+                )}
+              >
+                {i + 1}
+              </Button>
+            ))}
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => onPageIndexChange(pageIndex + 1)}
+            disabled={pageIndex >= totalPages || loading}
+            className="h-8 w-8 rounded-lg border-sidebar-border hover:bg-sidebar-accent"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </div>
   )
+}
+
+function formatPermissionLabel(id: string, map: Map<string, Permission>): string {
+  const p = map.get(id)
+  if (!p) return id
+  return p.code
 }

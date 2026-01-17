@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ControlHub.Application.Accounts.DTOs;
-using ControlHub.Application.Accounts.Interfaces.Repositories;
+using AppIdentifierConfigRepository = ControlHub.Application.Accounts.Interfaces.Repositories.IIdentifierConfigRepository;
 using ControlHub.SharedKernel.Results;
 using MediatR;
 
@@ -12,9 +12,9 @@ namespace ControlHub.Application.Accounts.Queries.GetIdentifierConfigs
 {
     public class GetIdentifierConfigsQueryHandler : IRequestHandler<GetIdentifierConfigsQuery, Result<List<IdentifierConfigDto>>>
     {
-        private readonly IIdentifierConfigRepository _repo;
+        private readonly AppIdentifierConfigRepository _repo;
 
-        public GetIdentifierConfigsQueryHandler(IIdentifierConfigRepository repo)
+        public GetIdentifierConfigsQueryHandler(AppIdentifierConfigRepository repo)
         {
             _repo = repo;
         }
