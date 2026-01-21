@@ -1,7 +1,7 @@
+using ControlHub.Application.Roles.Interfaces.Repositories;
 using ControlHub.Domain.Permissions;
-using ControlHub.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ControlHub.API.Authorization
 {
@@ -56,16 +56,15 @@ namespace ControlHub.API.Authorization
             var roleClaims = user.FindAll(System.Security.Claims.ClaimTypes.Role);
             
             using var scope = _serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var roleQueries = scope.ServiceProvider.GetRequiredService<IRoleQueries>();
 
             foreach (var roleClaim in roleClaims)
             {
                 var roleName = roleClaim.Value;
                 
                 // Get permissions for this role
-                var role = await dbContext.Roles
-                    .Include(r => r.Permissions)
-                    .FirstOrDefaultAsync(r => r.Name == roleName);
+                var rolesFound = await roleQueries.SearchByNameAsync(roleName, default);
+                var role = rolesFound.FirstOrDefault(r => r.Name == roleName);
 
                 if (role != null)
                 {

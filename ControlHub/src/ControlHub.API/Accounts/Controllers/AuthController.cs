@@ -1,5 +1,5 @@
 ﻿using ControlHub.API.Accounts.ViewModels.Request;
-using ControlHub.API.Accounts.ViewModels.Response;
+using ApiResponse = ControlHub.API.Accounts.ViewModels.Response;
 using ControlHub.API.Controllers; // Import BaseApiController
 using ControlHub.Application.Accounts.Commands.CreateAccount;
 using ControlHub.Application.Accounts.Commands.RefreshAccessToken;
@@ -26,7 +26,7 @@ namespace ControlHub.API.Accounts.Controllers
 
         [AllowAnonymous]
         [HttpPost("users/register")]
-        [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse.RegisterUserResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterUserRequest request, CancellationToken ct)
@@ -37,7 +37,7 @@ namespace ControlHub.API.Accounts.Controllers
             if (result.IsFailure)
                 return HandleFailure(result); // Sử dụng hàm từ BaseApiController
 
-            return Ok(new RegisterUserResponse
+            return Ok(new ApiResponse.RegisterUserResponse
             {
                 AccountId = result.Value,
                 Message = "Register success"
@@ -54,7 +54,7 @@ namespace ControlHub.API.Accounts.Controllers
             if (result.IsFailure)
                 return HandleFailure(result);
 
-            return Ok(new RegisterAdminResponse
+            return Ok(new ApiResponse.RegisterAdminResponse
             {
                 AccountId = result.Value,
                 Message = "Admin registration success"
@@ -71,7 +71,7 @@ namespace ControlHub.API.Accounts.Controllers
             if (result.IsFailure)
                 return HandleFailure(result);
 
-            return Ok(new RegisterSupperAdminResponse
+            return Ok(new ApiResponse.RegisterSupperAdminResponse
             {
                 AccountId = result.Value,
                 Message = "SuperAdmin registration success"
@@ -80,7 +80,7 @@ namespace ControlHub.API.Accounts.Controllers
 
         [AllowAnonymous]
         [HttpPost("auth/signin")]
-        [ProducesResponseType(typeof(SignInResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse.SignInResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> SignIn([FromBody] SignInRequest request, CancellationToken ct)
         {
@@ -90,7 +90,7 @@ namespace ControlHub.API.Accounts.Controllers
             if (result.IsFailure)
                 return HandleFailure(result);
 
-            return Ok(new SignInResponse
+            return Ok(new ApiResponse.SignInResponse
             {
                 AccountId = result.Value.AccountId,
                 Username = result.Value.Username,
@@ -109,7 +109,7 @@ namespace ControlHub.API.Accounts.Controllers
             if (result.IsFailure)
                 return HandleFailure(result);
 
-            return Ok(new RefreshAccessTokenReponse
+            return Ok(new ApiResponse.RefreshAccessTokenResponse
             {
                 RefreshToken = result.Value.RefreshToken,
                 AccessToken = result.Value.AccessToken

@@ -3,6 +3,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Prometheus;
 using Serilog;
+using Serilog.Formatting.Compact;
 
 namespace ControlHub.API
 {
@@ -24,7 +25,7 @@ namespace ControlHub.API
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("Application", "ControlHub.API")
                 .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-                .WriteTo.File("Logs/log-.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14)
+                .WriteTo.File(new CompactJsonFormatter(), "Logs/log-.json", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14)
                 .CreateLogger();
 
             builder.Host.UseSerilog();
@@ -60,6 +61,8 @@ namespace ControlHub.API
             // =========================================================================
 
             builder.Services.AddControlHub(builder.Configuration);
+
+            builder.Services.AddMemoryCache();
 
             // =========================================================================
             // 3. BUILD & PIPELINE
