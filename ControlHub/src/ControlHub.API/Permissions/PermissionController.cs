@@ -21,13 +21,14 @@ namespace ControlHub.API.Permissions
             _logger = logger;
         }
 
-        [Authorize(Policy = "Permission:permission.create")]
+        [Authorize(Policy = "Permission:permissions.create")]
         [HttpPost("permissions")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> CreatePermissions([FromBody] CreatePermissionsRequest request, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("--- DEBUG: PermissionController.CreatePermissions HIT ---");
             var command = new CreatePermissionsCommand(request.Permissions);
 
             var result = await Mediator.Send(command, cancellationToken);
@@ -40,7 +41,7 @@ namespace ControlHub.API.Permissions
             return Ok();
         }
 
-        [Authorize(Policy = "Permission:permission.view")]
+        [Authorize(Policy = "Permission:permissions.view")]
         [HttpGet]
         [ProducesResponseType(typeof(PagedResult<Permission>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPermissions(

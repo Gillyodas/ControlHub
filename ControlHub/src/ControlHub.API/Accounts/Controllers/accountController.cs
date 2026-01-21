@@ -3,7 +3,7 @@ using ControlHub.API.Controllers;
 using ControlHub.Application.Accounts.Commands.ChangePassword;
 using ControlHub.Application.Accounts.Commands.ForgotPassword;
 using ControlHub.Application.Accounts.Commands.ResetPassword;
-using ControlHub.Infrastructure.Authorization.Requirements;
+using ControlHub.Application.Authorization.Requirements;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -92,6 +92,12 @@ namespace ControlHub.API.Accounts.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetActiveIdentifierConfigs([FromQuery] bool includeDeactivated = false)
         {
+            // Security fix: Anonymous users cannot request deactivated configs, potentially exposing sensitive info/metadata.
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                includeDeactivated = false;
+            }
+
             _logger.LogInformation("Getting active identifier configurations, includeDeactivated: {IncludeDeactivated}", includeDeactivated);
 
             var query = new GetActiveIdentifierConfigsQuery(includeDeactivated);
