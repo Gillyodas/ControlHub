@@ -61,7 +61,7 @@ export function ChangePasswordDialog({ userId, accessToken, open, onOpenChange }
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="current-password" ***>{t('settings.currentPassword')}</Label>
+              <Label htmlFor="current-password">{t('settings.currentPassword')}</Label>
               <Input
                 id="current-password"
                 type="password"
@@ -72,7 +72,7 @@ export function ChangePasswordDialog({ userId, accessToken, open, onOpenChange }
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="new-password" ***>{t('settings.newPassword')}</Label>
+              <Label htmlFor="new-password">{t('settings.newPassword')}</Label>
               <Input
                 id="new-password"
                 type="password"
@@ -83,7 +83,7 @@ export function ChangePasswordDialog({ userId, accessToken, open, onOpenChange }
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="confirm-password" ***>{t('settings.confirmNewPassword')}</Label>
+              <Label htmlFor="confirm-password">{t('settings.confirmNewPassword')}</Label>
               <Input
                 id="confirm-password"
                 type="password"

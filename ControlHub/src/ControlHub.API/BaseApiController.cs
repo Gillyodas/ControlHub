@@ -60,6 +60,7 @@ namespace ControlHub.API.Controllers
                 Extensions =
                 {
                     { "code", error.Code },
+                    { "traceId", HttpContext?.TraceIdentifier },
                     { "timestamp", DateTime.UtcNow }
                 }
             };

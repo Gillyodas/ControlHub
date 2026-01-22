@@ -10,6 +10,7 @@ using ControlHub.Domain.Outboxs;
 using ControlHub.Domain.Tokens.Enums;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Common.Errors;
+using ControlHub.SharedKernel.Common.Logs;
 using ControlHub.SharedKernel.Results;
 using ControlHub.SharedKernel.Tokens;
 using MediatR;
@@ -54,17 +55,15 @@ namespace ControlHub.Application.Accounts.Commands.ForgotPassword
 
         public async Task<Result> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{Code}: {Message} for Identifier {Ident}",
-                AccountLogs.ForgotPassword_Started.Code,
-                AccountLogs.ForgotPassword_Started.Message,
+            _logger.LogInformation("{@LogCode} | Ident: {Ident}",
+                AccountLogs.ForgotPassword_Started,
                 request.Value);
 
             var result = _identifierFactory.Create(request.Type, request.Value);
             if (result.IsFailure)
             {
-                _logger.LogWarning("{Code}: {Message} for Identifier {Ident}. Error: {Error}",
-                    AccountLogs.ForgotPassword_InvalidIdentifier.Code,
-                    AccountLogs.ForgotPassword_InvalidIdentifier.Message,
+                _logger.LogWarning("{@LogCode} | Ident: {Ident} | Error: {Error}",
+                    AccountLogs.ForgotPassword_InvalidIdentifier,
                     request.Value, result.Error);
 
                 return Result<string>.Failure(result.Error);
@@ -73,9 +72,8 @@ namespace ControlHub.Application.Accounts.Commands.ForgotPassword
             var acc = await _accountRepository.GetByIdentifierWithoutUserAsync(request.Type, result.Value.NormalizedValue, cancellationToken);
             if (acc is null)
             {
-                _logger.LogWarning("{Code}: {Message} for Identifier {Ident}",
-                    AccountLogs.ForgotPassword_IdentifierNotFound.Code,
-                    AccountLogs.ForgotPassword_IdentifierNotFound.Message,
+                _logger.LogWarning("{@LogCode} | Ident: {Ident}",
+                    AccountLogs.ForgotPassword_IdentifierNotFound,
                     request.Value);
 
                 return Result<string>.Failure(AccountErrors.IdentifierNotFound);
@@ -83,9 +81,8 @@ namespace ControlHub.Application.Accounts.Commands.ForgotPassword
 
             if (acc.IsDeleted)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.ChangePassword_AccountDeleted.Code,
-                    AccountLogs.ChangePassword_AccountDeleted.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.ChangePassword_AccountDeleted,
                     acc.Id);
 
                 return Result.Failure(AccountErrors.AccountDeleted);
@@ -93,9 +90,8 @@ namespace ControlHub.Application.Accounts.Commands.ForgotPassword
 
             if (!acc.IsActive)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.ChangePassword_AccountDisabled.Code,
-                    AccountLogs.ChangePassword_AccountDisabled.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.ChangePassword_AccountDisabled,
                     acc.Id);
 
                 return Result.Failure(AccountErrors.AccountDisabled);
@@ -104,17 +100,15 @@ namespace ControlHub.Application.Accounts.Commands.ForgotPassword
             string resetToken = _passwordResetTokenGenerator.Generate(acc.Id.ToString());
             if (string.IsNullOrWhiteSpace(resetToken))
             {
-                _logger.LogWarning("{Code}: {Message} for Identifier {Ident}",
-                    AccountLogs.ForgotPassword_TokenGeneratedFailed.Code,
-                    AccountLogs.ForgotPassword_TokenGeneratedFailed.Message,
+                _logger.LogWarning("{@LogCode} | Ident: {Ident}",
+                    AccountLogs.ForgotPassword_TokenGeneratedFailed,
                     request.Value);
 
                 return Result<string>.Failure(TokenErrors.TokenGenerationFailed);
             }
 
-            _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}",
-                AccountLogs.ForgotPassword_TokenGenerated.Code,
-                AccountLogs.ForgotPassword_TokenGenerated.Message,
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId}",
+                AccountLogs.ForgotPassword_TokenGenerated,
                 acc.Id);
 
             var domainToken = _tokenFactory.Create(acc.Id, resetToken, TokenType.ResetPassword);
@@ -124,7 +118,7 @@ namespace ControlHub.Application.Accounts.Commands.ForgotPassword
 
             if (string.IsNullOrEmpty(devBaseUrl))
             {
-                _logger.LogError("Missing configuration: AppSettings:ClientBaseUrl");
+                _logger.LogError("{@LogCode} | Key: {Key}", CommonLogs.System_ConfigMissing, "BaseUrl:DevBaseUrl");
                 return Result.Failure(CommonErrors.SystemConfigurationError);
             }
 
@@ -144,9 +138,8 @@ namespace ControlHub.Application.Accounts.Commands.ForgotPassword
 
             await _uow.CommitAsync(cancellationToken);
 
-            _logger.LogInformation("{Code}: {Message} for Identifier {Ident}",
-                AccountLogs.ForgotPassword_NotificationSent.Code,
-                AccountLogs.ForgotPassword_NotificationSent.Message,
+            _logger.LogInformation("{@LogCode} | Ident: {Ident}",
+                AccountLogs.ForgotPassword_NotificationSent,
                 request.Value);
 
             return Result.Success();

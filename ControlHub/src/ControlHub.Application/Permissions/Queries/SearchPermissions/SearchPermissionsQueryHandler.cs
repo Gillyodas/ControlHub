@@ -23,9 +23,8 @@ namespace ControlHub.Application.Permissions.Queries.SearchPermissions
 
         public async Task<Result<PagedResult<Permission>>> Handle(SearchPermissionsQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{Code}: {Message}. PageIndex={PageIndex}, PageSize={PageSize}",
-                PermissionLogs.SearchPermissions_Started.Code,
-                PermissionLogs.SearchPermissions_Started.Message,
+            _logger.LogInformation("{@LogCode} | PageIndex: {PageIndex} | PageSize: {PageSize}",
+                PermissionLogs.SearchPermissions_Started,
                 request.PageIndex,
                 request.PageSize);
 
@@ -35,9 +34,8 @@ namespace ControlHub.Application.Permissions.Queries.SearchPermissions
                 request.Conditions,
                 cancellationToken);
 
-            _logger.LogInformation("{Code}: {Message}. TotalCount={TotalCount}",
-                PermissionLogs.SearchPermissions_Success.Code,
-                PermissionLogs.SearchPermissions_Success.Message,
+            _logger.LogInformation("{@LogCode} | TotalCount: {TotalCount}",
+                PermissionLogs.SearchPermissions_Success,
                 result.TotalCount);
 
             return Result<PagedResult<Permission>>.Success(result);

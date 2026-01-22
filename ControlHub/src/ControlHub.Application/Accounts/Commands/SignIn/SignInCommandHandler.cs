@@ -51,17 +51,15 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
 
         public async Task<Result<SignInDTO>> Handle(SignInCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{Code}: {Message} for Identifier {Value}",
-                AccountLogs.SignIn_Started.Code,
-                AccountLogs.SignIn_Started.Message,
+            _logger.LogInformation("{@LogCode} | Ident: {Value}",
+                AccountLogs.SignIn_Started,
                 request.Value);
 
             var result = await _identifierFactory.CreateAsync(request.Type, request.Value, request.IdentifierConfigId, cancellationToken);
             if (result.IsFailure)
             {
-                _logger.LogWarning("{Code}: {Message} for Identifier {Ident}. Error: {Error}",
-                    AccountLogs.SignIn_InvalidIdentifier.Code,
-                    AccountLogs.SignIn_InvalidIdentifier.Message,
+                _logger.LogWarning("{@LogCode} | Ident: {Ident} | Error: {Error}",
+                    AccountLogs.SignIn_InvalidIdentifier,
                     request.Value, result.Error);
                 return Result<SignInDTO>.Failure(result.Error);
             }
@@ -69,9 +67,8 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             var account = await _accountQueries.GetByIdentifierAsync(request.Type, result.Value.NormalizedValue, cancellationToken);
             if (account is null || account.IsDeleted == true || account.IsActive == false)
             {
-                _logger.LogWarning("{Code}: {Message} for Identifier {Ident}",
-                    AccountLogs.SignIn_AccountNotFound.Code,
-                    AccountLogs.SignIn_AccountNotFound.Message,
+                _logger.LogWarning("{@LogCode} | Ident: {Ident}",
+                    AccountLogs.SignIn_AccountNotFound,
                     request.Value);
                 return Result<SignInDTO>.Failure(AccountErrors.InvalidCredentials);
             }
@@ -79,9 +76,8 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             var isPasswordValid = _passwordHasher.Verify(request.Password, account.Password);
             if (!isPasswordValid)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.SignIn_InvalidPassword.Code,
-                    AccountLogs.SignIn_InvalidPassword.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.SignIn_InvalidPassword,
                     account.Id);
                 return Result<SignInDTO>.Failure(AccountErrors.InvalidCredentials);
             }
@@ -90,9 +86,8 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
 
             if (account.Identifiers == null || !account.Identifiers.Any())
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.SignIn_InvalidIdentifier.Code,
-                    AccountLogs.SignIn_InvalidIdentifier.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.SignIn_InvalidIdentifier,
                     account.Id);
 
                 return Result<SignInDTO>.Failure(AccountErrors.InvalidCredentials);
@@ -107,8 +102,8 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
 
             if (string.IsNullOrWhiteSpace(accessTokenValue) || string.IsNullOrWhiteSpace(refreshTokenValue))
             {
-                _logger.LogError("{Code}: {Message} during token generation for AccountId {AccountId}",
-                    TokenLogs.Refresh_TokenInvalid.Code,
+                _logger.LogError("{@LogCode} | AccountId: {AccountId} | Reason: {Reason}",
+                    TokenLogs.Refresh_TokenInvalid,
                     "Failed to generate tokens",
                     account.Id);
                 return Result<SignInDTO>.Failure(TokenErrors.TokenGenerationFailed);
@@ -121,9 +116,8 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             await _tokenRepository.AddAsync(refreshToken, cancellationToken);
             await _uow.CommitAsync(cancellationToken);
 
-            _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}",
-                AccountLogs.SignIn_Success.Code,
-                AccountLogs.SignIn_Success.Message,
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId}",
+                AccountLogs.SignIn_Success,
                 account.Id);
 
             var dto = new SignInDTO(

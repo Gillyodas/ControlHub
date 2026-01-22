@@ -34,17 +34,15 @@ namespace ControlHub.Application.Accounts.Commands.ResetPassword
         }
         public async Task<Result> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{Code}: {Message} for Token {Token}",
-                AccountLogs.ResetPassword_Started.Code,
-                AccountLogs.ResetPassword_Started.Message,
+            _logger.LogInformation("{@LogCode} | Token: {Token}",
+                AccountLogs.ResetPassword_Started,
                 request.Token);
 
             var token = await _tokenQueries.GetByValueAsync(request.Token, cancellationToken);
             if (token == null)
             {
-                _logger.LogWarning("{Code}: {Message} for Token {Token}",
-                    AccountLogs.ResetPassword_TokenNotFound.Code,
-                    AccountLogs.ResetPassword_TokenNotFound.Message,
+                _logger.LogWarning("{@LogCode} | Token: {Token}",
+                    AccountLogs.ResetPassword_TokenNotFound,
                     request.Token);
 
                 return Result.Failure(TokenErrors.TokenNotFound);
@@ -52,9 +50,8 @@ namespace ControlHub.Application.Accounts.Commands.ResetPassword
 
             if (!token.IsValid())
             {
-                _logger.LogWarning("{Code}: {Message} for Token {Token}",
-                    AccountLogs.ResetPassword_TokenInvalid.Code,
-                    AccountLogs.ResetPassword_TokenInvalid.Message,
+                _logger.LogWarning("{@LogCode} | Token: {Token}",
+                    AccountLogs.ResetPassword_TokenInvalid,
                     request.Token);
 
                 return Result.Failure(TokenErrors.TokenInvalid);
@@ -63,9 +60,8 @@ namespace ControlHub.Application.Accounts.Commands.ResetPassword
             var acc = await _accountRepository.GetWithoutUserByIdAsync(token.AccountId, cancellationToken);
             if (acc == null)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.ResetPassword_AccountNotFound.Code,
-                    AccountLogs.ResetPassword_AccountNotFound.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.ResetPassword_AccountNotFound,
                     token.AccountId);
 
                 return Result.Failure(AccountErrors.AccountNotFound);
@@ -73,9 +69,8 @@ namespace ControlHub.Application.Accounts.Commands.ResetPassword
 
             if (acc.IsDeleted)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.ResetPassword_AccountDisabled.Code,
-                    AccountLogs.ResetPassword_AccountDisabled.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.ResetPassword_AccountDisabled,
                     token.AccountId);
 
                 return Result.Failure(AccountErrors.AccountDisabled);
@@ -84,10 +79,10 @@ namespace ControlHub.Application.Accounts.Commands.ResetPassword
             var pass = Password.Create(request.Password, _passwordHasher);
             if (pass.IsFailure)
             {
-                _logger.LogError("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.ResetPassword_PasswordHashFailed.Code,
-                    AccountLogs.ResetPassword_PasswordHashFailed.Message,
-                    acc.Id);
+                _logger.LogError("{@LogCode} | AccountId: {AccountId} | Error: {Error}",
+                    AccountLogs.ResetPassword_PasswordHashFailed,
+                    acc.Id,
+                    pass.Error);
 
                 return Result.Failure(AccountErrors.PasswordHashFailed);
             }
@@ -95,9 +90,8 @@ namespace ControlHub.Application.Accounts.Commands.ResetPassword
             acc.UpdatePassword(pass.Value);
             await _uow.CommitAsync();
 
-            _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}",
-                AccountLogs.ResetPassword_Success.Code,
-                AccountLogs.ResetPassword_Success.Message,
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId}",
+                AccountLogs.ResetPassword_Success,
                 acc.Id);
 
             return Result.Success();

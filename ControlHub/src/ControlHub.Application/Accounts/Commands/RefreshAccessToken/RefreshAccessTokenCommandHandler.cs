@@ -44,17 +44,15 @@ namespace ControlHub.Application.Accounts.Commands.RefreshAccessToken
         }
         public async Task<Result<RefreshAccessTokenResponse>> Handle(RefreshAccessTokenCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{Code}: {Message} for RefreshToken {TokenValue}",
-                TokenLogs.Refresh_Started.Code,
-                TokenLogs.Refresh_Started.Message,
+            _logger.LogInformation("{@LogCode} | RefreshToken: {TokenValue}",
+                TokenLogs.Refresh_Started,
                 request.Value);
 
             var refreshToken = await _tokenQueries.GetByValueAsync(request.Value, cancellationToken);
             if (refreshToken == null)
             {
-                _logger.LogWarning("{Code}: {Message} for Token {TokenValue}",
-                    TokenLogs.Refresh_NotFound.Code,
-                    TokenLogs.Refresh_NotFound.Message,
+                _logger.LogWarning("{@LogCode} | Token: {TokenValue}",
+                    TokenLogs.Refresh_NotFound,
                     request.Value);
                 return Result<RefreshAccessTokenResponse>.Failure(TokenErrors.TokenNotFound);
             }
@@ -62,18 +60,16 @@ namespace ControlHub.Application.Accounts.Commands.RefreshAccessToken
             var acc = await _accountQueries.GetWithoutUserByIdAsync(request.accId, cancellationToken);
             if (acc == null)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    TokenLogs.Refresh_AccountNotFound.Code,
-                    TokenLogs.Refresh_AccountNotFound.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    TokenLogs.Refresh_AccountNotFound,
                     request.accId);
                 return Result<RefreshAccessTokenResponse>.Failure(AccountErrors.AccountNotFound);
             }
 
             if (refreshToken.AccountId != acc.Id)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}, TokenAccountId {TokenAccountId}",
-                    TokenLogs.Refresh_TokenMismatch.Code,
-                    TokenLogs.Refresh_TokenMismatch.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId} | TokenAccountId: {TokenAccountId}",
+                    TokenLogs.Refresh_TokenMismatch,
                     acc.Id,
                     refreshToken.AccountId);
                 return Result<RefreshAccessTokenResponse>.Failure(TokenErrors.TokenInvalid);
@@ -81,18 +77,16 @@ namespace ControlHub.Application.Accounts.Commands.RefreshAccessToken
 
             if (refreshToken.ExpiredAt <= DateTime.UtcNow || refreshToken.IsUsed)
             {
-                _logger.LogWarning("{Code}: {Message} for RefreshToken {TokenValue}, ExpiredAt {ExpiredAt}, IsUsed {IsUsed}",
-                    TokenLogs.Refresh_TokenInvalid.Code,
-                    TokenLogs.Refresh_TokenInvalid.Message,
+                _logger.LogWarning("{@LogCode} | RefreshToken: {TokenValue} | ExpiredAt: {ExpiredAt} | IsUsed: {IsUsed}",
+                    TokenLogs.Refresh_TokenInvalid,
                     request.Value,
                     refreshToken.ExpiredAt,
                     refreshToken.IsUsed);
                 return Result<RefreshAccessTokenResponse>.Failure(TokenErrors.TokenInvalid);
             }
 
-            _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}",
-                TokenLogs.Refresh_Valid.Code,
-                TokenLogs.Refresh_Valid.Message,
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId}",
+                TokenLogs.Refresh_Valid,
                 acc.Id);
 
             var roleId = await _accountQueries.GetRoleIdByAccIdAsync(acc.Id, cancellationToken);
@@ -106,9 +100,8 @@ namespace ControlHub.Application.Accounts.Commands.RefreshAccessToken
             {
                 if (oldAccessToken.AccountId != acc.Id)
                 {
-                    _logger.LogWarning("{Code}: {Message} Old access token mismatch for Account {AccountId}",
-                        TokenLogs.Refresh_AccessMismatch.Code,
-                        TokenLogs.Refresh_AccessMismatch.Message,
+                    _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                        TokenLogs.Refresh_AccessMismatch,
                         acc.Id);
                     return Result<RefreshAccessTokenResponse>.Failure(TokenErrors.TokenInvalid);
                 }
@@ -125,9 +118,8 @@ namespace ControlHub.Application.Accounts.Commands.RefreshAccessToken
 
             await _uow.CommitAsync(cancellationToken);
 
-            _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}. NewAccess: {NewAccess}, NewRefresh: {NewRefresh}",
-                TokenLogs.Refresh_Success.Code,
-                TokenLogs.Refresh_Success.Message,
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId} | NewAccess: {NewAccess} | NewRefresh: {NewRefresh}",
+                TokenLogs.Refresh_Success,
                 acc.Id,
                 accessTokenValue,
                 newRefreshToken.Value);
