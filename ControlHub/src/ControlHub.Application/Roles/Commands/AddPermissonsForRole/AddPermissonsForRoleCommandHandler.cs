@@ -31,17 +31,15 @@ namespace ControlHub.Application.Roles.Commands.SetRolePermissions
         public async Task<Result<PartialResult<Permission, string>>> Handle(AddPermissonsForRoleCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation(
-                "{Code}: {Message} for RoleId: {RoleId}",
-                RoleLogs.SetPermissions_Started.Code,
-                RoleLogs.SetPermissions_Started.Message,
+                "{@LogCode} | RoleId: {RoleId}",
+                RoleLogs.SetPermissions_Started,
                 request.roleId);
 
             if (!Guid.TryParse(request.roleId, out var roleId))
             {
                 _logger.LogWarning(
-                    "{Code}: {Message} | Invalid format: {RoleId}",
-                    RoleLogs.SetPermissions_InvalidRoleId.Code,
-                    RoleLogs.SetPermissions_InvalidRoleId.Message,
+                    "{@LogCode} | Invalid format: {RoleId}",
+                    RoleLogs.SetPermissions_InvalidRoleId,
                     request.roleId);
                 return Result<PartialResult<Permission, string>>.Failure(RoleErrors.InvalidRoleIdFormat);
             }
@@ -50,9 +48,8 @@ namespace ControlHub.Application.Roles.Commands.SetRolePermissions
             if (role == null)
             {
                 _logger.LogWarning(
-                    "{Code}: {Message} | RoleId: {RoleId}",
-                    RoleLogs.SetPermissions_RoleNotFound.Code,
-                    RoleLogs.SetPermissions_RoleNotFound.Message,
+                    "{@LogCode} | RoleId: {RoleId}",
+                    RoleLogs.SetPermissions_RoleNotFound,
                     roleId);
                 return Result<PartialResult<Permission, string>>.Failure(RoleErrors.RoleNotFound);
             }
@@ -89,9 +86,8 @@ namespace ControlHub.Application.Roles.Commands.SetRolePermissions
             await _uow.CommitAsync(cancellationToken);
 
             _logger.LogInformation(
-                "{Code}: {Message} | Role: {RoleName} | Success: {SuccessCount} | Failure: {FailureCount}",
-                RoleLogs.SetPermissions_Finished.Code,
-                RoleLogs.SetPermissions_Finished.Message,
+                "{@LogCode} | Role: {RoleName} | Success: {SuccessCount} | Failure: {FailureCount}",
+                RoleLogs.SetPermissions_Finished,
                 role.Name,
                 finalPartialResult.Successes.Count,
                 finalPartialResult.Failures.Count);

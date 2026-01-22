@@ -9,5 +9,11 @@
         // Log cho lỗi nhập sai Master Key (Có thể là tấn công)
         public static readonly LogCode Auth_InvalidMasterKey =
             new("Auth.InvalidMasterKey", "Invalid Master Key provided during registration attempt");
+
+        public static readonly LogCode System_InvalidConfiguration =
+            new("System.InvalidConfiguration", "Invalid system configuration value");
+
+        public static readonly LogCode System_ConfigFallback =
+            new("System.ConfigFallback", "Configuration invalid or missing, using default fallback value");
     }
 }

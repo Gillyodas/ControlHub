@@ -38,64 +38,34 @@ type ApiRole = {
   permissions?: ApiPermission[]
 }
 
-import { api } from "@/lib/http"
+import { fetchJson, fetchVoid } from "@/services/api/client"
 
-type ProblemDetails = {
-  title?: string
-  status?: number
-  detail?: string
-  extensions?: {
-    code?: string
-  }
-}
 
-function readAxiosErrorMessage(e: unknown) {
-  const ax = e as { response?: { status?: number; data?: ProblemDetails } }
-  const status = ax?.response?.status
-  const data = ax?.response?.data
-
-  return data?.detail || data?.title || (status ? `Request failed (${status})` : "Request failed")
-}
-
-async function postJson<T>(path: string, body: unknown, accessToken: string) {
-  try {
-    const res = await api.post<T>(path, body, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-    return res.data
-  } catch (e) {
-    throw new Error(readAxiosErrorMessage(e))
-  }
-}
-
-async function getJson<T>(path: string, accessToken: string) {
-  try {
-    const res = await api.get<T>(path, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-    return res.data
-  } catch (e) {
-    throw new Error(readAxiosErrorMessage(e))
-  }
-}
 
 export async function createRoles(roles: CreateRoleInput[], accessToken: string): Promise<CreateRolesResponse> {
-  return postJson<CreateRolesResponse>("/api/Role/roles", { roles }, accessToken)
+  return fetchJson<CreateRolesResponse>("/api/Role/roles", {
+    method: "POST",
+    body: { roles },
+    accessToken
+  })
 }
 
 export async function createPermissions(permissions: CreatePermissionInput[], accessToken: string): Promise<void> {
-  await postJson<void>("/api/Permission/permissions", { permissions }, accessToken)
+  await fetchVoid("/api/Permission/permissions", {
+    method: "POST",
+    body: { permissions },
+    accessToken
+  })
 }
 
 export async function addPermissionsForRole(roleId: string, permissionIds: string[], accessToken: string) {
-  return postJson<{ message: string; successCount: number; failureCount: number; failedRoles?: string[] }>(
+  return fetchJson<{ message: string; successCount: number; failureCount: number; failedRoles?: string[] }>(
     `/api/Role/roles/${roleId}/permissions`,
-    { permissionIds },
-    accessToken,
+    {
+      method: "POST",
+      body: { permissionIds },
+      accessToken
+    }
   )
 }
 
@@ -113,7 +83,9 @@ export async function getRoles(
   })
   if (searchTerm) params.set("searchTerm", searchTerm)
 
-  return getJson<PagedResult<ApiRole>>(`/api/Role?${params.toString()}`, accessToken)
+  return fetchJson<PagedResult<ApiRole>>(`/api/Role?${params.toString()}`, {
+    accessToken
+  })
 }
 
 export async function getPermissions(
@@ -130,5 +102,7 @@ export async function getPermissions(
   })
   if (searchTerm) params.set("searchTerm", searchTerm)
 
-  return getJson<PagedResult<ApiPermission>>(`/api/Permission?${params.toString()}`, accessToken)
+  return fetchJson<PagedResult<ApiPermission>>(`/api/Permission?${params.toString()}`, {
+    accessToken
+  })
 }

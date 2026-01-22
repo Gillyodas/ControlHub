@@ -142,7 +142,7 @@ export function PermissionsTableCard({
                 className="border-sidebar-border hover:bg-sidebar-accent/30 transition-colors cursor-grab active:cursor-grabbing group/row"
                 draggable
                 onDragStart={(e) => {
-                  e.dataTransfer.setData("text/plain", permission.id)
+                  e.dataTransfer.setData("application/rbac-permission-id", permission.id)
                   e.dataTransfer.effectAllowed = "copy"
                 }}
                 title={t('permissions.dragHint')}

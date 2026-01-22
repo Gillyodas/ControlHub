@@ -2,6 +2,7 @@
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.SharedKernel.Accounts;
+using ControlHub.SharedKernel.Common.Logs;
 using ControlHub.SharedKernel.Common.Errors;
 using ControlHub.SharedKernel.Results;
 using MediatR;
@@ -37,16 +38,14 @@ namespace ControlHub.Application.Accounts.Commands.RegisterAdmin
 
         public async Task<Result<Guid>> Handle(RegisterAdminCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{Code}: {Message} for Ident {Ident}",
-                AccountLogs.RegisterAdmin_Started.Code,
-                AccountLogs.RegisterAdmin_Started.Message,
+            _logger.LogInformation("{@LogCode} | Ident: {Ident}",
+                AccountLogs.RegisterAdmin_Started,
                 request.Value);
 
             if (await _accountValidator.IdentifierIsExist(request.Value.ToLower(), request.Type, cancellationToken))
             {
-                _logger.LogWarning("{Code}: {Message} for Ident {Ident}",
-                    AccountLogs.RegisterAdmin_IdentifierExists.Code,
-                    AccountLogs.RegisterAdmin_IdentifierExists.Message,
+                _logger.LogWarning("{@LogCode} | Ident: {Ident}",
+                    AccountLogs.RegisterAdmin_IdentifierExists,
                     request.Value);
 
                 return Result<Guid>.Failure(AccountErrors.EmailAlreadyExists);
@@ -57,7 +56,7 @@ namespace ControlHub.Application.Accounts.Commands.RegisterAdmin
             var roleIdString = _config["RoleSettings:AdminRoleId"];
             if (!Guid.TryParse(roleIdString, out var userRoleId))
             {
-                _logger.LogError("Invalid Admin Role ID configuration: {Value}", roleIdString);
+                _logger.LogError("{@LogCode} | Value: {Value}", CommonLogs.System_InvalidConfiguration, roleIdString);
                 return Result<Guid>.Failure(CommonErrors.SystemConfigurationError);
             }
 
@@ -71,9 +70,8 @@ namespace ControlHub.Application.Accounts.Commands.RegisterAdmin
 
             if (!accountResult.IsSuccess)
             {
-                _logger.LogError("{Code}: {Message} for Ident {Ident}. Error: {Error}",
-                    AccountLogs.RegisterAdmin_FactoryFailed.Code,
-                    AccountLogs.RegisterAdmin_FactoryFailed.Message,
+                _logger.LogError("{@LogCode} | Ident: {Ident} | Error: {Error}",
+                    AccountLogs.RegisterAdmin_FactoryFailed,
                     request.Value,
                     accountResult.Error);
 
@@ -82,9 +80,8 @@ namespace ControlHub.Application.Accounts.Commands.RegisterAdmin
 
             await _accountRepository.AddAsync(accountResult.Value.Value, cancellationToken);
 
-            _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}, Ident {Ident}",
-                AccountLogs.RegisterAdmin_Success.Code,
-                AccountLogs.RegisterAdmin_Success.Message,
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId} | Ident: {Ident}",
+                AccountLogs.RegisterAdmin_Success,
                 accId,
                 request.Value);
 

@@ -23,18 +23,38 @@ namespace ControlHub.Application.Users.Commands.UpdateUsername
 
         public async Task<Result<string>> Handle(UpdateUsernameCommand request, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId} | NewUsername: {NewUsername}",
+                UserLogs.UpdateUsername_Started,
+                request.id,
+                request.username);
+
             var user = await _userRepository.GetByAccountId(request.id, cancellationToken);
 
             if (user is null)
+            {
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    UserLogs.UpdateUsername_NotFound,
+                    request.id);
                 return Result<string>.Failure(UserErrors.NotFound);
+            }
 
             var updateResult = user.UpdateUsername(request.username);
 
             if (!updateResult.IsSuccess)
+            {
+                _logger.LogWarning("{@LogCode} | Error: {Error}",
+                    UserLogs.UpdateUsername_Failed,
+                    updateResult.Error.Code);
                 return Result<string>.Failure(updateResult.Error);
+            }
             
 
             await _uow.CommitAsync(cancellationToken);
+
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId} | Username: {Username}",
+                UserLogs.UpdateUsername_Success,
+                request.id,
+                user.Username);
 
             return Result<string>.Success(user.Username);
         }

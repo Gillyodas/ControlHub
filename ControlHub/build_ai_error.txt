@@ -1,0 +1,20 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ControlHub.SharedKernel -> e:\Project\ControlHub\src\ControlHub.SharedKernel\bin\Debug\net8.0\ControlHub.SharedKernel.dll
+  ControlHub.Domain -> e:\Project\ControlHub\src\ControlHub.Domain\bin\Debug\net8.0\ControlHub.Domain.dll
+  ControlHub.Application -> e:\Project\ControlHub\src\ControlHub.Application\bin\Debug\net8.0\ControlHub.Application.dll
+  ControlHub.Domain.Tests -> e:\Project\ControlHub\tests\ControlHub.Domain.Tests\bin\Debug\net8.0\ControlHub.Domain.Tests.dll
+  ControlHub.Application.Tests -> e:\Project\ControlHub\tests\ControlHub.Application.Tests\bin\Debug\net8.0\ControlHub.Application.Tests.dll
+  ControlHub.Infrastructure -> e:\Project\ControlHub\src\ControlHub.Infrastructure\bin\Debug\net8.0\ControlHub.Infrastructure.dll
+  ControlHub.Infrastructure.Tests -> e:\Project\ControlHub\tests\ControlHub.Infrastructure.Tests\bin\Debug\net8.0\ControlHub.Infrastructure.Tests.dll
+e:\Project\ControlHub\src\ControlHub.API\Controllers\AuditController.cs(12,26): error CS0246: The type or namespace name 'ILogReaderService' could not be found (are you missing a using directive or an assembly reference?) [e:\Project\ControlHub\src\ControlHub.API\ControlHub.API.csproj]
+e:\Project\ControlHub\src\ControlHub.API\Controllers\AuditController.cs(14,70): error CS0246: The type or namespace name 'ILogReaderService' could not be found (are you missing a using directive or an assembly reference?) [e:\Project\ControlHub\src\ControlHub.API\ControlHub.API.csproj]
+
+Build FAILED.
+
+e:\Project\ControlHub\src\ControlHub.API\Controllers\AuditController.cs(12,26): error CS0246: The type or namespace name 'ILogReaderService' could not be found (are you missing a using directive or an assembly reference?) [e:\Project\ControlHub\src\ControlHub.API\ControlHub.API.csproj]
+e:\Project\ControlHub\src\ControlHub.API\Controllers\AuditController.cs(14,70): error CS0246: The type or namespace name 'ILogReaderService' could not be found (are you missing a using directive or an assembly reference?) [e:\Project\ControlHub\src\ControlHub.API\ControlHub.API.csproj]
+    0 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:01.47

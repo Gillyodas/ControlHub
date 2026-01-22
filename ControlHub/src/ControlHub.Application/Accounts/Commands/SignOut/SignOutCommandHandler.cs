@@ -35,17 +35,16 @@ namespace ControlHub.Application.Accounts.Commands.SignOut
 
         public async Task<Result> Handle(SignOutCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{Code}: {Message} for AccessToken {AccessToken}",
-                AccountLogs.SignOut_Started.Code,
-                AccountLogs.SignOut_Started.Message,
+            _logger.LogInformation("{@LogCode} | AccessToken: {AccessToken}",
+                AccountLogs.SignOut_Started,
                 request.accessToken[..Math.Min(10, request.accessToken.Length)]); // log 1 phần token để tránh lộ full
 
             var claim = _tokenVerifier.Verify(request.accessToken);
             if (claim == null)
             {
-                _logger.LogWarning("{Code}: {Message} - invalid access token",
-                    AccountLogs.SignOut_InvalidToken.Code,
-                    AccountLogs.SignOut_InvalidToken.Message);
+                _logger.LogWarning("{@LogCode} | Reason: {Reason}",
+                    AccountLogs.SignOut_InvalidToken,
+                    "invalid access token verification");
 
                 return Result.Failure(TokenErrors.TokenInvalid);
             }
@@ -55,9 +54,9 @@ namespace ControlHub.Application.Accounts.Commands.SignOut
 
             if (accessToken == null || refreshToken == null)
             {
-                _logger.LogWarning("{Code}: {Message} - token not found in storage",
-                    AccountLogs.SignOut_TokenNotFound.Code,
-                    AccountLogs.SignOut_TokenNotFound.Message);
+                _logger.LogWarning("{@LogCode} | Reason: {Reason}",
+                    AccountLogs.SignOut_TokenNotFound,
+                     "token not found in storage");
 
                 return Result.Failure(TokenErrors.TokenNotFound);
             }
@@ -66,9 +65,8 @@ namespace ControlHub.Application.Accounts.Commands.SignOut
                             ?? claim.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(accIdString, out var accId))
             {
-                _logger.LogWarning("{Code}: {Message} - invalid AccountId format:{id}",
-                    AccountLogs.SignOut_InvalidAccountId.Code,
-                    AccountLogs.SignOut_InvalidAccountId.Message,
+                _logger.LogWarning("{@LogCode} | RawId: {RawId}",
+                    AccountLogs.SignOut_InvalidAccountId,
                     accIdString);
                 foreach (var c in claim.Claims)
                 {
@@ -80,9 +78,8 @@ namespace ControlHub.Application.Accounts.Commands.SignOut
 
             if (accessToken.AccountId != accId || refreshToken.AccountId != accId)
             {
-                _logger.LogWarning("{Code}: {Message} - mismatched AccountId {AccountId}",
-                    AccountLogs.SignOut_MismatchedAccount.Code,
-                    AccountLogs.SignOut_MismatchedAccount.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.SignOut_MismatchedAccount,
                     accId);
 
                 return Result.Failure(TokenErrors.TokenInvalid);
@@ -93,9 +90,8 @@ namespace ControlHub.Application.Accounts.Commands.SignOut
 
             if (revokeAccessResult.IsFailure || revokeRefreshResult.IsFailure)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.SignOut_TokenAlreadyRevoked.Code,
-                    AccountLogs.SignOut_TokenAlreadyRevoked.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.SignOut_TokenAlreadyRevoked,
                     accId);
 
                 return Result.Failure(TokenErrors.TokenAlreadyRevoked);
@@ -103,9 +99,8 @@ namespace ControlHub.Application.Accounts.Commands.SignOut
 
             await _uow.CommitAsync(cancellationToken);
 
-            _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}",
-                AccountLogs.SignOut_Success.Code,
-                AccountLogs.SignOut_Success.Message,
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId}",
+                AccountLogs.SignOut_Success,
                 accId);
 
             return Result.Success();

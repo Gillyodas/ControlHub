@@ -1,0 +1,28 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ControlHub.SharedKernel -> e:\Project\ControlHub\src\ControlHub.SharedKernel\bin\Debug\net8.0\ControlHub.SharedKernel.dll
+  ControlHub.Domain -> e:\Project\ControlHub\src\ControlHub.Domain\bin\Debug\net8.0\ControlHub.Domain.dll
+e:\Project\ControlHub\src\ControlHub.Application\Users\Commands\UpdateUsername\UpdateUsernameCommandHandler.cs(39,43): warning CS8604: Possible null reference argument for parameter 'value' in 'Result<string> Result<string>.Success(string value)'. [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Accounts\Commands\ForgotPassword\ForgotPasswordCommandHandler.cs(120,61): error CS0103: The name 'CommonLogs' does not exist in the current context [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Accounts\Commands\RegisterUser\RegisterUserCommandHandler.cs(59,65): error CS0103: The name 'CommonLogs' does not exist in the current context [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Common\Behaviors\ValidationBehavior.cs(65,72): warning CS8625: Cannot convert null literal to non-nullable reference type. [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Accounts\Commands\RegisterAdmin\RegisterAdminCommandHandler.cs(58,65): error CS0103: The name 'CommonLogs' does not exist in the current context [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Permissions\Commands\CreatePermissions\CreatePermissionsCommandHandler.cs(56,82): warning CS8604: Possible null reference argument for parameter 'description' in 'Result<Permission> Permission.Create(Guid id, string code, string description)'. [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Roles\Commands\CreateRoles\CreateRolesCommandHandler.cs(55,33): warning CS8602: Dereference of a possibly null reference. [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Roles\Commands\CreateRoles\CreateRolesCommandHandler.cs(132,81): warning CS8604: Possible null reference argument for parameter 'description' in 'Result<Role> CreateRoleWithPermissionsService.Handle(string name, string description, IEnumerable<Permission> validPermissions)'. [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+  ControlHub.Domain.Tests -> e:\Project\ControlHub\tests\ControlHub.Domain.Tests\bin\Debug\net8.0\ControlHub.Domain.Tests.dll
+
+Build FAILED.
+
+e:\Project\ControlHub\src\ControlHub.Application\Users\Commands\UpdateUsername\UpdateUsernameCommandHandler.cs(39,43): warning CS8604: Possible null reference argument for parameter 'value' in 'Result<string> Result<string>.Success(string value)'. [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Common\Behaviors\ValidationBehavior.cs(65,72): warning CS8625: Cannot convert null literal to non-nullable reference type. [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Permissions\Commands\CreatePermissions\CreatePermissionsCommandHandler.cs(56,82): warning CS8604: Possible null reference argument for parameter 'description' in 'Result<Permission> Permission.Create(Guid id, string code, string description)'. [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Roles\Commands\CreateRoles\CreateRolesCommandHandler.cs(55,33): warning CS8602: Dereference of a possibly null reference. [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Roles\Commands\CreateRoles\CreateRolesCommandHandler.cs(132,81): warning CS8604: Possible null reference argument for parameter 'description' in 'Result<Role> CreateRoleWithPermissionsService.Handle(string name, string description, IEnumerable<Permission> validPermissions)'. [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Accounts\Commands\ForgotPassword\ForgotPasswordCommandHandler.cs(120,61): error CS0103: The name 'CommonLogs' does not exist in the current context [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Accounts\Commands\RegisterUser\RegisterUserCommandHandler.cs(59,65): error CS0103: The name 'CommonLogs' does not exist in the current context [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+e:\Project\ControlHub\src\ControlHub.Application\Accounts\Commands\RegisterAdmin\RegisterAdminCommandHandler.cs(58,65): error CS0103: The name 'CommonLogs' does not exist in the current context [e:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
+    5 Warning(s)
+    3 Error(s)
+
+Time Elapsed 00:00:01.30

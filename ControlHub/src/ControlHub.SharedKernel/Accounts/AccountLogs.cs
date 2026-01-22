@@ -75,7 +75,7 @@ namespace ControlHub.SharedKernel.Accounts
             new("Account.ChangePassword.AccountDisabled", "Attempt to change password for a disabled account");
 
         public static readonly LogCode ChangePassword_PasswordHashFailed =
-            new("Account.ChangePassword.PasswordHashFailed", "Password hashing failed.");
+            new("Account.ChangePassword.PasswordHashFailed", "Password hashing failed");
 
         public static readonly LogCode ChangePassword_PasswordSameAsOld =
             new("Account.ChangePassword.PasswordSameAsOld", "New password must not be the same as the current password.");
@@ -94,7 +94,7 @@ namespace ControlHub.SharedKernel.Accounts
             new("Account.ForgotPassword.TokenGenerated", "Password reset token generated");
 
         public static readonly LogCode ForgotPassword_TokenGeneratedFailed =
-            new("Account.ForgotPassword.TokenGeneratedFailed", "Password reset token generated is failed");
+            new("Account.ForgotPassword.TokenGeneratedFailed", "Failed to generate password reset token");
 
         public static readonly LogCode ForgotPassword_NotificationSent =
             new("Account.ForgotPassword.NotificationSent", "Password reset notification sent successfully");

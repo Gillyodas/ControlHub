@@ -41,9 +41,8 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
 
         public async Task<Result<PartialResult<Role, string>>> Handle(CreateRolesCommand request, CancellationToken ct)
         {
-            _logger.LogInformation("{Code}: {Message}. Count={Count}",
-                ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_Started.Code,
-                ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_Started.Message,
+            _logger.LogInformation("{@LogCode} | Count: {Count}",
+                ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_Started,
                 request.Roles?.Count() ?? 0);
 
             var existingNames = new HashSet<string>(
@@ -57,9 +56,8 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
             {
                 if (existingNames.Contains(dto.Name.ToLowerInvariant()))
                 {
-                    _logger.LogWarning("{Code}: {Message}. Role={RoleName}",
-                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_DuplicateNames.Code,
-                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_DuplicateNames.Message,
+                    _logger.LogWarning("{@LogCode} | Role: {RoleName}",
+                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_DuplicateNames,
                         dto.Name);
 
                     failures.Add($"{dto.Name}: {RoleErrors.RoleAlreadyExists.Code}");
@@ -72,9 +70,8 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
 
             if (!dtosToProcess.Any() && !failures.Any())
             {
-                _logger.LogWarning("{Code}: {Message}. IncomingCount={Count}",
-                    ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_NoValidRole.Code,
-                    ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_NoValidRole.Message,
+                _logger.LogWarning("{@LogCode} | IncomingCount: {Count}",
+                    ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_NoValidRole,
                     request.Roles?.Count() ?? 0);
 
                 return Result<PartialResult<Role, string>>.Failure(RoleErrors.NoValidRolesCreated);
@@ -98,9 +95,8 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
             {
                 if (dto.PermissionIds == null || !dto.PermissionIds.Any())
                 {
-                    _logger.LogWarning("{Code}: {Message}. Role={RoleName}",
-                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_MissingPermissions.Code,
-                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_MissingPermissions.Message,
+                    _logger.LogWarning("{@LogCode} | Role: {RoleName}",
+                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_MissingPermissions,
                         dto.Name);
 
                     failures.Add($"{dto.Name}: {RoleErrors.PermissionRequired.Code}");
@@ -125,9 +121,8 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
 
                 if (missingPermissions)
                 {
-                    _logger.LogWarning("{Code}: {Message}. Role={RoleName}",
-                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_NoValidPermissionFound.Code,
-                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_NoValidPermissionFound.Message,
+                    _logger.LogWarning("{@LogCode} | Role: {RoleName}",
+                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_NoValidPermissionFound,
                         dto.Name);
 
                     failures.Add($"{dto.Name}: {ControlHub.SharedKernel.Permissions.PermissionErrors.PermissionNotFound.Code}");
@@ -139,17 +134,15 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
                 if (result.IsSuccess)
                 {
                     successes.Add(result.Value);
-                    _logger.LogInformation("{Code}: {Message}. Role={RoleName}",
-                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_RolePrepared.Code,
-                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_RolePrepared.Message,
+                    _logger.LogInformation("{@LogCode} | Role: {RoleName}",
+                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_RolePrepared,
                         dto.Name);
                 }
                 else
                 {
                     failures.Add($"{dto.Name}: {result.Error.Code}");
-                    _logger.LogWarning("{Code}: {Message}. Role={RoleName} Error={ErrorCode}",
-                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_RolePrepareFailed.Code,
-                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_RolePrepareFailed.Message,
+                    _logger.LogWarning("{@LogCode} | Role: {RoleName} | Error: {ErrorCode}",
+                        ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_RolePrepareFailed,
                         dto.Name,
                         result.Error.Code);
                 }
@@ -160,16 +153,14 @@ namespace ControlHub.Application.Roles.Commands.CreateRoles
                 await _roleRepository.AddRangeAsync(successes, ct);
                 await _uow.CommitAsync(ct);
 
-                _logger.LogInformation("{Code}: {Message}. RolesCreated={Count}",
-                    ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_Success.Code,
-                    ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_Success.Message,
+                _logger.LogInformation("{@LogCode} | RolesCreated: {Count}",
+                    ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_Success,
                     successes.Count);
             }
             else
             {
-                _logger.LogInformation("{Code}: {Message}. No roles persisted.",
-                    ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_NoPersist.Code,
-                    ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_NoPersist.Message);
+                _logger.LogInformation("{@LogCode}",
+                    ControlHub.SharedKernel.Roles.RoleLogs.CreateRoles_NoPersist);
             }
 
             var partial = PartialResult<Role, string>.Create(successes, failures);

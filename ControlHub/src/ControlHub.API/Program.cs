@@ -25,7 +25,7 @@ namespace ControlHub.API
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("Application", "ControlHub.API")
                 .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-                .WriteTo.File(new CompactJsonFormatter(), "Logs/log-.json", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14)
+                .WriteTo.File(new CompactJsonFormatter(), "Logs/log-.json", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14, shared: true)
                 .CreateLogger();
 
             builder.Host.UseSerilog();
@@ -64,6 +64,8 @@ namespace ControlHub.API
 
             builder.Services.AddMemoryCache();
 
+
+
             // =========================================================================
             // 3. BUILD & PIPELINE
             // =========================================================================
@@ -74,8 +76,13 @@ namespace ControlHub.API
             app.MapMetrics(); // Prometheus Endpoint
 
             // CORS Configuration
+            // CORS Configuration
             app.UseCors(policy => policy
-                .WithOrigins("http://localhost:3000", "http://localhost:3000/control-hub")
+                .WithOrigins(
+                    "http://localhost:3000",
+                    "https://localhost:7110",
+                    "http://localhost:5173" // Vite default
+                )
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials());

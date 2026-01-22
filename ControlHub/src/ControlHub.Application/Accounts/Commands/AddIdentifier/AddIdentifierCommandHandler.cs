@@ -29,9 +29,8 @@ namespace ControlHub.Application.Accounts.Commands.AddIdentifier
 
         public async Task<Result> Handle(AddIdentifierCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{Code}: {Message} for AccountId: {AccountId}",
-                 AccountLogs.AddIdentifier_Started.Code,
-                 AccountLogs.AddIdentifier_Started.Message,
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId}",
+                 AccountLogs.AddIdentifier_Started,
                  request.id);
 
             // 1. Lấy Aggregate Root (Có Tracking)
@@ -39,9 +38,8 @@ namespace ControlHub.Application.Accounts.Commands.AddIdentifier
 
             if (acc is null)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId: {AccountId}",
-                    AccountLogs.AddIdentifier_AccountNotFound.Code,
-                    AccountLogs.AddIdentifier_AccountNotFound.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.AddIdentifier_AccountNotFound,
                     request.id);
                 return Result.Failure(AccountErrors.AccountNotFound);
             }
@@ -49,18 +47,16 @@ namespace ControlHub.Application.Accounts.Commands.AddIdentifier
             // 2. Kiểm tra trạng thái Account
             if (acc.IsDeleted)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId: {AccountId}",
-                    AccountLogs.AddIdentifier_AccountDeleted.Code,
-                    AccountLogs.AddIdentifier_AccountDeleted.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.AddIdentifier_AccountDeleted,
                     request.id);
                 return Result.Failure(AccountErrors.AccountDeleted);
             }
 
             if (!acc.IsActive)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId: {AccountId}",
-                    AccountLogs.AddIdentifier_AccountDisabled.Code,
-                    AccountLogs.AddIdentifier_AccountDisabled.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.AddIdentifier_AccountDisabled,
                     request.id);
                 return Result.Failure(AccountErrors.AccountDisabled);
             }
@@ -70,9 +66,8 @@ namespace ControlHub.Application.Accounts.Commands.AddIdentifier
 
             if (createIdentResult.IsFailure)
             {
-                _logger.LogWarning("{Code}: {Message} | Error: {Error}",
-                    AccountLogs.AddIdentifier_InvalidFormat.Code,
-                    AccountLogs.AddIdentifier_InvalidFormat.Message,
+                _logger.LogWarning("{@LogCode} | Error: {Error}",
+                    AccountLogs.AddIdentifier_InvalidFormat,
                     createIdentResult.Error.Code);
 
                 return Result.Failure(createIdentResult.Error);
@@ -83,9 +78,8 @@ namespace ControlHub.Application.Accounts.Commands.AddIdentifier
 
             if (addResult.IsFailure)
             {
-                _logger.LogWarning("{Code}: {Message} | Error: {Error}",
-                    AccountLogs.AddIdentifier_FailedToAdd.Code,
-                    AccountLogs.AddIdentifier_FailedToAdd.Message,
+                _logger.LogWarning("{@LogCode} | Error: {Error}",
+                    AccountLogs.AddIdentifier_FailedToAdd,
                     addResult.Error.Code);
 
                 return Result.Failure(addResult.Error);
@@ -94,9 +88,8 @@ namespace ControlHub.Application.Accounts.Commands.AddIdentifier
             // 5. Commit (EF Core tự động Insert vào bảng AccountIdentifiers nhờ OwnsMany)
             await _uow.CommitAsync(cancellationToken);
 
-            _logger.LogInformation("{Code}: {Message} for AccountId: {AccountId}",
-                 AccountLogs.AddIdentifier_Success.Code,
-                 AccountLogs.AddIdentifier_Success.Message,
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId}",
+                 AccountLogs.AddIdentifier_Success,
                  request.id);
 
             return Result.Success();

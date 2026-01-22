@@ -1,4 +1,9 @@
 ﻿using System.Reflection;
+using ControlHub.Application.AI;
+using ControlHub.Application.Common.Interfaces.AI;
+using ControlHub.Application.Common.Logging.Interfaces;
+using ControlHub.Infrastructure.AI;
+using ControlHub.Infrastructure.Logging;
 using ControlHub.Application.Accounts.Interfaces;
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Behaviors;
@@ -161,6 +166,17 @@ namespace ControlHub
             services.AddHostedService<OutboxProcessor>();
             // Đăng ký các handler cụ thể cho Factory (nếu Factory dùng IServiceProvider để resolve)
             services.AddScoped<IOutboxHandler, EmailOutboxHandler>();
+            
+            // 10. Logging & AI Infrastructure
+            services.AddScoped<ILogReaderService, LogReaderService>();
+
+            // Register HttpClients for AI Services
+            services.AddHttpClient<IVectorDatabase, QdrantVectorStore>();
+            services.AddHttpClient<IEmbeddingService, OllamaEmbeddingService>();
+            services.AddHttpClient<IAIAnalysisService, LocalAIAdapter>();
+
+            // Register Application Service
+            services.AddScoped<LogKnowledgeService>();
 
 
             // 10. Application Libraries (MediatR, AutoMapper)

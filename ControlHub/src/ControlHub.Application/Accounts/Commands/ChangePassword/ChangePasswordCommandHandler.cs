@@ -34,17 +34,15 @@ namespace ControlHub.Application.Accounts.Commands.ChangePassword
 
         public async Task<Result> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}",
-                AccountLogs.ChangePassword_Started.Code,
-                AccountLogs.ChangePassword_Started.Message,
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId}",
+                AccountLogs.ChangePassword_Started,
                 request.id);
 
             var acc = await _accountRepository.GetWithoutUserByIdAsync(request.id, cancellationToken);
             if (acc is null)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.ChangePassword_AccountNotFound.Code,
-                    AccountLogs.ChangePassword_AccountNotFound.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.ChangePassword_AccountNotFound,
                     request.id);
 
                 return Result.Failure(AccountErrors.AccountNotFound);
@@ -52,9 +50,8 @@ namespace ControlHub.Application.Accounts.Commands.ChangePassword
 
             if (acc.IsDeleted)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.ChangePassword_AccountDeleted.Code,
-                    AccountLogs.ChangePassword_AccountDeleted.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.ChangePassword_AccountDeleted,
                     request.id);
 
                 return Result.Failure(AccountErrors.AccountDeleted);
@@ -62,9 +59,8 @@ namespace ControlHub.Application.Accounts.Commands.ChangePassword
 
             if (!acc.IsActive)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.ChangePassword_AccountDisabled.Code,
-                    AccountLogs.ChangePassword_AccountDisabled.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.ChangePassword_AccountDisabled,
                     request.id);
 
                 return Result.Failure(AccountErrors.AccountDisabled);
@@ -73,18 +69,16 @@ namespace ControlHub.Application.Accounts.Commands.ChangePassword
             var passIsVerify = _passwordHasher.Verify(request.curPassword, acc.Password);
             if (!passIsVerify)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.ChangePassword_InvalidPassword.Code,
-                    AccountLogs.ChangePassword_InvalidPassword.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.ChangePassword_InvalidPassword,
                     request.id);
                 return Result.Failure(AccountErrors.InvalidCredentials);
             }
 
             if (_passwordHasher.Verify(request.newPassword, acc.Password))
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.ChangePassword_PasswordSameAsOld.Code,
-                    AccountLogs.ChangePassword_PasswordSameAsOld.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.ChangePassword_PasswordSameAsOld,
                     request.id);
                 return Result.Failure(AccountErrors.PasswordSameAsOld);
             }
@@ -92,9 +86,8 @@ namespace ControlHub.Application.Accounts.Commands.ChangePassword
             var newPass = Password.Create(request.newPassword, _passwordHasher);
             if (newPass.IsFailure)
             {
-                _logger.LogWarning("{Code}: {Message} for AccountId {AccountId}",
-                    AccountLogs.ChangePassword_PasswordHashFailed.Code,
-                    AccountLogs.ChangePassword_PasswordHashFailed.Message,
+                _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
+                    AccountLogs.ChangePassword_PasswordHashFailed,
                     request.id);
                 return Result.Failure(newPass.Error);
             }
@@ -102,9 +95,8 @@ namespace ControlHub.Application.Accounts.Commands.ChangePassword
             var updateResult = acc.UpdatePassword(newPass.Value);
             if (!updateResult.IsSuccess)
             {
-                _logger.LogError("{Code}: {Message} for AccountId {AccountId}. Errors: {Errors}",
-                    AccountLogs.ChangePassword_UpdateFailed.Code,
-                    AccountLogs.ChangePassword_UpdateFailed.Message,
+                _logger.LogError("{@LogCode} | AccountId: {AccountId} | Errors: {Errors}",
+                    AccountLogs.ChangePassword_UpdateFailed,
                     request.id,
                     updateResult.Error);
                 return updateResult;
@@ -125,9 +117,8 @@ namespace ControlHub.Application.Accounts.Commands.ChangePassword
 
             await _uow.CommitAsync(cancellationToken);
 
-            _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}",
-                AccountLogs.ChangePassword_Success.Code,
-                AccountLogs.ChangePassword_Success.Message,
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId}",
+                AccountLogs.ChangePassword_Success,
                 request.id);
 
             return Result.Success();

@@ -21,17 +21,15 @@ namespace ControlHub.Application.Roles.Queries.SearchRoles
 
         public async Task<Result<PagedResult<Role>>> Handle(SearchRolesQuery request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{Code}: {Message}. PageIndex={PageIndex}, PageSize={PageSize}",
-                RoleLogs.SearchRoles_Started.Code,
-                RoleLogs.SearchRoles_Started.Message,
+            _logger.LogInformation("{@LogCode} | PageIndex: {PageIndex} | PageSize: {PageSize}",
+                RoleLogs.SearchRoles_Started,
                 request.pageIndex,
                 request.pageSize);
 
             var result = await _roleQueries.SearchPaginationAsync(request.pageIndex, request.pageSize, request.conditions, cancellationToken);
 
-            _logger.LogInformation("{Code}: {Message}. TotalCount={TotalCount}",
-                RoleLogs.SearchRoles_Success.Code,
-                RoleLogs.SearchRoles_Success.Message,
+            _logger.LogInformation("{@LogCode} | TotalCount: {TotalCount}",
+                RoleLogs.SearchRoles_Success,
                 result.TotalCount);
 
             return Result<PagedResult<Role>>.Success(result);
