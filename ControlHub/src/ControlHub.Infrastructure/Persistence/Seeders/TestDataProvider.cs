@@ -210,20 +210,44 @@ namespace ControlHub.Infrastructure.Persistence.Seeders
                 Console.WriteLine($"Seeded {permissionEntities.Count()} permissions successfully.");
             }
 
-            // Assign permissions to roles
-            await AssignPermissionsToRolesAsync(db);
+            // Always assign permissions to roles (will check for duplicates inside)
+            await AssignPermissionsToRolesAsync(db, forceSeed);
         }
 
         /// <summary>
         /// Assigns permissions to default roles
         /// </summary>
-        private static async Task AssignPermissionsToRolesAsync(AppDbContext db)
+        private static async Task AssignPermissionsToRolesAsync(AppDbContext db, bool forceSeed = false)
+
         {
+            Console.WriteLine("--- Starting AssignPermissionsToRolesAsync ---");
+            
             var roles = await db.Roles.Include(r => r.Permissions).ToListAsync();
             var allPermissions = await db.Permissions.ToListAsync();
 
-            foreach (var role in roles)
+            Console.WriteLine($"Found {roles.Count} roles and {allPermissions.Count} permissions");
+
+            // If forceSeed, clear existing role permissions
+            if (forceSeed)
             {
+                Console.WriteLine("forceSeed=true, clearing existing RolePermissions...");
+                var existingRolePermissions = await db.RolePermissions.ToListAsync();
+                if (existingRolePermissions.Any())
+                {
+                    db.RolePermissions.RemoveRange(existingRolePermissions);
+                    await db.SaveChangesAsync();
+                    Console.WriteLine($"Cleared {existingRolePermissions.Count} existing RolePermissions");
+                    
+                    // Reload roles to refresh the Permissions collection
+                    roles = await db.Roles.Include(r => r.Permissions).ToListAsync();
+                }
+            }
+
+            foreach (var role in roles)
+
+            {
+                Console.WriteLine($"Processing role: {role.Name} (Current permissions: {role.Permissions.Count})");
+                
                 var permissionStrings = role.Name switch
                 {
                     "SuperAdmin" => allPermissions.Select(p => p.Code), // SuperAdmin gets all permissions
@@ -236,16 +260,32 @@ namespace ControlHub.Infrastructure.Persistence.Seeders
                 };
 
                 var permissionsToAdd = allPermissions
-                    .Where(p => permissionStrings.Contains(p.Code));
+                    .Where(p => permissionStrings.Contains(p.Code))
+                    .ToList();
+
+                Console.WriteLine($"Will add {permissionsToAdd.Count} permissions to role {role.Name}");
 
                 foreach (var permission in permissionsToAdd)
                 {
-                    role.AddPermission(permission);
+                    var result = role.AddPermission(permission);
+                    if (result.IsFailure)
+                    {
+                        Console.WriteLine($"  ⚠️  Failed to add {permission.Code}: {result.Error}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"  ✅ Added {permission.Code}");
+                    }
                 }
+                
+                Console.WriteLine($"Role {role.Name} now has {role.Permissions.Count} permissions");
             }
 
-            await db.SaveChangesAsync();
+            Console.WriteLine("Saving changes to database...");
+            var savedCount = await db.SaveChangesAsync();
+            Console.WriteLine($"✅ Saved {savedCount} changes to database");
         }
+
 
         /// <summary>
         /// Gets description for a permission

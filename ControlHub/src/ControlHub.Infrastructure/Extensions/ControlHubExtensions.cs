@@ -177,7 +177,32 @@ namespace ControlHub
             services.AddHttpClient<IAIAnalysisService, LocalAIAdapter>();
 
             // Register Application Service
-            services.AddScoped<LogKnowledgeService>();
+            // Register Application Service
+            // Core AI Services (Shared)
+            services.AddScoped<ILogParserService, ControlHub.Infrastructure.AI.Parsing.Drain3ParserService>();
+            services.AddScoped<IRunbookService, RunbookService>();
+
+            // Sampling Strategy
+            var samplingStrategy = configuration["AuditAI:SamplingStrategy"] ?? "Naive";
+            if (samplingStrategy == "WeightedReservoir")
+            {
+                services.AddScoped<ISamplingStrategy, ControlHub.Infrastructure.AI.Strategies.WeightedReservoirSamplingStrategy>();
+            }
+            else
+            {
+                services.AddScoped<ISamplingStrategy, ControlHub.Infrastructure.AI.Strategies.NaiveSamplingStrategy>();
+            }
+
+            // AI Versioning (V1 vs V2.5)
+            var aiVersion = configuration["AuditAI:Version"] ?? "V1";
+            if (aiVersion == "V2.5")
+            {
+                services.AddScoped<IAuditAgentService, AgenticAuditService>();
+            }
+            
+            // Backward Compatibility: Always register V1 service (wrapped or standalone)
+            services.AddScoped<ILogKnowledgeService, LogKnowledgeService>();
+            services.AddScoped<LogKnowledgeService>(); // Self-binding for older consumers
 
 
             // 10. Application Libraries (MediatR, AutoMapper)

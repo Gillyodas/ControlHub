@@ -5,10 +5,25 @@ import axios, {
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from "axios"
+import { jwtDecode } from "jwt-decode"
 
 import { clearAuth, loadAuth, saveAuth } from "@/auth/storage"
 
 const API_BASE: string = import.meta.env.VITE_API_BASE_URL ?? ""
+
+/**
+ * Check if JWT token is expired or expiring soon
+ * @param token - JWT access token
+ * @param bufferMs - Buffer time in milliseconds (default 60s)
+ */
+function isTokenExpired(token: string, bufferMs = 60 * 1000): boolean {
+  try {
+    const decoded = jwtDecode<{ exp: number }>(token)
+    return decoded.exp * 1000 < Date.now() + bufferMs
+  } catch {
+    return true
+  }
+}
 
 type RefreshResponse = {
   accessToken?: string
@@ -88,10 +103,44 @@ export const api = axios.create({
   baseURL: API_BASE,
 })
 
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const auth = loadAuth()
+api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+  // Skip auth endpoints to avoid infinite loops
+  if (isAuthEndpoint(config.url)) {
+    return config
+  }
+
   if (!config.headers) config.headers = new AxiosHeaders()
 
+  const auth = loadAuth()
+
+  // Proactive refresh: if token is expiring soon, refresh before making request
+  if (auth?.accessToken && isTokenExpired(auth.accessToken)) {
+    // Only refresh if not already refreshing
+    if (!isRefreshing) {
+      try {
+        console.log("[http] Token expiring soon, proactively refreshing...")
+        const { accessToken } = await refreshAccessToken()
+        config.headers.set("Authorization", `Bearer ${accessToken}`)
+        return config
+      } catch (error) {
+        console.warn("[http] Proactive refresh failed, will retry on 401")
+        // Let response interceptor handle it
+      }
+    } else {
+      // Wait for ongoing refresh to complete
+      return new Promise((resolve, reject) => {
+        failedQueue.push({
+          resolve: (token: string) => {
+            config.headers.set("Authorization", `Bearer ${token}`)
+            resolve(config)
+          },
+          reject,
+        })
+      })
+    }
+  }
+
+  // Attach existing token if available
   if (!config.headers.get("Authorization") && auth?.accessToken) {
     config.headers.set("Authorization", `Bearer ${auth.accessToken}`)
   }
@@ -123,7 +172,7 @@ api.interceptors.response.use(
             if (!originalRequest.headers) {
               originalRequest.headers = new AxiosHeaders()
             }
-            ;(originalRequest.headers as AxiosHeaders).set("Authorization", `Bearer ${token}`)
+            ; (originalRequest.headers as AxiosHeaders).set("Authorization", `Bearer ${token}`)
             resolve(api(originalRequest))
           },
           reject,
@@ -142,7 +191,7 @@ api.interceptors.response.use(
       if (!originalRequest.headers) {
         originalRequest.headers = new AxiosHeaders()
       }
-      ;(originalRequest.headers as AxiosHeaders).set("Authorization", `Bearer ${accessToken}`)
+      ; (originalRequest.headers as AxiosHeaders).set("Authorization", `Bearer ${accessToken}`)
 
       return api(originalRequest)
     } catch (refreshErr) {
@@ -190,7 +239,7 @@ export async function fetchJson<T>(url: string, options: {
     // Parse validation errors from backend
     if (error && typeof error === 'object' && 'response' in error) {
       const axiosError = error as { response?: { data?: { errors?: Record<string, unknown>; title?: string } } }
-      
+
       if (axiosError.response?.data?.errors) {
         const validationErrors = axiosError.response.data.errors
         const errorMessages = Object.entries(validationErrors)
@@ -201,12 +250,12 @@ export async function fetchJson<T>(url: string, options: {
           .join("; ")
         throw new Error(errorMessages)
       }
-      
+
       if (axiosError.response?.data?.title) {
         throw new Error(axiosError.response.data.title)
       }
     }
-    
+
     throw error
   }
 }

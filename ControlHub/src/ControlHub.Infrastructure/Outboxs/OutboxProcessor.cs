@@ -38,7 +38,7 @@ namespace ControlHub.Infrastructure.Outboxs
                         var handler = handlerFactory.Get(msg.Type);
                         if (handler == null)
                         {
-                            _logger.LogWarning("No handler for outbox message type {Type}", msg.Type);
+                            //_logger.LogWarning("No handler for outbox message type {Type}", msg.Type);
                             continue;
                         }
 

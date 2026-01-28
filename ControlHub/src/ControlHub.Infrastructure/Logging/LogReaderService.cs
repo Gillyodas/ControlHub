@@ -50,7 +50,7 @@ namespace ControlHub.Infrastructure.Logging
             return matches;
         }
 
-        public async Task<List<LogEntry>> GetRecentLogsAsync(int count = 100)
+        public async Task<List<LogEntry>> GetRecentLogsAsync(int count = 500)
         {
             var logs = await ReadAllLogsAsync();
             return logs.OrderByDescending(x => x.Timestamp).Take(count).ToList();

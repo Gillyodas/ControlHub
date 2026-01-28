@@ -24,8 +24,17 @@ namespace ControlHub.API
             Log.Logger = new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("Application", "ControlHub.API")
-                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-                .WriteTo.File(new CompactJsonFormatter(), "Logs/log-.json", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14, shared: true)
+                // Reduce noise from EF Core (hide SQL queries in console/log)
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+                // Sub-logger: Write only Email logs to a separate file
+                .WriteTo.Logger(l => l
+                    .Filter.ByIncludingOnly(e => e.Properties.TryGetValue("SourceContext", out var v) && v.ToString().Contains("ControlHub.Infrastructure.Emails"))
+                    .WriteTo.File(new RenderedCompactJsonFormatter(), "Logs/email-.json", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14, shared: true))
+                // Main logger: Write everything ELSE to console and main file
+                .WriteTo.Logger(l => l
+                    .Filter.ByExcluding(e => e.Properties.TryGetValue("SourceContext", out var v) && v.ToString().Contains("ControlHub.Infrastructure.Emails"))
+                    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+                    .WriteTo.File(new RenderedCompactJsonFormatter(), "Logs/log-.json", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14, shared: true))
                 .CreateLogger();
 
             builder.Host.UseSerilog();
@@ -64,8 +73,6 @@ namespace ControlHub.API
 
             builder.Services.AddMemoryCache();
 
-
-
             // =========================================================================
             // 3. BUILD & PIPELINE
             // =========================================================================
@@ -76,13 +83,8 @@ namespace ControlHub.API
             app.MapMetrics(); // Prometheus Endpoint
 
             // CORS Configuration
-            // CORS Configuration
             app.UseCors(policy => policy
-                .WithOrigins(
-                    "http://localhost:3000",
-                    "https://localhost:7110",
-                    "http://localhost:5173" // Vite default
-                )
+                .WithOrigins("http://localhost:3000", "http://localhost:3000/control-hub")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials());

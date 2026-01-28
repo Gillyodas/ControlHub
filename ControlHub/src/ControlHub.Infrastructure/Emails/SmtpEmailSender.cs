@@ -2,20 +2,25 @@
 using System.Net.Mail;
 using ControlHub.Application.Emails.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace ControlHub.Infrastructure.Emails
 {
     internal class SmtpEmailSender : IEmailSender
     {
         private readonly IConfiguration _config;
+        private readonly ILogger<SmtpEmailSender> _logger;
 
-        public SmtpEmailSender(IConfiguration config)
+        public SmtpEmailSender(IConfiguration config, ILogger<SmtpEmailSender> logger)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
+            _logger = logger;
         }
 
         public async Task SendEmailAsync(string to, string subject, string body, bool isHtml = true)
         {
+            _logger.LogInformation("Sending email to {To} with subject {Subject}", to, subject);
+
             // Validate input parameters
             if (string.IsNullOrWhiteSpace(to))
                 throw new ArgumentException("To email address is required", nameof(to));

@@ -4,7 +4,6 @@ using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Common.Errors;
-using ControlHub.SharedKernel.Common.Logs;
 using ControlHub.SharedKernel.Results;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -39,14 +38,16 @@ namespace ControlHub.Application.Accounts.Commands.RegisterUser
 
         public async Task<Result<Guid>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{@LogCode} | Ident: {Ident}",
-                AccountLogs.RegisterUser_Started,
+            _logger.LogInformation("{Code}: {Message} for Ident {Ident}",
+                AccountLogs.RegisterUser_Started.Code,
+                AccountLogs.RegisterUser_Started.Message,
                 request.Value);
 
             if (await _accountValidator.IdentifierIsExist(request.Value.ToLower(), request.Type, cancellationToken))
             {
-                _logger.LogWarning("{@LogCode} | Ident: {Ident}",
-                    AccountLogs.RegisterUser_IdentifierExists,
+                _logger.LogWarning("{Code}: {Message} for Ident {Ident}",
+                    AccountLogs.RegisterUser_IdentifierExists.Code,
+                    AccountLogs.RegisterUser_IdentifierExists.Message,
                     request.Value);
 
                 return Result<Guid>.Failure(AccountErrors.EmailAlreadyExists);
@@ -57,7 +58,7 @@ namespace ControlHub.Application.Accounts.Commands.RegisterUser
             var roleIdString = _config["RoleSettings:UserRoleId"];
             if (!Guid.TryParse(roleIdString, out var userRoleId))
             {
-                _logger.LogError("{@LogCode} | Value: {Value}", CommonLogs.System_InvalidConfiguration, roleIdString);
+                _logger.LogError("Invalid User Role ID configuration: {Value}", roleIdString);
                 return Result<Guid>.Failure(CommonErrors.SystemConfigurationError);
             }
 
@@ -71,8 +72,9 @@ namespace ControlHub.Application.Accounts.Commands.RegisterUser
 
             if (!accountResult.IsSuccess)
             {
-                _logger.LogError("{@LogCode} | Ident: {Ident} | Error: {Error}",
-                    AccountLogs.RegisterUser_FactoryFailed,
+                _logger.LogError("{Code}: {Message} for Ident {Ident}. Error: {Error}",
+                    AccountLogs.RegisterUser_FactoryFailed.Code,
+                    AccountLogs.RegisterUser_FactoryFailed.Message,
                     request.Value,
                     accountResult.Error);
 
@@ -81,12 +83,13 @@ namespace ControlHub.Application.Accounts.Commands.RegisterUser
 
             await _accountRepository.AddAsync(accountResult.Value.Value, cancellationToken);
 
-            _logger.LogInformation("{@LogCode} | AccountId: {AccountId} | Ident: {Ident}",
-                AccountLogs.RegisterUser_Success,
+            await _uow.CommitAsync(cancellationToken);
+
+            _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}, Ident {Ident}",
+                AccountLogs.RegisterUser_Success.Code,
+                AccountLogs.RegisterUser_Success.Message,
                 accId,
                 request.Value);
-
-            await _uow.CommitAsync(cancellationToken);
 
             return Result<Guid>.Success(accId);
         }

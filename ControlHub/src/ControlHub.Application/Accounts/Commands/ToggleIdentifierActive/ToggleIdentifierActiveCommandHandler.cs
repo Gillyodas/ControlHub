@@ -52,7 +52,7 @@ namespace ControlHub.Application.Accounts.Commands.ToggleIdentifierActive
                 config.Deactivate();
             }
 
-            await _unitOfWork.CommitAsync();
+            await _unitOfWork.CommitAsync(cancellationToken);
 
             _logger.LogInformation("{@LogCode} | ConfigId: {ConfigId} | NewStatus: {NewStatus}",
                 IdentifierConfigLogs.ToggleActive_Success,
