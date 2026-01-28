@@ -6,10 +6,11 @@ import type { AuthContextValue } from "./auth-context"
 import { AuthContext } from "./auth-context"
 import { clearAuth, loadAuth, saveAuth } from "./storage"
 import { authApi } from "@/services/api"
+import { useVisibilityRefresh } from "@/hooks/use-visibility-refresh"
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = React.useState<AuthData | null>(() => loadAuth())
-  
+
   // Expose this function to be called from axios interceptor
   const updateAuth = React.useCallback((updates: Partial<AuthData>) => {
     if (!auth) return
@@ -60,6 +61,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }),
     [auth, register, signIn, signOut, updateAuth],
   )
+
+  // Handle token refresh when tab becomes visible
+  const handleVisibilityRefresh = React.useCallback(async () => {
+    if (!auth?.accessToken || !auth?.refreshToken || !auth?.accountId) return
+
+    try {
+      const result = await authApi.refreshAccessToken({
+        accessToken: auth.accessToken,
+        refreshToken: auth.refreshToken,
+        accID: String(auth.accountId),
+      })
+      updateAuth({
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      })
+    } catch {
+      signOut()
+    }
+  }, [auth, updateAuth, signOut])
+
+  useVisibilityRefresh(handleVisibilityRefresh)
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

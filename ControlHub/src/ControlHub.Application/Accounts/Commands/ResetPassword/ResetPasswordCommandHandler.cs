@@ -88,7 +88,7 @@ namespace ControlHub.Application.Accounts.Commands.ResetPassword
             }
 
             acc.UpdatePassword(pass.Value);
-            await _uow.CommitAsync();
+            await _uow.CommitAsync(cancellationToken);
 
             _logger.LogInformation("{@LogCode} | AccountId: {AccountId}",
                 AccountLogs.ResetPassword_Success,

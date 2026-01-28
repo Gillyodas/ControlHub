@@ -1,0 +1,32 @@
+[
+    {
+        "LogCode": "AUTH_001",
+        "Problem": "High number of failed login attempts from a single IP",
+        "Solution": "1. Check if the IP is whitelisted. 2. If not, temporarily block the IP in the firewall. 3. Monitor 'AuditLogs' for further suspicious activity.",
+        "Tags": [
+            "Security",
+            "Authentication",
+            "BruteForce"
+        ]
+    },
+    {
+        "LogCode": "DB_CONNECTION_TIMEOUT",
+        "Problem": "Application cannot connect to SQL Server within timeout period",
+        "Solution": "1. Verify SQL Server service is running. 2. check connection string in 'appsettings.json'. 3. Check network latency or firewall rules between App Server and DB Server.",
+        "Tags": [
+            "Database",
+            "Infrastructure",
+            "Timeout"
+        ]
+    },
+    {
+        "LogCode": "PAYMENT_GATEWAY_502",
+        "Problem": "Bad Gateway response from Payment Provider",
+        "Solution": "1. Check Payment Provider status page for outages. 2. Retry the transaction manually if supported. 3. Contact Payment Provider support if issue persists > 10 mins.",
+        "Tags": [
+            "Payment",
+            "ExternalAPI",
+            "Critical"
+        ]
+    }
+]

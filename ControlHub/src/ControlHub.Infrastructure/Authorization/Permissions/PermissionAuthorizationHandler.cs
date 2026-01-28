@@ -1,4 +1,5 @@
-﻿using ControlHub.Application.Tokens;
+﻿using System.Security.Claims;
+using ControlHub.Application.Tokens;
 using ControlHub.Application.Authorization.Requirements;
 using ControlHub.SharedKernel.Constants;
 using Microsoft.AspNetCore.Authorization;
@@ -11,23 +12,41 @@ namespace ControlHub.Infrastructure.Permissions.AuthZ
             AuthorizationHandlerContext context,
             PermissionRequirement requirement)
         {
-            // Lấy tất cả các claims 'Permission' từ user (đã được thêm từ IClaimsTransformation)
-            var userPermissions = context.User.FindAll(AppClaimTypes.Permission);
-
-            if (context.User.IsInRole(ControlHubDefaults.Roles.SuperAdminId.ToString()))
+            Console.WriteLine($"[PermissionAuthorizationHandler] Checking permission: {requirement.Permission}");
+            
+            // Check if user is SuperAdmin (bypass all permission checks)
+            var roleIdClaim = context.User.FindFirst(AppClaimTypes.Role) ?? context.User.FindFirst(ClaimTypes.Role);
+            
+            Console.WriteLine($"[PermissionAuthorizationHandler] Role claim found: {roleIdClaim?.Value ?? "NULL"}");
+            Console.WriteLine($"[PermissionAuthorizationHandler] SuperAdmin ID: {ControlHubDefaults.Roles.SuperAdminId}");
+            
+            if (roleIdClaim != null && 
+                roleIdClaim.Value.Equals(ControlHubDefaults.Roles.SuperAdminId.ToString(), StringComparison.OrdinalIgnoreCase))
             {
+                Console.WriteLine($"[PermissionAuthorizationHandler] ✅ SuperAdmin detected! Bypassing permission check.");
                 context.Succeed(requirement);
                 return Task.CompletedTask;
             }
 
+            // Lấy tất cả các claims 'Permission' từ user (đã được thêm từ IClaimsTransformation)
+            var userPermissions = context.User.FindAll(AppClaimTypes.Permission);
+            
+            Console.WriteLine($"[PermissionAuthorizationHandler] User has {userPermissions.Count()} permission claims");
+
             // Kiểm tra xem user có claim nào khớp với permission yêu cầu không
             if (userPermissions.Any(c => c.Value == requirement.Permission))
             {
+                Console.WriteLine($"[PermissionAuthorizationHandler] ✅ Permission '{requirement.Permission}' found in user claims");
                 // Nếu có, đánh dấu là thành công
                 context.Succeed(requirement);
+            }
+            else
+            {
+                Console.WriteLine($"[PermissionAuthorizationHandler] ❌ Permission '{requirement.Permission}' NOT found in user claims");
             }
 
             return Task.CompletedTask;
         }
     }
+
 }

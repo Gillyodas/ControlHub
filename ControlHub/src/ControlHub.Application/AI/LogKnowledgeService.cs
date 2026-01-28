@@ -6,7 +6,7 @@ using ControlHub.SharedKernel.Common.Logs; // Để truy cập LogCode
 
 namespace ControlHub.Application.AI
 {
-    public class LogKnowledgeService
+    public class LogKnowledgeService : ILogKnowledgeService
     {
         private readonly IVectorDatabase _vectorDb;
         private readonly IEmbeddingService _embeddingService;

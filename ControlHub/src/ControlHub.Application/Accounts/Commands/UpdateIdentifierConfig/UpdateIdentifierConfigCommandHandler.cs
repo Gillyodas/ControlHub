@@ -67,7 +67,7 @@ namespace ControlHub.Application.Accounts.Commands.UpdateIdentifierConfig
 
             config.UpdateRules(validationRules);
 
-            await _unitOfWork.CommitAsync();
+            await _unitOfWork.CommitAsync(cancellationToken);
 
             _logger.LogInformation("{@LogCode} | Id: {Id} | Name: {Name}",
                 IdentifierConfigLogs.UpdateConfig_Success,

@@ -13,7 +13,13 @@ namespace ControlHub.Application.Common.Logging
         public DateTime Timestamp { get; set; }
 
         [JsonPropertyName("@mt")]
-        public string Message { get; set; } = string.Empty;
+        public string MessageTemplate { get; set; } = string.Empty;
+
+        [JsonPropertyName("@m")]
+        public string? RenderedMessage { get; set; }
+
+        [JsonIgnore]
+        public string Message => !string.IsNullOrEmpty(RenderedMessage) ? RenderedMessage : MessageTemplate;
 
         [JsonPropertyName("@l")]
         public string Level { get; set; } = "Information";
