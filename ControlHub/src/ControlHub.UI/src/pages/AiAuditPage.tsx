@@ -10,6 +10,7 @@ import { fetchJson } from '@/services/api/client';
 import { loadAuth } from '@/auth/storage';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import RunbookIngestDialog from '@/components/audit/RunbookIngestDialog';
 
 interface LogTemplate {
     templateId: string;
@@ -159,6 +160,7 @@ const AiAuditPage = () => {
                     </Badge>
                 </div>
                 <div className="flex gap-2">
+                    <RunbookIngestDialog onSuccess={() => setChatAnswer('Runbook ingested! You can now ask about it.')} />
                     <Button variant="outline" onClick={handleLearn} disabled={knowledgeLoading}>
                         {knowledgeLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
                         {t('ai.refreshKnowledge', 'Refresh Knowledge')}
@@ -276,7 +278,9 @@ const AiAuditPage = () => {
                                 {chatLoading ? (
                                     <Loader2 className="h-8 w-8 animate-spin m-auto" />
                                 ) : chatAnswer ? (
-                                    <ReactMarkdown className="prose prose-sm dark:prose-invert">{chatAnswer}</ReactMarkdown>
+                                    <div className="prose prose-sm dark:prose-invert">
+                                        <ReactMarkdown>{chatAnswer}</ReactMarkdown>
+                                    </div>
                                 ) : (
                                     <p className="text-center text-muted-foreground mt-40">Ask about recent system activity...</p>
                                 )}
