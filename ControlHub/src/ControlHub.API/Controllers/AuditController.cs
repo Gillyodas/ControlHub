@@ -72,7 +72,7 @@ namespace ControlHub.API.Controllers
             if (_runbookService == null) return BadRequest("Runbook Service is not enabled (V2.5 required).");
             
             await _runbookService.IngestRunbooksAsync(runbooks);
-            return Ok($"Ingested {runbooks.Count} runbooks.");
+            return Ok(new { Message = $"Ingested {runbooks.Count} runbooks." });
         }
 
         // Endpoint 2: Phân tích Session (Hybrid V1/2.5)
