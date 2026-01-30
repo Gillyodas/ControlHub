@@ -2,7 +2,6 @@ using ControlHub.Application.AI;
 using ControlHub.Application.Common.Interfaces.AI;
 using ControlHub.Application.Common.Logging;
 using ControlHub.Application.Common.Logging.Interfaces;
-using ControlHub.Domain.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -56,7 +55,7 @@ namespace ControlHub.API.Controllers
         }
 
         // Endpoint 1: Ingest Log Definitions (V1)
-        [Authorize(Policy = Policies.CanManageSystemSettings)]
+        [Authorize(Policy = "Permission:system.manage_settings")]
         [HttpPost("learn")]
         public async Task<IActionResult> LearnLogDefinitions()
         {
@@ -65,7 +64,7 @@ namespace ControlHub.API.Controllers
         }
 
         // Endpoint 1.5: Ingest Runbooks (V2.5)
-        [Authorize(Policy = Policies.CanManageSystemSettings)]
+        [Authorize(Policy = "Permission:system.manage_settings")]
         [HttpPost("ingest-runbooks")]
         public async Task<IActionResult> IngestRunbooks([FromBody] List<RunbookEntry> runbooks)
         {
@@ -76,7 +75,7 @@ namespace ControlHub.API.Controllers
         }
 
         // Endpoint 2: Phân tích Session (Hybrid V1/2.5)
-        [Authorize(Policy = Policies.CanViewSystemLogs)]
+        [Authorize(Policy = "Permission:system.view_logs")]
         [HttpGet("analyze/{correlationId}")]
         public async Task<IActionResult> Analyze(string correlationId, [FromQuery] string lang = "en")
         {
@@ -118,7 +117,7 @@ namespace ControlHub.API.Controllers
         }
 
         // Endpoint 3: Chat với Logs
-        [Authorize(Policy = Policies.CanViewSystemLogs)]
+        [Authorize(Policy = "Permission:system.view_logs")]
         [HttpPost("chat")]
         public async Task<IActionResult> Chat([FromBody] ChatRequest request, [FromQuery] string lang = "en")
         {
@@ -152,7 +151,7 @@ namespace ControlHub.API.Controllers
         }
         
         // Endpoint: Get Templates (Debug/UI)
-        [Authorize(Policy = Policies.CanViewSystemLogs)]
+        [Authorize(Policy = "Permission:system.view_logs")]
         [HttpGet("templates/{correlationId}")]
         public async Task<IActionResult> GetTemplates(string correlationId)
         {

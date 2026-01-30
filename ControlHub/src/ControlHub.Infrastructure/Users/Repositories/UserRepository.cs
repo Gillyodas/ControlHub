@@ -41,6 +41,11 @@ namespace ControlHub.Infrastructure.Users.Repositories
             return await _db.Users.FirstOrDefaultAsync(u => u.AccId == id);
         }
 
+        public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await _db.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        }
+
         public async Task SaveChangesAsync(CancellationToken cancellationToken)
         {
             try

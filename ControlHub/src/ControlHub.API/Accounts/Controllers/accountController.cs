@@ -8,7 +8,6 @@ using ControlHub.Application.Authorization.Requirements;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ControlHub.Domain.Permissions;
 
 namespace ControlHub.API.Accounts.Controllers
 {
@@ -91,7 +90,7 @@ namespace ControlHub.API.Accounts.Controllers
             return Ok();
         }
 
-        [Authorize(Policy = Policies.CanViewUsers)]
+        [Authorize(Policy = "Permission:users.view")]
         [HttpGet("admins")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAdmins(CancellationToken cancellationToken)

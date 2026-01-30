@@ -15,6 +15,15 @@ namespace ControlHub.Infrastructure.Users
             builder.Property(u => u.Username)
                 .HasMaxLength(100);
 
+            builder.Property(u => u.FirstName)
+                .HasMaxLength(100);
+
+            builder.Property(u => u.LastName)
+                .HasMaxLength(100);
+
+            builder.Property(u => u.PhoneNumber)
+                .HasMaxLength(20);
+
             builder.Property(u => u.IsDeleted)
                 .IsRequired();
 

@@ -51,5 +51,8 @@ namespace ControlHub.SharedKernel.Roles
 
         public static readonly Error InvalidRoleIdFormat =
             Error.Validation("Role.InvalidId", "The provided Role ID is not in a valid GUID format.");
+
+        public static readonly Error RoleInUse =
+            Error.Conflict("Role.InUse", "Cannot delete role because it is currently assigned to users.");
     }
 }

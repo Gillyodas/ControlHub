@@ -8,6 +8,9 @@ namespace ControlHub.Domain.Users
         // Properties
         public Guid Id { get; private set; }
         public string? Username { get; private set; }
+        public string? FirstName { get; private set; }
+        public string? LastName { get; private set; }
+        public string? PhoneNumber { get; private set; }
         public bool IsDeleted { get; private set; }
 
         // Foreign Key & Navigation
@@ -21,7 +24,7 @@ namespace ControlHub.Domain.Users
         // Constructor rỗng cho EF Core
         private User() { }
 
-        public User(Guid id, Guid accId, string? username = null)
+        public User(Guid id, Guid accId, string? username = null, string? firstName = null, string? lastName = null, string? phoneNumber = null)
         {
             if (id == Guid.Empty) throw new ArgumentException("User Id is required", nameof(id));
             if (accId == Guid.Empty) throw new ArgumentException("Account Id is required", nameof(accId));
@@ -29,6 +32,9 @@ namespace ControlHub.Domain.Users
             Id = id;
             AccId = accId;
             Username = username;
+            FirstName = firstName;
+            LastName = lastName;
+            PhoneNumber = phoneNumber;
             IsDeleted = false;
         }
 
@@ -50,6 +56,13 @@ namespace ControlHub.Domain.Users
             Username = username;
 
             return Result.Success();
+        }
+
+        public void UpdateProfile(string? firstName, string? lastName, string? phoneNumber)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+            PhoneNumber = phoneNumber;
         }
     }
 }

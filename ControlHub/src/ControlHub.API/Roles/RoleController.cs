@@ -1,11 +1,13 @@
-﻿using ControlHub.API.Controllers; // BaseApiController
+﻿using ControlHub.Application.Roles.Commands.AssignRoleToUser;
+using ControlHub.Application.Roles.Queries.GetUserRoles;
+using ControlHub.API.Controllers; // BaseApiController
 using ControlHub.API.Roles.ViewModels.Requests;
 using ControlHub.API.Roles.ViewModels.Responses;
 using ControlHub.Application.Common.DTOs;
 using ControlHub.Application.Roles.Commands.CreateRoles;
-using ControlHub.Application.Roles.Commands.SetRolePermissions; // Đổi tên namespace nếu bạn đã đổi tên command thành AddPermissionsForRole
+using ControlHub.Application.Roles.Commands.SetRolePermissions;
+using ControlHub.Application.Roles.Queries.GetRolePermissions;
 using ControlHub.Application.Roles.Queries.SearchRoles;
-using ControlHub.Domain.Permissions;
 using ControlHub.Domain.Roles;
 using ControlHub.SharedKernel.Results;
 using MediatR;
@@ -25,45 +27,92 @@ namespace ControlHub.API.Roles
             _logger = logger;
         }
 
-        [Authorize(Policy = Policies.CanAssignPermission)]
-        [HttpPost("roles/{roleId}/permissions")]
-        [ProducesResponseType(typeof(AddPermissonsForRoleResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> AddPermissionsForRole(string roleId, [FromBody] AddPermissonsForRoleRequest request, CancellationToken cancellationToken)
+        [HttpPost("users/{userId}/assign/{roleId}")]
+        [Authorize(Policy = "Permission:roles.assign")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> AssignRoleToUser(Guid userId, Guid roleId, CancellationToken cancellationToken)
         {
-            var command = new AddPermissonsForRoleCommand(roleId, request.PermissionIds, cancellationToken);
+            var command = new AssignRoleToUserCommand(userId, roleId);
             var result = await Mediator.Send(command, cancellationToken);
 
-            if (result.IsFailure)
-            {
-                return HandleFailure(result);
-            }
+            if (result.IsFailure) return HandleFailure(result);
 
-            // Xử lý Partial Result
-            if (result is Result<PartialResult<Permission, string>> typedResult)
-            {
-                var summary = typedResult.Value;
-                return Ok(new AddPermissonsForRoleResponse
-                {
-                    Message = summary.Failures.Any()
-                        ? "Partial success: some permissions failed to add."
-                        : "All permissions added successfully.",
-                    SuccessCount = summary.Successes.Count, // Count thay vì Count()
-                    FailureCount = summary.Failures.Count,
-                    FailedRoles = summary.Failures // Kiểm tra lại tên property trong Response DTO, có thể nên là FailedPermissions
-                });
-            }
-
-            // Fallback
-            return Ok(new AddPermissonsForRoleResponse
-            {
-                Message = "Permissions updated successfully.",
-                SuccessCount = request.PermissionIds.Count(),
-                FailureCount = 0
-            });
+            return Ok();
         }
 
-        [Authorize(Policy = Policies.CanCreateRole)]
+        [HttpGet("users/{userId}")]
+        [Authorize(Policy = "Permission:roles.view")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetUserRoles(Guid userId, CancellationToken cancellationToken)
+        {
+            var query = new GetUserRolesQuery(userId);
+            var result = await Mediator.Send(query, cancellationToken);
+            
+            if (result.IsFailure) return HandleFailure(result);
+
+            return Ok(result.Value);
+        }
+
+        [HttpPut("{id}")]
+        [Authorize(Policy = "Permission:roles.update")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> UpdateRole(Guid id, [FromBody] UpdateRoleRequest request, CancellationToken cancellationToken)
+        {
+            // Note: Request body doesn't contain ID, but Command does.
+            var command = new ControlHub.Application.Roles.Commands.UpdateRole.UpdateRoleCommand(id, request.Name, request.Description);
+            var result = await Mediator.Send(command, cancellationToken);
+
+            if (result.IsFailure) return HandleFailure(result);
+
+            return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Policy = "Permission:roles.delete")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> DeleteRole(Guid id, CancellationToken cancellationToken)
+        {
+            var command = new ControlHub.Application.Roles.Commands.DeleteRole.DeleteRoleCommand(id);
+            var result = await Mediator.Send(command, cancellationToken);
+
+            if (result.IsFailure) return HandleFailure(result);
+
+            return NoContent();
+        }
+
+        [Authorize(Policy = "Permission:roles.view")]
+        [HttpGet("{roleId}/permissions")]
+        [ProducesResponseType(typeof(List<ControlHub.Application.Permissions.DTOs.PermissionDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetRolePermissions(Guid roleId, CancellationToken cancellationToken)
+        {
+            var query = new GetRolePermissionsQuery(roleId);
+            var result = await Mediator.Send(query, cancellationToken);
+            if (result.IsFailure) return HandleFailure(result);
+            return Ok(result.Value);
+        }
+
+        [Authorize(Policy = "Permission:roles.update")]
+        [HttpPut("{roleId}/permissions")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> SetRolePermissions(Guid roleId, [FromBody] List<Guid> permissionIds, CancellationToken cancellationToken)
+        {
+            var command = new SetRolePermissionsCommand(roleId, permissionIds);
+            var result = await Mediator.Send(command, cancellationToken);
+            if (result.IsFailure) return HandleFailure(result);
+            return NoContent();
+        }
+
+
+
+        [Authorize(Policy = "Permission:roles.create")]
         [HttpPost("roles")]
         [ProducesResponseType(typeof(CreateRolesResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -99,7 +148,7 @@ namespace ControlHub.API.Roles
             });
         }
 
-        [Authorize(Policy = Policies.CanViewRoles)]
+        [Authorize(Policy = "Permission:roles.view")]
         [HttpGet]
         [ProducesResponseType(typeof(PagedResult<Role>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetRoles(

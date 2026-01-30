@@ -23,6 +23,12 @@ namespace ControlHub.Infrastructure.Roles
             builder.Property(r => r.IsActive)
                 .IsRequired();
 
+            builder.Property(r => r.IsDeleted)
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            builder.HasQueryFilter(r => !r.IsDeleted);
+
             // --- CẤU HÌNH MANY-TO-MANY ---
 
             builder.HasMany(r => r.Permissions) // Role có nhiều Permission

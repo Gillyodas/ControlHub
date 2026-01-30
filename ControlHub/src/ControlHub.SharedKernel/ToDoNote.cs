@@ -9,6 +9,7 @@
         // TODO: Thống kê user active ra FE
         // TODO: Tìm hiểu về các công nghệ và kỹ thuật cache (mediatR hay Redis)
         // TODO: Sử dụng Domain Events: Khi một Role được cập nhật, phát ra một Event. Một Handler sẽ bắt Event đó và gọi _memoryCache.Remove(key). Cách này "sạch" nhất vì Decorator không cần quan tâm đến logic nghiệp vụ.
-        // TODO: Thêm các tool observability để theo dõi tỉ lệ truy cập cache 
+        // TODO: Thêm các tool observability để theo dõi tỉ lệ truy cập cache
+        // // TODO: Xóa bớt 1 method dư thừa của UserRepository
     }
 }

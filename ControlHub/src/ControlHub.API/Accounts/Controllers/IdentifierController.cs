@@ -5,7 +5,6 @@ using ControlHub.Application.Accounts.DTOs;
 using ControlHub.Application.Accounts.Queries.GetActiveIdentifierConfigs;
 using ControlHub.Application.Accounts.Queries.GetIdentifierConfigs;
 using ControlHub.API.Controllers;
-using ControlHub.Domain.Permissions;
 using ControlHub.SharedKernel.Results;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -31,7 +30,7 @@ namespace ControlHub.API.Accounts.Controllers
         /// </summary>
         /// <returns>List of identifier configurations</returns>
         [HttpGet]
-        [Authorize(Policy = Policies.CanViewIdentifierConfigs)]
+        [Authorize(Policy = "Permission:identifiers.view")]
         [ProducesResponseType(typeof(List<IdentifierConfigDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -59,7 +58,7 @@ namespace ControlHub.API.Accounts.Controllers
         /// <param name="command">Identifier configuration creation request</param>
         /// <returns>Created identifier configuration ID</returns>
         [HttpPost]
-        [Authorize(Policy = Policies.CanCreateIdentifierConfig)]
+        [Authorize(Policy = "Permission:identifiers.create")]
         [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -122,7 +121,7 @@ namespace ControlHub.API.Accounts.Controllers
         /// <param name="request">Toggle request with isActive flag</param>
         /// <returns>Success result</returns>
         [HttpPatch("{id}/toggle-active")]
-        [Authorize(Policy = Policies.CanToggleIdentifierConfig)]
+        [Authorize(Policy = "Permission:identifiers.toggle")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -151,7 +150,7 @@ namespace ControlHub.API.Accounts.Controllers
         /// <param name="command">Update request</param>
         /// <returns>Success result</returns>
         [HttpPut("{id}")]
-        [Authorize(Policy = Policies.CanUpdateIdentifierConfig)]
+        [Authorize(Policy = "Permission:identifiers.update")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

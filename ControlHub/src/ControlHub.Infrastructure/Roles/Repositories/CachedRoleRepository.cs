@@ -36,6 +36,11 @@ namespace ControlHub.Infrastructure.Roles.Repositories
                 });
         }
 
+        public async Task<Role?> GetByNameAsync(string name, CancellationToken cancellationToken)
+        {
+            return await _decorated.GetByNameAsync(name, cancellationToken);
+        }
+
         public async Task AddAsync(Role role, CancellationToken ct)
         {
             await _decorated.AddAsync(role, ct);

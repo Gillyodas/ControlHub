@@ -11,6 +11,7 @@ namespace ControlHub.Domain.Roles
         public string Name { get; private set; }
         public string Description { get; private set; }
         public bool IsActive { get; private set; }
+        public bool IsDeleted { get; private set; }
 
         private readonly List<Permission> _permissions = new();
 
@@ -97,7 +98,13 @@ namespace ControlHub.Domain.Roles
             return Result<PartialResult<Permission, string>>.Success(partial);
         }
 
+        public void ClearPermissions()
+        {
+            _permissions.Clear();
+        }
+
         public void Deactivate() => IsActive = false;
         public void Activate() => IsActive = true;
+        public void Delete() => IsDeleted = true;
     }
 }

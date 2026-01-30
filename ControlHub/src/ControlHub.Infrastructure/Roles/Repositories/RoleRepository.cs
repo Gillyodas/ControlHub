@@ -21,6 +21,11 @@ namespace ControlHub.Infrastructure.Roles.Repositories
                 .FirstOrDefaultAsync(r => r.Id == roleId, cancellationToken);
         }
 
+        public async Task<Role?> GetByNameAsync(string name, CancellationToken cancellationToken)
+        {
+            return await _db.Roles.FirstOrDefaultAsync(r => r.Name == name, cancellationToken);
+        }
+
         public async Task AddAsync(Role role, CancellationToken cancellationToken)
         {
             await _db.Roles.AddAsync(role, cancellationToken);
