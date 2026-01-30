@@ -62,5 +62,40 @@ namespace ControlHub.API.Permissions
 
             return Ok(result.Value);
         }
+
+        [Authorize(Policy = "Permission:permissions.update")]
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdatePermission(Guid id, [FromBody] UpdatePermissionRequest request, CancellationToken cancellationToken)
+        {
+            var command = new ControlHub.Application.Permissions.Commands.UpdatePermission.UpdatePermissionCommand(id, request.Code, request.Description);
+            var result = await Mediator.Send(command, cancellationToken);
+
+            if (result.IsFailure)
+            {
+                return HandleFailure(result);
+            }
+
+            return NoContent();
+        }
+
+        [Authorize(Policy = "Permission:permissions.delete")]
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeletePermission(Guid id, CancellationToken cancellationToken)
+        {
+            var command = new ControlHub.Application.Permissions.Commands.DeletePermission.DeletePermissionCommand(id);
+            var result = await Mediator.Send(command, cancellationToken);
+
+            if (result.IsFailure)
+            {
+                return HandleFailure(result);
+            }
+
+            return NoContent();
+        }
     }
 }

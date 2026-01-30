@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using ControlHub.Application.AI;
+using ControlHub.Application.Common.Interfaces;
 using ControlHub.Application.Common.Interfaces.AI;
 using ControlHub.Application.Common.Logging.Interfaces;
 using ControlHub.Infrastructure.AI;
@@ -42,6 +43,7 @@ using ControlHub.Infrastructure.Tokens.Generate;
 using ControlHub.Infrastructure.Tokens.Repositories;
 using ControlHub.Infrastructure.Tokens.Sender;
 using ControlHub.Infrastructure.Users.Repositories;
+using ControlHub.Infrastructure.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
@@ -113,6 +115,8 @@ namespace ControlHub
 
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserQueries, UserQueries>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddHttpContextAccessor();
 
             // 6. Identifier Configuration Services
             services.AddScoped<ControlHub.Infrastructure.Accounts.Repositories.IdentifierConfigRepository>();

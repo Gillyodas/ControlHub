@@ -47,6 +47,33 @@ namespace ControlHub.Infrastructure.Users.Repositories
             );
         }
 
+        public async Task<UserDto?> GetDtoByAccountId(Guid accountId, CancellationToken cancellationToken)
+        {
+            var query = from u in _db.Users.AsNoTracking()
+                        join a in _db.Accounts.AsNoTracking() on u.AccId equals a.Id
+                        join r in _db.Roles.AsNoTracking() on a.RoleId equals r.Id
+                        where u.AccId == accountId
+                        select new { u, a, r };
+
+            var result = await query.FirstOrDefaultAsync(cancellationToken);
+
+            if (result == null) return null;
+
+            var email = result.a.Identifiers.FirstOrDefault(i => i.Type == ControlHub.Domain.Accounts.Enums.IdentifierType.Email)?.Value;
+
+            return new UserDto(
+                result.u.Id,
+                result.u.Username ?? string.Empty,
+                email,
+                result.u.FirstName,
+                result.u.LastName,
+                result.u.PhoneNumber,
+                result.a.IsActive,
+                result.r.Id,
+                result.r.Name
+            );
+        }
+
         public async Task<PaginatedResult<UserDto>> GetPaginatedAsync(int page, int pageSize, string? searchTerm, CancellationToken cancellationToken)
         {
              var query = from u in _db.Users.AsNoTracking()

@@ -77,4 +77,25 @@ public class CachedPermissionRepository : IPermissionRepository
 
         return permissions;
     }
+
+    public async Task<Permission?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        string key = $"permission-{id}";
+        if (_memoryCache.TryGetValue(key, out Permission? cachedPerm) && cachedPerm != null)
+        {
+            return cachedPerm;
+        }
+
+        var permission = await _decorated.GetByIdAsync(id, cancellationToken);
+        if (permission != null)
+        {
+            _memoryCache.Set(key, permission, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1),
+                SlidingExpiration = TimeSpan.FromMinutes(20)
+            });
+        }
+
+        return permission;
+    }
 }

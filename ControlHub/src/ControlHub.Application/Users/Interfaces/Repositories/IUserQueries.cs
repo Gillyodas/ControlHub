@@ -8,6 +8,7 @@ namespace ControlHub.Application.Users.Interfaces.Repositories
     {
         Task<User> GetByAccountId(Guid id, CancellationToken cancellationToken);
         Task<UserDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<UserDto?> GetDtoByAccountId(Guid accountId, CancellationToken cancellationToken);
         Task<PaginatedResult<UserDto>> GetPaginatedAsync(int page, int pageSize, string? searchTerm, CancellationToken cancellationToken);
     }
 }

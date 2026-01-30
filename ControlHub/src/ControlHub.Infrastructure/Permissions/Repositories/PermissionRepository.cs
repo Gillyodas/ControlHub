@@ -1,5 +1,9 @@
-﻿using ControlHub.Application.Permissions.Interfaces.Repositories;
-using ControlHub.Domain.Permissions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using ControlHub.Application.Permissions.Interfaces.Repositories;
 using ControlHub.Infrastructure.Persistence;
 using ControlHub.SharedKernel.Common.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +22,7 @@ namespace ControlHub.Infrastructure.Permissions.Repositories
             _logger = logger;
         }
 
-        public async Task AddAsync(Permission permission, CancellationToken cancellationToken)
+        public async Task AddAsync(ControlHub.Domain.Permissions.Permission permission, CancellationToken cancellationToken)
         {
             try
             {
@@ -31,7 +35,7 @@ namespace ControlHub.Infrastructure.Permissions.Repositories
             }
         }
 
-        public async Task AddRangeAsync(IEnumerable<Permission> permissions, CancellationToken cancellationToken)
+        public async Task AddRangeAsync(IEnumerable<ControlHub.Domain.Permissions.Permission> permissions, CancellationToken cancellationToken)
         {
             try
             {
@@ -44,7 +48,7 @@ namespace ControlHub.Infrastructure.Permissions.Repositories
             }
         }
 
-        public async Task DeleteAsync(Permission permission, CancellationToken cancellationToken)
+        public async Task DeleteAsync(ControlHub.Domain.Permissions.Permission permission, CancellationToken cancellationToken)
         {
             try
             {
@@ -58,7 +62,7 @@ namespace ControlHub.Infrastructure.Permissions.Repositories
             }
         }
 
-        public async Task DeleteRangeAsync(IEnumerable<Permission> permissions, CancellationToken cancellationToken)
+        public async Task DeleteRangeAsync(IEnumerable<ControlHub.Domain.Permissions.Permission> permissions, CancellationToken cancellationToken)
         {
             try
             {
@@ -72,11 +76,17 @@ namespace ControlHub.Infrastructure.Permissions.Repositories
             }
         }
 
-        public async Task<IEnumerable<Permission>> GetByIdsAsync(IEnumerable<Guid> permissionIds, CancellationToken cancellationToken)
+        public async Task<IEnumerable<ControlHub.Domain.Permissions.Permission>> GetByIdsAsync(IEnumerable<Guid> permissionIds, CancellationToken cancellationToken)
         {
             return await _db.Permissions
                 .Where(p => permissionIds.Contains(p.Id))
                 .ToListAsync(cancellationToken);
+        }
+
+        public async Task<ControlHub.Domain.Permissions.Permission?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await _db.Permissions
+                .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         }
     }
 }

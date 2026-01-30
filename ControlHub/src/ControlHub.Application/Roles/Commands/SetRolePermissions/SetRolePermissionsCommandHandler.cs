@@ -18,7 +18,6 @@ namespace ControlHub.Application.Roles.Commands.SetRolePermissions
         public SetRolePermissionsCommandHandler(
             IRoleRepository roleRepository,
             IPermissionRepository permissionRepository,
-            IPermissionRepository permissionRepository,
             IUnitOfWork unitOfWork,
             ILogger<SetRolePermissionsCommandHandler> logger)
         {
