@@ -1,9 +1,12 @@
+using System.IO;
 using ControlHub.Application.Accounts.DTOs;
 using ControlHub.Application.Accounts.Interfaces.Repositories;
+using ControlHub.Application.Common.Events;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.Application.Tokens.Interfaces;
 using ControlHub.Application.Tokens.Interfaces.Generate;
 using ControlHub.Application.Tokens.Interfaces.Repositories;
+using ControlHub.Domain.Accounts.Enums;
 using ControlHub.Domain.Accounts.Identifiers.Services;
 using ControlHub.Domain.Accounts.Security;
 using ControlHub.Domain.Tokens.Enums;
@@ -26,6 +29,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
         private readonly ITokenFactory _tokenFactory;
         private readonly ITokenRepository _tokenRepository;
         private readonly IUnitOfWork _uow;
+        private readonly IPublisher _publisher;
 
         public SignInCommandHandler(
             ILogger<SignInCommandHandler> logger,
@@ -36,7 +40,8 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             IRefreshTokenGenerator refreshTokenGenerator,
             ITokenFactory tokenFactory,
             ITokenRepository tokenRepository,
-            IUnitOfWork uow)
+            IUnitOfWork uow,
+            IPublisher publisher)
         {
             _logger = logger;
             _accountQueries = accountQueries;
@@ -47,6 +52,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             _tokenFactory = tokenFactory;
             _tokenRepository = tokenRepository;
             _uow = uow;
+            _publisher = publisher;
         }
 
         public async Task<Result<SignInDTO>> Handle(SignInCommand request, CancellationToken cancellationToken)
@@ -58,6 +64,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             var result = await _identifierFactory.CreateAsync(request.Type, request.Value, request.IdentifierConfigId, cancellationToken);
             if (result.IsFailure)
             {
+                _ = PublishLoginEvent(request, false, "Account not found");
                 _logger.LogWarning("{@LogCode} | Ident: {Ident} | Error: {Error}",
                     AccountLogs.SignIn_InvalidIdentifier,
                     request.Value, result.Error);
@@ -67,6 +74,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             var account = await _accountQueries.GetByIdentifierAsync(request.Type, result.Value.NormalizedValue, cancellationToken);
             if (account is null || account.IsDeleted == true || account.IsActive == false)
             {
+                _ = PublishLoginEvent(request, false, "Account not found or inactive");
                 _logger.LogWarning("{@LogCode} | Ident: {Ident}",
                     AccountLogs.SignIn_AccountNotFound,
                     request.Value);
@@ -76,6 +84,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             var isPasswordValid = _passwordHasher.Verify(request.Password, account.Password);
             if (!isPasswordValid)
             {
+                _ = PublishLoginEvent(request, false, "Invalid password");
                 _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
                     AccountLogs.SignIn_InvalidPassword,
                     account.Id);
@@ -86,6 +95,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
 
             if (account.Identifiers == null || !account.Identifiers.Any())
             {
+                _ = PublishLoginEvent(request, false, "No identifiers found for account");
                 _logger.LogWarning("{@LogCode} | AccountId: {AccountId}",
                     AccountLogs.SignIn_InvalidIdentifier,
                     account.Id);
@@ -116,6 +126,7 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             await _tokenRepository.AddAsync(refreshToken, cancellationToken);
             await _uow.CommitAsync(cancellationToken);
 
+            _ = PublishLoginEvent(request, true, null);
             _logger.LogInformation("{@LogCode} | AccountId: {AccountId}",
                 AccountLogs.SignIn_Success,
                 account.Id);
@@ -127,6 +138,28 @@ namespace ControlHub.Application.Accounts.Commands.SignIn
             refreshTokenValue);
 
             return Result<SignInDTO>.Success(dto);
+        }
+
+        private Task PublishLoginEvent(SignInCommand req, bool success, string? reason)
+        {
+            return _publisher.Publish(new LoginAttemptedEvent
+            {
+                IsSuccess = success,
+                IdentifierType = req.Type.ToString(),
+                MaskedIdentifier = MaskIdentifier(req.Value),
+                FailureReason = reason
+            });
+        }
+
+        private static string MaskIdentifier(string value)
+        {
+            if (string.IsNullOrEmpty(value) || value.Length < 4) return "***";
+            if (value.Contains('@'))
+            {
+                var parts = value.Split('@');
+                return $"{parts[0][0]}***@{(parts.Length > 1 ? parts[1] : "")}";
+            }
+            return $"{value[..3]}***";
         }
     }
 }

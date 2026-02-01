@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Search, Plus, Trash2, X, MoreHorizontal, GripVertical, ChevronLeft, ChevronRight, Loader2, Save, Undo } from "lucide-react"
+import { Search, Plus, Trash2, X, GripVertical, ChevronLeft, ChevronRight, Loader2, Save, Pencil, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -33,6 +33,9 @@ type RolesTableCardProps = {
   onDropPermissionToRole: (roleId: string, permissionId: string) => void
   onDropPermissionToDraft: (draftIndex: number, permissionId: string) => void
   onRemovePermissionFromDraft: (draftIndex: number, permissionId: string) => void
+
+  onDeleteRole: (id: string) => void
+  onEditRole: (id: string, data: { name: string; description: string }) => Promise<void>
 }
 
 export function RolesTableCard({
@@ -43,7 +46,7 @@ export function RolesTableCard({
   pageIndex,
   onPageIndexChange,
   pageSize,
-  onPageSizeChange,
+  onPageSizeChange: _onPageSizeChange,
   totalCount,
   totalPages,
   loading,
@@ -60,12 +63,39 @@ export function RolesTableCard({
   onDropPermissionToRole,
   onDropPermissionToDraft,
   onRemovePermissionFromDraft,
+  onDeleteRole,
+  onEditRole,
 }: RolesTableCardProps) {
   const { t } = useTranslation()
   const permissionMap = React.useMemo(() => new Map(permissions.map((p) => [p.id, p])), [permissions])
 
   const [dragOverRole, setDragOverRole] = React.useState<string | null>(null)
   const [dragOverDraft, setDragOverDraft] = React.useState<number | null>(null)
+
+  const [editingRoleId, setEditingRoleId] = React.useState<string | null>(null)
+  const [editName, setEditName] = React.useState("")
+  const [editDescription, setEditDescription] = React.useState("")
+  const [isSavingEdit, setIsSavingEdit] = React.useState(false)
+
+  const startEdit = (role: Role) => {
+    setEditingRoleId(role.id)
+    setEditName(role.name)
+    setEditDescription(role.description)
+  }
+
+  const cancelEdit = () => {
+    setEditingRoleId(null)
+    setEditName("")
+    setEditDescription("")
+  }
+
+  const saveEdit = async () => {
+    if (!editingRoleId) return
+    setIsSavingEdit(true)
+    await onEditRole(editingRoleId, { name: editName, description: editDescription })
+    setIsSavingEdit(false)
+    setEditingRoleId(null)
+  }
 
   const handleDropToRole = (e: React.DragEvent, roleId: string) => {
     e.preventDefault()
@@ -258,10 +288,26 @@ export function RolesTableCard({
                 >
                   <td className="p-4 text-xs font-mono font-bold text-muted-foreground/40">{(pageIndex - 1) * pageSize + idx + 1}</td>
                   <td className="p-4">
-                    <div className="flex flex-col">
-                      <div className="text-sm font-black text-foreground group-hover/row:text-sidebar-primary transition-colors uppercase tracking-tight">{role.name}</div>
-                      <div className="text-[11px] text-muted-foreground italic line-clamp-1 mt-0.5 opacity-60 group-hover/row:opacity-100 transition-opacity">{role.description}</div>
-                    </div>
+                    {editingRoleId === role.id ? (
+                      <div className="flex flex-col gap-2">
+                        <input
+                          className="w-full bg-sidebar-primary/5 border border-sidebar-primary/20 rounded px-2 py-1 text-sm font-black text-foreground placeholder:text-muted-foreground/20 focus:outline-none focus:ring-1 focus:ring-sidebar-primary"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          autoFocus
+                        />
+                        <input
+                          className="w-full bg-sidebar-primary/5 border border-sidebar-primary/20 rounded px-2 py-1 text-[11px] text-muted-foreground italic placeholder:text-muted-foreground/20 focus:outline-none focus:ring-1 focus:ring-sidebar-primary"
+                          value={editDescription}
+                          onChange={(e) => setEditDescription(e.target.value)}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex flex-col">
+                        <div className="text-sm font-black text-foreground group-hover/row:text-sidebar-primary transition-colors uppercase tracking-tight">{role.name}</div>
+                        <div className="text-[11px] text-muted-foreground italic line-clamp-1 mt-0.5 opacity-60 group-hover/row:opacity-100 transition-opacity">{role.description}</div>
+                      </div>
+                    )}
                   </td>
                   <td className="p-4">
                     <div className="flex flex-wrap gap-1.5 min-h-[40px] p-2 bg-transparent transition-all">
@@ -289,9 +335,47 @@ export function RolesTableCard({
                     </div>
                   </td>
                   <td className="p-4">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-sidebar-accent/50 opacity-0 group-hover/row:opacity-100 transition-all">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
+                    {editingRoleId === role.id ? (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={saveEdit}
+                          disabled={isSavingEdit}
+                          className="h-8 w-8 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+                        >
+                          {isSavingEdit ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={cancelEdit}
+                          disabled={isSavingEdit}
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-all">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => startEdit(role)}
+                          className="h-8 w-8 text-muted-foreground/40 hover:text-sidebar-primary hover:bg-sidebar-primary/10"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDeleteRole(role.id)}
+                          className="h-8 w-8 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))

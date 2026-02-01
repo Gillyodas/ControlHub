@@ -40,27 +40,24 @@ namespace ControlHub.Application.Accounts.Commands.RegisterSupperAdmin
 
         public async Task<Result<Guid>> Handle(RegisterSupperAdminCommand request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("{Code}: {Message} for Ident {Ident}",
-                AccountLogs.RegisterSupperAdmin_Started.Code,
-                AccountLogs.RegisterSupperAdmin_Started.Message,
+            _logger.LogInformation("{@LogCode} | Ident: {Ident}",
+                AccountLogs.RegisterSupperAdmin_Started,
                 request.Value);
 
             var masterKey = _config["AppPassword:MasterKey"];
 
             if (string.IsNullOrEmpty(masterKey))
             {
-                _logger.LogError("{Code}: {Message}",
-                    CommonLogs.System_ConfigMissing.Code,
-                    CommonLogs.System_ConfigMissing.Message);
+                _logger.LogError("{@LogCode}",
+                    CommonLogs.System_ConfigMissing);
 
                 return Result<Guid>.Failure(CommonErrors.SystemConfigurationError);
             }
 
             if (request.MasterKey != masterKey)
             {
-                _logger.LogWarning("{Code}: {Message} | Email attempted: {Email}",
-                    CommonLogs.Auth_InvalidMasterKey.Code,
-                    CommonLogs.Auth_InvalidMasterKey.Message,
+                _logger.LogWarning("{@LogCode} | Email attempted: {Email}",
+                    CommonLogs.Auth_InvalidMasterKey,
                     request.Value);
 
                 return Result<Guid>.Failure(CommonErrors.InvalidMasterKey);
@@ -68,9 +65,8 @@ namespace ControlHub.Application.Accounts.Commands.RegisterSupperAdmin
 
             if (await _accountValidator.IdentifierIsExist(request.Value.ToLower(), request.Type, cancellationToken))
             {
-                _logger.LogWarning("{Code}: {Message} for Ident {Ident}",
-                    AccountLogs.RegisterSupperAdmin_IdentifierExists.Code,
-                    AccountLogs.RegisterSupperAdmin_IdentifierExists.Message,
+                _logger.LogWarning("{@LogCode} | Ident: {Ident}",
+                    AccountLogs.RegisterSupperAdmin_IdentifierExists,
                     request.Value);
 
                 return Result<Guid>.Failure(AccountErrors.EmailAlreadyExists);
@@ -96,9 +92,8 @@ namespace ControlHub.Application.Accounts.Commands.RegisterSupperAdmin
 
             if (!accountResult.IsSuccess)
             {
-                _logger.LogError("{Code}: {Message} for Ident {Ident}. Error: {Error}",
-                    AccountLogs.RegisterSupperAdmin_FactoryFailed.Code,
-                    AccountLogs.RegisterSupperAdmin_FactoryFailed.Message,
+                _logger.LogError("{@LogCode} | Ident: {Ident} | Error: {Error}",
+                    AccountLogs.RegisterSupperAdmin_FactoryFailed,
                     request.Value,
                     accountResult.Error);
 
@@ -109,9 +104,8 @@ namespace ControlHub.Application.Accounts.Commands.RegisterSupperAdmin
 
             await _uow.CommitAsync(cancellationToken);
 
-            _logger.LogInformation("{Code}: {Message} for AccountId {AccountId}, Ident {Ident}",
-                AccountLogs.RegisterSupperAdmin_Success.Code,
-                AccountLogs.RegisterSupperAdmin_Success.Message,
+            _logger.LogInformation("{@LogCode} | AccountId: {AccountId} | Ident: {Ident}",
+                AccountLogs.RegisterSupperAdmin_Success,
                 accId,
                 request.Value);
 

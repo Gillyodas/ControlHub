@@ -1,4 +1,5 @@
-﻿using OpenTelemetry.Exporter;
+﻿using ControlHub.Infrastructure.RealTime.Hubs;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Prometheus;
@@ -109,6 +110,8 @@ namespace ControlHub.API
 
             // Kích hoạt ControlHub (Auto Migration & Seed Data)
             app.UseControlHub();
+
+            app.MapHub<DashboardHub>("/hubs/dashboard");
 
             app.MapControllers();
 

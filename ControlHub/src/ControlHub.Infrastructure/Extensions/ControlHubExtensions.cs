@@ -1,13 +1,11 @@
 ﻿using System.Reflection;
+using ControlHub.Application.Accounts.Interfaces;
+using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.AI;
+using ControlHub.Application.Common.Behaviors;
 using ControlHub.Application.Common.Interfaces;
 using ControlHub.Application.Common.Interfaces.AI;
 using ControlHub.Application.Common.Logging.Interfaces;
-using ControlHub.Infrastructure.AI;
-using ControlHub.Infrastructure.Logging;
-using ControlHub.Application.Accounts.Interfaces;
-using ControlHub.Application.Accounts.Interfaces.Repositories;
-using ControlHub.Application.Common.Behaviors;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.Application.Emails.Interfaces;
 using ControlHub.Application.OutBoxs;
@@ -27,9 +25,11 @@ using ControlHub.Infrastructure.Accounts.Factories;
 using ControlHub.Infrastructure.Accounts.Repositories;
 using ControlHub.Infrastructure.Accounts.Security;
 using ControlHub.Infrastructure.Accounts.Validators;
+using ControlHub.Infrastructure.AI;
 using ControlHub.Infrastructure.Authorization.Handlers;
 using ControlHub.Infrastructure.Authorization.Permissions;
 using ControlHub.Infrastructure.Emails;
+using ControlHub.Infrastructure.Logging;
 using ControlHub.Infrastructure.Outboxs;
 using ControlHub.Infrastructure.Outboxs.Handler;
 using ControlHub.Infrastructure.Outboxs.Repositories;
@@ -37,13 +37,14 @@ using ControlHub.Infrastructure.Permissions.AuthZ;
 using ControlHub.Infrastructure.Permissions.Repositories;
 using ControlHub.Infrastructure.Persistence;
 using ControlHub.Infrastructure.Persistence.Seeders;
+using ControlHub.Infrastructure.RealTime.Services;
 using ControlHub.Infrastructure.Roles.Repositories;
+using ControlHub.Infrastructure.Services;
 using ControlHub.Infrastructure.Tokens;
 using ControlHub.Infrastructure.Tokens.Generate;
 using ControlHub.Infrastructure.Tokens.Repositories;
 using ControlHub.Infrastructure.Tokens.Sender;
 using ControlHub.Infrastructure.Users.Repositories;
-using ControlHub.Infrastructure.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
@@ -236,12 +237,33 @@ namespace ControlHub
             services.AddSingleton<IAuthorizationHandler, SameUserAuthorizationHandler>();
             services.AddAuthorization();
 
+            // SignalR & Real-time
+            services.AddSignalR();
+            services.AddSingleton<IActiveUserTracker, InMemoryActiveUserTracker>();
+            services.AddSingleton<LoginEventBuffer>();
+            services.AddHostedService(sp => sp.GetRequiredService<LoginEventBuffer>());
+
+            // MediatR
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(infraAssembly));
+
             // 12. Controllers (Để Swagger của App chính quét được)
             services.AddControllers()
                     .AddApplicationPart(Assembly.GetExecutingAssembly());
 
             // 13. SWAGGER CONFIGURATION (Tích hợp sẵn)
             services.AddEndpointsApiExplorer(); // Bắt buộc cho Swagger
+
+            // Authorization
+            services.AddAuthorization(options =>
+            {
+                // Policy cho Dashboard Hub - chỉ Admin/SupperAdmin
+                options.AddPolicy("DashboardAccess", policy =>
+                policy.RequireAssertion(context =>
+                {
+                    var roleClaim = context.User.FindFirst("role")?.Value;
+                    return roleClaim == "Admin" || roleClaim == "SupperAdmin";
+                }));
+            });
 
             services.AddSwaggerGen(c =>
             {

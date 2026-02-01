@@ -1,9 +1,0 @@
-E:\Project\ControlHub\src\ControlHub.Application\Users\Commands\UpdateUser\UpdateUserCommandHandler.cs(54,62): error CS0117: 'AccountErrors' does not contain a definition for 'NotFound' [E:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
-E:\Project\ControlHub\src\ControlHub.Application\Users\Commands\DeleteUser\DeleteUserCommandHandler.cs(46,59): error CS0117: 'AccountErrors' does not contain a definition for 'NotFound' [E:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
-E:\Project\ControlHub\src\ControlHub.Application\Roles\Commands\AssignRoleToUser\AssignRoleToUserCommandHandler.cs(62,59): error CS0117: 'AccountErrors' does not contain a definition for 'NotFound' [E:\Project\ControlHub\src\ControlHub.Application\ControlHub.Application.csproj]
-
-Build FAILED.
-    9 Warning(s)
-    3 Error(s)
-
-Time Elapsed 00:00:01.12

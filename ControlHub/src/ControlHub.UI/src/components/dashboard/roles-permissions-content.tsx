@@ -67,6 +67,11 @@ export function RolesPermissionsContent() {
 
     canConfirmRole,
     canConfirmPermission,
+
+    deleteRole,
+    deletePermission,
+    editRole,
+    editPermission,
   } = useRolesPermissions({
     notify: showToast,
     accessToken: auth?.accessToken,
@@ -75,6 +80,30 @@ export function RolesPermissionsContent() {
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <PermissionsTableCard
+          permissions={permissions}
+          searchTerm={permissionsSearchTerm}
+          onSearchTermChange={setPermissionsSearchTerm}
+          pageIndex={permissionsPageIndex}
+          onPageIndexChange={setPermissionsPageIndex}
+          pageSize={permissionsPageSize}
+          onPageSizeChange={setPermissionsPageSize}
+          totalCount={permissionsTotalCount}
+          totalPages={permissionsTotalPages}
+          loading={loadingPermissions}
+          permissionDrafts={permissionDrafts}
+          onStartAdd={startAddPermission}
+          onConfirmAdd={confirmAddPermissions}
+          onUpdate={updatePermissions}
+          canConfirm={canConfirmPermission}
+          canUpdate={permissionsDirty}
+          saving={savingPermissions}
+          onDraftChange={updatePermissionDraft}
+          onRemoveDraft={removePermissionDraft}
+          onDeletePermission={deletePermission}
+          onEditPermission={editPermission}
+        />
+
         <RolesTableCard
           roles={roles}
           permissions={permissions}
@@ -100,28 +129,8 @@ export function RolesPermissionsContent() {
           onDropPermissionToRole={addPermissionToRole}
           onDropPermissionToDraft={addPermissionToRoleDraft}
           onRemovePermissionFromDraft={removePermissionFromRoleDraft}
-        />
-
-        <PermissionsTableCard
-          permissions={permissions}
-          searchTerm={permissionsSearchTerm}
-          onSearchTermChange={setPermissionsSearchTerm}
-          pageIndex={permissionsPageIndex}
-          onPageIndexChange={setPermissionsPageIndex}
-          pageSize={permissionsPageSize}
-          onPageSizeChange={setPermissionsPageSize}
-          totalCount={permissionsTotalCount}
-          totalPages={permissionsTotalPages}
-          loading={loadingPermissions}
-          permissionDrafts={permissionDrafts}
-          onStartAdd={startAddPermission}
-          onConfirmAdd={confirmAddPermissions}
-          onUpdate={updatePermissions}
-          canConfirm={canConfirmPermission}
-          canUpdate={permissionsDirty}
-          saving={savingPermissions}
-          onDraftChange={updatePermissionDraft}
-          onRemoveDraft={removePermissionDraft}
+          onDeleteRole={deleteRole}
+          onEditRole={editRole}
         />
       </div>
 

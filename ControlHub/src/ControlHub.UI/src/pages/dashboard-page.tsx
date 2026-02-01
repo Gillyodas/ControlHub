@@ -1,15 +1,19 @@
 import { ShieldCheck, Fingerprint, Code2, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTranslation } from "react-i18next"
+import { useRealtimeStats } from "@/hooks/use-realtime-stats"
+import { LoginAttemptsChart } from "@/components/dashboard/login-attempts-chart"
+import { cn } from "@/lib/utils" // Ensure this exists, or copy from original file. Original had local function.
 
 export function DashboardPage() {
   const { t } = useTranslation()
+  const { activeUsers, loginAttempts, connectionStatus } = useRealtimeStats()
 
   const stats = [
     { title: t('dashboard.totalRoles'), value: "12", icon: ShieldCheck, color: "text-blue-500", bg: "bg-blue-500/10" },
     { title: t('dashboard.identifiers'), value: "8", icon: Fingerprint, color: "text-purple-500", bg: "bg-purple-500/10" },
     { title: t('dashboard.apiEndpoints'), value: "45", icon: Code2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { title: t('dashboard.activeUsers'), value: "156", icon: Users, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { title: t('dashboard.activeUsers'), value: String(activeUsers), icon: Users, color: "text-amber-500", bg: "bg-amber-500/10" },
   ]
 
   return (
@@ -38,7 +42,17 @@ export function DashboardPage() {
             <CardContent>
               <div className="text-3xl font-bold">{stat.value}</div>
               <p className="text-xs text-muted-foreground mt-1 font-medium">
-                {t('dashboard.fromLastMonth')}
+                {stat.title === t('dashboard.activeUsers') ? (
+                  <span className="flex items-center gap-1 text-emerald-500">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    Live
+                  </span>
+                ) : (
+                  t('dashboard.fromLastMonth')
+                )}
               </p>
             </CardContent>
           </Card>
@@ -46,16 +60,10 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 border-sidebar-border bg-sidebar/50">
-          <CardHeader>
-            <CardTitle>{t('dashboard.recentActivity')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px] flex items-center justify-center text-muted-foreground italic">
-              {t('dashboard.activityPlaceholder')}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="col-span-4 rounded-xl border border-sidebar-border bg-sidebar/50 overflow-hidden">
+          <LoginAttemptsChart attempts={loginAttempts} connectionStatus={connectionStatus} />
+        </div>
+
         <Card className="col-span-3 border-sidebar-border bg-sidebar/50">
           <CardHeader>
             <CardTitle>{t('dashboard.systemHealth')}</CardTitle>
@@ -66,6 +74,7 @@ export function DashboardPage() {
                 { name: t('dashboard.apiService'), status: t('dashboard.healthy'), color: "bg-emerald-500" },
                 { name: t('dashboard.database'), status: t('dashboard.connected'), color: "bg-emerald-500" },
                 { name: t('dashboard.authProvider'), status: t('dashboard.activeStatus'), color: "bg-blue-500" },
+                { name: "Real-time Hub", status: connectionStatus === 'connected' ? "Active" : "Connecting...", color: connectionStatus === 'connected' ? "bg-emerald-500" : "bg-yellow-500" },
               ].map((item) => (
                 <div key={item.name} className="flex items-center justify-between">
                   <span className="text-sm font-medium">{item.name}</span>
@@ -83,7 +92,4 @@ export function DashboardPage() {
   )
 }
 
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(" ")
-}
 

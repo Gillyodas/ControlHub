@@ -24,6 +24,16 @@ type PagedResult<T> = {
   totalPages: number
 }
 
+type UpdateRoleInput = {
+  name: string
+  description: string
+}
+
+type UpdatePermissionInput = {
+  code: string
+  description: string
+}
+
 type ApiPermission = {
   id: string
   code: string
@@ -103,6 +113,36 @@ export async function getPermissions(
   if (searchTerm) params.set("searchTerm", searchTerm)
 
   return fetchJson<PagedResult<ApiPermission>>(`/api/Permission?${params.toString()}`, {
+    accessToken
+  })
+}
+
+export async function updateRole(id: string, input: UpdateRoleInput, accessToken: string): Promise<void> {
+  await fetchVoid(`/api/Role/${id}`, {
+    method: "PUT",
+    body: input,
+    accessToken
+  })
+}
+
+export async function deleteRole(id: string, accessToken: string): Promise<void> {
+  await fetchVoid(`/api/Role/${id}`, {
+    method: "DELETE",
+    accessToken
+  })
+}
+
+export async function updatePermission(id: string, input: UpdatePermissionInput, accessToken: string): Promise<void> {
+  await fetchVoid(`/api/Permission/${id}`, {
+    method: "PUT",
+    body: input,
+    accessToken
+  })
+}
+
+export async function deletePermission(id: string, accessToken: string): Promise<void> {
+  await fetchVoid(`/api/Permission/${id}`, {
+    method: "DELETE",
     accessToken
   })
 }

@@ -393,6 +393,76 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
     await confirmAddPermissions()
   }, [confirmAddPermissions])
 
+  const deleteRole = React.useCallback(async (id: string) => {
+    if (!accessToken) return
+    if (!confirm(t('roles.confirmDelete'))) return
+
+    try {
+      const mod = await import("@/rbac/api")
+      await mod.deleteRole(id, accessToken)
+      notify({ title: t('roles.deleted'), variant: "success" })
+      bumpRolesReloadToken()
+    } catch (e) {
+      notify({
+        title: t('roles.deleteFailed'),
+        description: e instanceof Error ? e.message : String(e),
+        variant: "error"
+      })
+    }
+  }, [accessToken, notify, t])
+
+  const deletePermission = React.useCallback(async (id: string) => {
+    if (!accessToken) return
+    if (!confirm(t('permissions.confirmDelete'))) return
+
+    try {
+      const mod = await import("@/rbac/api")
+      await mod.deletePermission(id, accessToken)
+      notify({ title: t('permissions.deleted'), variant: "success" })
+      bumpPermissionsReloadToken()
+    } catch (e) {
+      notify({
+        title: t('permissions.deleteFailed'),
+        description: e instanceof Error ? e.message : String(e),
+        variant: "error"
+      })
+    }
+  }, [accessToken, notify, t])
+
+  const editRole = React.useCallback(async (id: string, data: { name: string; description: string }) => {
+    if (!accessToken) return
+
+    try {
+      const mod = await import("@/rbac/api")
+      await mod.updateRole(id, data, accessToken)
+      notify({ title: t('roles.updated'), variant: "success" })
+      bumpRolesReloadToken()
+    } catch (e) {
+      notify({
+        title: t('roles.updateFailed'),
+        description: e instanceof Error ? e.message : String(e),
+        variant: "error"
+      })
+    }
+  }, [accessToken, notify, t])
+
+  const editPermission = React.useCallback(async (id: string, data: { code: string; description: string }) => {
+    if (!accessToken) return
+
+    try {
+      const mod = await import("@/rbac/api")
+      await mod.updatePermission(id, data, accessToken)
+      notify({ title: t('permissions.updated'), variant: "success" })
+      bumpPermissionsReloadToken()
+    } catch (e) {
+      notify({
+        title: t('permissions.updateFailed'),
+        description: e instanceof Error ? e.message : String(e),
+        variant: "error"
+      })
+    }
+  }, [accessToken, notify, t])
+
   const canConfirmRole = Boolean(
     roleDrafts.length && roleDrafts.every((d) => d.name.trim() && d.description.trim() && d.permissionIds.length),
   )
@@ -518,5 +588,10 @@ export function useRolesPermissions({ notify, accessToken }: UseRolesPermissions
 
     canConfirmRole,
     canConfirmPermission,
+
+    deleteRole,
+    deletePermission,
+    editRole,
+    editPermission,
   }
 }
