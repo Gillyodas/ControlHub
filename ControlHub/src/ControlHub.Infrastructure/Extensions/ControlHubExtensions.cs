@@ -5,6 +5,7 @@ using ControlHub.Application.AI;
 using ControlHub.Application.Common.Behaviors;
 using ControlHub.Application.Common.Interfaces;
 using ControlHub.Application.Common.Interfaces.AI;
+using ControlHub.Application.Common.Interfaces.AI.V1;
 using ControlHub.Application.Common.Logging.Interfaces;
 using ControlHub.Application.Common.Persistence;
 using ControlHub.Application.Emails.Interfaces;

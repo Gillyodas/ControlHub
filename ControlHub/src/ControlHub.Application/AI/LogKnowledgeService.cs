@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using ControlHub.Application.Common.Interfaces.AI;
+using ControlHub.Application.Common.Interfaces.AI.V1;
 using ControlHub.Application.Common.Logging;
 using ControlHub.SharedKernel.Common.Logs; // Để truy cập LogCode
 

@@ -1,5 +1,6 @@
 using ControlHub.Application.AI;
 using ControlHub.Application.Common.Interfaces.AI;
+using ControlHub.Application.Common.Interfaces.AI.V1;
 using ControlHub.Application.Common.Logging;
 using ControlHub.Application.Common.Logging.Interfaces;
 using Microsoft.AspNetCore.Authorization;
