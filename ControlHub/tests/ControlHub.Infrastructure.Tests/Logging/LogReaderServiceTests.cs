@@ -36,7 +36,7 @@ namespace ControlHub.Infrastructure.Tests.Logging
             var logEntry = new LogEntry
             {
                 Timestamp = DateTime.UtcNow,
-                Message = "Test log message",
+                RenderedMessage = "Test log message",
                 Level = "Information",
                 Properties = new Dictionary<string, object>
                 {
@@ -67,7 +67,7 @@ namespace ControlHub.Infrastructure.Tests.Logging
             var logEntry = new LogEntry
             {
                 Timestamp = DateTime.UtcNow,
-                Message = "Other log message",
+                RenderedMessage = "Other log message",
                 Level = "Information",
                 Properties = new Dictionary<string, object>
                 {

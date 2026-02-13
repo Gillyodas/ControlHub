@@ -27,6 +27,7 @@ namespace ControlHub.API
                 .Enrich.WithProperty("Application", "ControlHub.API")
                 // Reduce noise from EF Core (hide SQL queries in console/log)
                 .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning)
                 // Sub-logger: Write only Email logs to a separate file
                 .WriteTo.Logger(l => l
                     .Filter.ByIncludingOnly(e => e.Properties.TryGetValue("SourceContext", out var v) && v.ToString().Contains("ControlHub.Infrastructure.Emails"))

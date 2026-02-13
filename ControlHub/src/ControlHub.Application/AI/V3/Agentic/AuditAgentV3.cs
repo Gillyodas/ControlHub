@@ -117,8 +117,7 @@ namespace ControlHub.Application.AI.V3.Agentic
         {
             _logger.LogInformation("AuditAgentV3 starting investigation: {Query}", query);
 
-            // Initialize state - INCREASED MAX ITERATIONS TO 20
-            var initialState = new AgentState(maxIterations: 20);
+            var initialState = new AgentState(maxIterations: 50);
             initialState.Context["query"] = query;
             if (!string.IsNullOrEmpty(correlationId))
                 initialState.Context["correlationId"] = correlationId;
@@ -158,42 +157,45 @@ namespace ControlHub.Application.AI.V3.Agentic
         {
             var sb = new System.Text.StringBuilder();
 
-            // Add plan summary
-            var plan = state.GetContext<List<string>>("plan");
-            if (plan != null && plan.Any())
+            // 1. FINAL DIAGNOSIS (If available from synthesis step)
+            var results = state.GetContext<List<string>>("execution_results") ?? new List<string>();
+            var synthesis = results.LastOrDefault(r => r.Contains("Root Cause Synthesis", StringComparison.OrdinalIgnoreCase) 
+                                                     || r.Contains("ID_", StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrEmpty(synthesis))
             {
-                sb.AppendLine("## Execution Plan");
-                for (int i = 0; i < plan.Count; i++)
+                sb.AppendLine("# 🔍 Final Investigation Diagnosis");
+                sb.AppendLine(synthesis);
+                sb.AppendLine();
+            }
+
+            // 2. DETAILED FINDINGS
+            sb.AppendLine("## 📋 Execution Details");
+            var plan = state.GetContext<List<string>>("plan") ?? new List<string>();
+            for (int i = 0; i < plan.Count; i++)
+            {
+                var stepResult = results.FirstOrDefault(r => r.StartsWith($"Step {i + 1}:"));
+                sb.AppendLine($"### Step {i + 1}: {plan[i]}");
+                if (!string.IsNullOrEmpty(stepResult))
                 {
-                    sb.AppendLine($"{i + 1}. {plan[i]}");
+                    // Clean up stepResult prefix for cleaner view
+                    var cleanerResult = stepResult.Substring(stepResult.IndexOf('\n') + 1);
+                    sb.AppendLine(cleanerResult);
                 }
                 sb.AppendLine();
             }
 
-            // Add execution results
-            var results = state.GetContext<List<string>>("execution_results");
-            if (results != null && results.Any())
-            {
-                sb.AppendLine("## Results");
-                foreach (var result in results)
-                {
-                    sb.AppendLine(result);
-                }
-                sb.AppendLine();
-            }
-
-            // Add verification status
+            // 3. VERIFICATION & REFLEXION
             var passed = state.GetContextValue("verification_passed", false);
             var score = state.GetContextValue("verification_score", 0f);
-            sb.AppendLine($"## Verification: {(passed ? "PASSED" : "FAILED")} ({score:P0})");
+            sb.AppendLine($"---");
+            sb.AppendLine($"**Verification Status:** {(passed ? "✅ PASSED" : "❌ FAILED")} (Confidence: {score:P0})");
 
-            // Add reflexion if any
             var analysis = state.GetContext<string>("reflexion_analysis");
             if (!string.IsNullOrEmpty(analysis))
             {
                 sb.AppendLine();
-                sb.AppendLine("## Reflexion");
-                sb.AppendLine(analysis);
+                sb.AppendLine("> **Agent Reflexion:** " + analysis);
             }
 
             return sb.ToString();

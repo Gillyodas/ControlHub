@@ -7,12 +7,17 @@
 		<OutputType>Library</OutputType>
 
 		<IsPackable>true</IsPackable>
-		<Version>1.1.13</Version>
+		<Version>1.2.5</Version>
 		<Authors>Huỳnh Anh Khoa</Authors>
 		<PackageId>ControlHub.Infrastructure</PackageId>
 		<ReactBuildDir>..\ControlHub.UI\dist</ReactBuildDir>
 		<GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<!-- Giúp sử dụng các thành phần ASP.NET Core trong Class Library -->
@@ -20,6 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="FastBertTokenizer" Version="1.0.28" />
 		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.2" />
 
 		<PackageReference Include="AutoMapper" Version="13.0.1" />
@@ -39,6 +45,7 @@
 
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.6" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.23.2" />
 
 		<!-- Swagger -->
 		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" />
@@ -61,6 +68,13 @@
 		<InternalsVisibleTo Include="ControlHub.Infrastructure.Tests" />
 		<InternalsVisibleTo Include="ControlHub.API" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="AI\V3\ML\" />
+	  <Folder Include="AI\V3\Embeddings\" />
+	  <Folder Include="AI\V3\LLM\" />
+	  <Folder Include="AI\V3\Observability\" />
 	</ItemGroup>
 
 </Project>

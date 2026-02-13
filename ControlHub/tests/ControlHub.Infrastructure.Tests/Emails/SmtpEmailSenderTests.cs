@@ -40,7 +40,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
                 }!)
                 .Build();
 
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -62,7 +62,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
                 }!)
                 .Build();
 
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             // BUG: Code hiện tại sẽ dùng port 25 thay vì throw error
@@ -86,7 +86,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
                 }!)
                 .Build();
 
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             await Assert.ThrowsAsync<FormatException>(async () =>
@@ -108,7 +108,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
                 }!)
                 .Build();
 
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -130,7 +130,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
                 }!)
                 .Build();
 
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -152,7 +152,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
                 }!)
                 .Build();
 
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentNullException>(async () =>
@@ -169,7 +169,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
         {
             // Arrange
             var config = CreateValidConfig();
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             await Assert.ThrowsAnyAsync<Exception>(async () =>
@@ -181,7 +181,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
         {
             // Arrange
             var config = CreateValidConfig();
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             await Assert.ThrowsAsync<FormatException>(async () =>
@@ -205,7 +205,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
                 }!)
                 .Build();
 
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             await Assert.ThrowsAsync<SmtpException>(async () =>
@@ -227,7 +227,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
                 }!)
                 .Build();
 
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             await Assert.ThrowsAnyAsync<Exception>(async () =>
@@ -249,7 +249,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
                 }!)
                 .Build();
 
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             // BUG: Code không validate credentials trước khi send
@@ -264,7 +264,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
         {
             // Arrange
             var config = CreateValidConfig();
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             await Assert.ThrowsAnyAsync<Exception>(async () =>
@@ -276,7 +276,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
         {
             // Arrange
             var config = CreateValidConfig();
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             await Assert.ThrowsAnyAsync<Exception>(async () =>
@@ -288,7 +288,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
         {
             // Arrange
             var config = CreateValidConfig();
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
             var longSubject = new string('A', 10000);
 
             // Act & Assert
@@ -302,7 +302,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
         {
             // Arrange
             var config = CreateValidConfig();
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
             var longBody = new string('B', 100000);
 
             // Act & Assert
@@ -318,7 +318,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
         {
             // Arrange
             var config = CreateValidConfig();
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act & Assert
             // BUG: EnableSsl = true luôn luôn, không config được
@@ -334,7 +334,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
         {
             // Arrange
             var config = CreateValidConfig();
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act
             var tasks = Enumerable.Range(0, 10).Select(i =>
@@ -353,7 +353,7 @@ namespace ControlHub.Infrastructure.Tests.Emails
         {
             // Arrange
             var config = CreateValidConfig();
-            var sender = new SmtpEmailSender(config);
+            var sender = new SmtpEmailSender(config, Microsoft.Extensions.Logging.Abstractions.NullLogger<SmtpEmailSender>.Instance);
 
             // Act
             // Multiple calls to check for resource leaks

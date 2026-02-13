@@ -11,6 +11,7 @@ import { loadAuth } from '@/auth/storage';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import RunbookIngestDialog from '@/components/audit/RunbookIngestDialog';
+import V3InvestigationPanel from '@/components/audit/V3InvestigationPanel';
 
 interface LogTemplate {
     templateId: string;
@@ -44,7 +45,7 @@ const AiAuditPage = () => {
     const [loadingStep, setLoadingStep] = useState<string>('');
 
     // Chat State
-    const [activeTab, setActiveTab] = useState<'analyze' | 'chat'>('analyze');
+    const [activeTab, setActiveTab] = useState<'analyze' | 'chat' | 'v3'>('v3');
     const [chatQuestion, setChatQuestion] = useState('');
     const [chatAnswer, setChatAnswer] = useState<string | null>(null);
     const [chatLoading, setChatLoading] = useState(false);
@@ -171,6 +172,12 @@ const AiAuditPage = () => {
             {/* Custom Tabs */}
             <div className="flex space-x-1 rounded-xl bg-muted p-1 w-fit">
                 <button
+                    onClick={() => setActiveTab('v3')}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'v3' ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:bg-background/50'}`}
+                >
+                    🤖 V3.0 Agent
+                </button>
+                <button
                     onClick={() => setActiveTab('analyze')}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'analyze' ? 'bg-background text-foreground shadow' : 'text-muted-foreground hover:bg-background/50'}`}
                 >
@@ -184,7 +191,9 @@ const AiAuditPage = () => {
                 </button>
             </div>
 
-            {activeTab === 'analyze' ? (
+            {activeTab === 'v3' ? (
+                <V3InvestigationPanel />
+            ) : activeTab === 'analyze' ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {/* Input Section */}
                     <Card className="col-span-1 h-fit">

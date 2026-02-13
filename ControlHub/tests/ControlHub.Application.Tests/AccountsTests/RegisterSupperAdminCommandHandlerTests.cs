@@ -20,8 +20,8 @@ namespace ControlHub.Application.Tests.AccountsTests
     {
         private readonly Mock<IAccountValidator> _accountValidatorMock = new();
         private readonly Mock<IAccountRepository> _accountRepositoryMock = new();
-        // Mock Logger khớp với loại được inject trong Handler (hiện tại là RegisterUserCommandHandler)
-        private readonly Mock<ILogger<RegisterUserCommandHandler>> _loggerMock = new();
+        // Mock Logger khớp với loại được inject trong Handler
+        private readonly Mock<ILogger<RegisterSupperAdminCommandHandler>> _loggerMock = new();
         private readonly Mock<IAccountFactory> _accountFactoryMock = new();
         private readonly Mock<IConfiguration> _configMock = new();
         private readonly Mock<IUnitOfWork> _uowMock = new();

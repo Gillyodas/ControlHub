@@ -38,11 +38,27 @@ namespace ControlHub.Infrastructure.Logging
             
             _logger.LogInformation("LogReader: Read {Count} total logs from {Path}. Searching for {CorrelationId}", logs.Count, _logDirectory, correlationId);
 
+            // Search in multiple fields since "CorrelationId" might not exist
+            // ASP.NET Core uses RequestId (format: "0HNJ3P2CR9G6I:00000027")
+            // User might provide:
+            // - Full RequestId: "0HNJ3P2CR9G6I:00000027"
+            // - Just connection ID: "0HNJ3P2CR9G6I"
+            // - Just sequence number: "00000027"
+            // - TraceId or SerilogTraceId
             var matches = logs.Where(l =>
-            (l.Properties.ContainsKey("CorrelationId") && l.Properties["CorrelationId"].ToString() == correlationId) ||
-            (l.TraceId == correlationId) ||
-            (l.RequestId == correlationId) ||
-            (l.SerilogTraceId == correlationId)
+                // Match RequestId (full, contains, startsWith, endsWith)
+                (l.RequestId != null && (
+                    l.RequestId == correlationId || 
+                    l.RequestId.Contains(correlationId) ||
+                    l.RequestId.StartsWith(correlationId) ||
+                    l.RequestId.EndsWith(correlationId)
+                )) ||
+                // Match TraceId (exact or contains)
+                (l.TraceId != null && (l.TraceId == correlationId || l.TraceId.Contains(correlationId))) ||
+                // Match Serilog TraceId (@tr field)
+                (l.SerilogTraceId != null && (l.SerilogTraceId == correlationId || l.SerilogTraceId.Contains(correlationId))) ||
+                // Match in Properties if CorrelationId exists there
+                (l.Properties.ContainsKey("CorrelationId") && l.Properties["CorrelationId"].ToString() == correlationId)
             ).OrderBy(x => x.Timestamp).ToList();
 
             _logger.LogInformation("LogReader: Found {Count} matches for {CorrelationId}", matches.Count, correlationId);

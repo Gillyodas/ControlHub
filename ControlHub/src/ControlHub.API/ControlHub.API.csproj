@@ -7,7 +7,7 @@
 
 		<IsPackable>true</IsPackable>
 		<PackageId>ControlHub.Core</PackageId>
-		<Version>1.1.13</Version>
+		<Version>1.2.5</Version>
 		<Authors>Huỳnh Anh Khoa</Authors>
 		<Company>Huỳnh Anh Khoa</Company>
 		<Description>Thư viện Identity và Auth trọn gói cho .NET 8</Description>
@@ -19,9 +19,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Accounts\Mappers\**" />
 	  <Compile Remove="Configurations\**" />
+	  <Content Remove="Accounts\Mappers\**" />
 	  <Content Remove="Configurations\**" />
+	  <EmbeddedResource Remove="Accounts\Mappers\**" />
 	  <EmbeddedResource Remove="Configurations\**" />
+	  <None Remove="Accounts\Mappers\**" />
 	  <None Remove="Configurations\**" />
 	</ItemGroup>
 
@@ -67,10 +71,6 @@
 		<ProjectReference Include="..\ControlHub.Domain\ControlHub.Domain.csproj" />
 		<ProjectReference Include="..\ControlHub.Infrastructure\ControlHub.Infrastructure.csproj" />
 		<ProjectReference Include="..\ControlHub.Application\ControlHub.Application.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="Accounts\Mappers\" />
 	</ItemGroup>
 
 	<ItemGroup>

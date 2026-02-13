@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ControlHub.Application.Common.Interfaces.AI;
 using ControlHub.Application.Common.Interfaces.AI.V3.RAG;
 using ControlHub.Application.Common.Logging.Interfaces;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace ControlHub.Application.AI.V3.RAG
@@ -23,6 +24,7 @@ namespace ControlHub.Application.AI.V3.RAG
         private readonly IMultiHopRetriever _multiHopRetriever;
         private readonly IEmbeddingService _embeddingService;
         private readonly ILogReaderService _logReader;
+        private readonly IConfiguration _config;
         private readonly ILogger<AgenticRAGService> _logger;
 
         public AgenticRAGService(
@@ -31,6 +33,7 @@ namespace ControlHub.Application.AI.V3.RAG
             IMultiHopRetriever multiHopRetriever,
             IEmbeddingService embeddingService,
             ILogReaderService logReader,
+            IConfiguration config,
             ILogger<AgenticRAGService> logger)
         {
             _vectorDb = vectorDb;
@@ -38,6 +41,7 @@ namespace ControlHub.Application.AI.V3.RAG
             _multiHopRetriever = multiHopRetriever;
             _embeddingService = embeddingService;
             _logReader = logReader;
+            _config = config;
             _logger = logger;
         }
 
@@ -89,7 +93,7 @@ namespace ControlHub.Application.AI.V3.RAG
 
             var candidates = new List<RetrievedDocument>();
 
-            // Step 1: If correlationId provided, read from log files FIRST
+            // Step 1: If correlationId provided, read from log files
             if (!string.IsNullOrEmpty(options.CorrelationId))
             {
                 _logger.LogInformation("Reading logs for correlationId: {Id}", options.CorrelationId);
@@ -105,7 +109,7 @@ namespace ControlHub.Application.AI.V3.RAG
                     var content = $"[{entry.Timestamp:yyyy-MM-dd HH:mm:ss}] [{entry.Level}] {entry.Message}";
                     candidates.Add(new RetrievedDocument(
                         content,
-                        0.9f, // High score for direct matches
+                        0.95f, // High score for direct matches
                         new Dictionary<string, string> 
                         { 
                             ["source"] = "log_file",
@@ -116,32 +120,35 @@ namespace ControlHub.Application.AI.V3.RAG
                 }
             }
 
-            // Step 2: If no logs found or no correlationId, fallback to vector DB
-            if (candidates.Count == 0)
+            // Step 2: ALWAYS search Vector DB for Knowledge/Runbooks (Hybrid RAG)
+            var collectionName = _config["AuditAI:RunbookCollectionName"] ?? "Runbooks";
+            _logger.LogInformation("Searching vector DB collection '{Collection}' for knowledge/runbooks: {Query}", collectionName, query);
+            try
             {
-                _logger.LogInformation("No log entries found, trying vector DB search");
-                
-                try
-                {
-                    var embedding = await _embeddingService.GenerateEmbeddingAsync(query);
-                    var vectorResults = await _vectorDb.SearchAsync(
-                        collectionName: "audit_logs",
-                        vector: embedding,
-                        limit: 20
-                    );
+                var embedding = await _embeddingService.GenerateEmbeddingAsync(query);
+                var vectorResults = await _vectorDb.SearchAsync(
+                    collectionName: collectionName,
+                    vector: embedding,
+                    limit: 10 // Get relevant runbooks/history
+                );
 
-                    candidates = vectorResults
-                        .Select(r => new RetrievedDocument(
-                            GetContentFromPayload(r.Payload),
-                            (float)r.Score,
-                            new Dictionary<string, string> { ["source"] = "vector_db", ["id"] = r.Id }
-                        ))
-                        .ToList();
-                }
-                catch (Exception ex)
+                foreach (var r in vectorResults)
                 {
-                    _logger.LogWarning(ex, "Vector DB search failed, continuing with empty results");
+                    candidates.Add(new RetrievedDocument(
+                        GetContentFromPayload(r.Payload),
+                        (float)r.Score,
+                        new Dictionary<string, string> 
+                        { 
+                            ["source"] = "vector_db", 
+                            ["id"] = r.Id,
+                            ["is_runbook"] = "true" 
+                        }
+                    ));
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Vector DB knowledge retrieval failed, continuing with available logs");
             }
 
             // Step 3: Rerank (if we have candidates)

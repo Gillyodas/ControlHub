@@ -54,7 +54,9 @@ namespace ControlHub.Application.AI.V3.Agentic.Nodes
 
             // Use reasoning model to create plan
             var context = new ReasoningContext(
-                Query: $"Create a step-by-step plan to: {enhancedQuery}",
+                Query: $"Create a detailed technical investigation plan for: {enhancedQuery}. " +
+                       "IMPORTANT: The plan MUST conclude with a final step named 'Root Cause Synthesis and Recommendations' " +
+                       "that aggregates all findings into a developer-friendly report.",
                 RetrievedDocs: new List<Common.Interfaces.AI.V3.RAG.RankedDocument>()
             );
 

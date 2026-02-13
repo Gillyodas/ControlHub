@@ -17,6 +17,7 @@ using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Common.Errors;
 using ControlHub.SharedKernel.Tokens;
 using Microsoft.Extensions.Logging;
+using MediatR;
 using Moq;
 
 namespace ControlHub.Application.Tests.AccountsTests
@@ -35,6 +36,7 @@ namespace ControlHub.Application.Tests.AccountsTests
         private readonly Mock<ITokenFactory> _tokenFactoryMock = new();
         private readonly Mock<ITokenRepository> _tokenRepositoryMock = new();
         private readonly Mock<IUnitOfWork> _uowMock = new();
+        private readonly Mock<IPublisher> _publisherMock = new();
 
         // Dùng Factory thật (Concrete Class)
         private readonly IdentifierFactory _identifierFactory;
@@ -62,7 +64,8 @@ namespace ControlHub.Application.Tests.AccountsTests
                 _refreshTokenGeneratorMock.Object,
                 _tokenFactoryMock.Object,
                 _tokenRepositoryMock.Object,
-                _uowMock.Object
+                _uowMock.Object,
+                _publisherMock.Object
             );
         }
 

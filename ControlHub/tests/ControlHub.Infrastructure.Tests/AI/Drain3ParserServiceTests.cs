@@ -23,9 +23,9 @@ namespace ControlHub.Infrastructure.Tests.AI
             // Arrange
             var logs = new List<LogEntry>
             {
-                new LogEntry { Message = "Connection from 192.168.1.1 failed", Timestamp = DateTime.Now, Level = "Error" },
-                new LogEntry { Message = "Connection from 10.0.0.5 failed", Timestamp = DateTime.Now.AddSeconds(1), Level = "Error" },
-                new LogEntry { Message = "User admin logged in", Timestamp = DateTime.Now.AddSeconds(2), Level = "Info" }
+                new LogEntry { RenderedMessage = "Connection from 192.168.1.1 failed", Timestamp = DateTime.Now, Level = "Error" },
+                new LogEntry { RenderedMessage = "Connection from 10.0.0.5 failed", Timestamp = DateTime.Now.AddSeconds(1), Level = "Error" },
+                new LogEntry { RenderedMessage = "User admin logged in", Timestamp = DateTime.Now.AddSeconds(2), Level = "Info" }
             };
 
             // Act
@@ -47,8 +47,8 @@ namespace ControlHub.Infrastructure.Tests.AI
             // Arrange
             var logs = new List<LogEntry>
             {
-                new LogEntry { Message = "Process 1234 terminated with error 500", Timestamp = DateTime.Now, Level = "Error" },
-                new LogEntry { Message = "Process 5678 terminated with error 500", Timestamp = DateTime.Now, Level = "Error" }
+                new LogEntry { RenderedMessage = "Process 1234 terminated with error 500", Timestamp = DateTime.Now, Level = "Error" },
+                new LogEntry { RenderedMessage = "Process 5678 terminated with error 500", Timestamp = DateTime.Now, Level = "Error" }
             };
 
             // Act

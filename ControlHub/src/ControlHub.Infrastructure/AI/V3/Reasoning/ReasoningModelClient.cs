@@ -249,10 +249,25 @@ namespace ControlHub.Infrastructure.AI.V3.Reasoning
             var steps = new List<string>();
             if (root.TryGetProperty("steps", out var stepsArr) && stepsArr.ValueKind == JsonValueKind.Array)
             {
-                foreach (var step in stepsArr.EnumerateArray())
+                foreach (var stepElement in stepsArr.EnumerateArray())
                 {
-                    var stepText = step.GetString();
-                    if (!string.IsNullOrEmpty(stepText)) steps.Add(stepText);
+                    if (stepElement.ValueKind == JsonValueKind.String)
+                    {
+                        var stepText = stepElement.GetString();
+                        if (!string.IsNullOrEmpty(stepText)) steps.Add(stepText);
+                    }
+                    else if (stepElement.ValueKind == JsonValueKind.Object)
+                    {
+                        // Handle hierarchical step objects like { "step": "...", "description": "..." }
+                        var title = GetStringProperty(stepElement, "step") ?? GetStringProperty(stepElement, "name");
+                        var desc = GetStringProperty(stepElement, "description") ?? GetStringProperty(stepElement, "content");
+                        
+                        var combined = !string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(desc)
+                            ? $"{title}: {desc}"
+                            : title ?? desc;
+
+                        if (!string.IsNullOrEmpty(combined)) steps.Add(combined);
+                    }
                 }
             }
 

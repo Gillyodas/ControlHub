@@ -1,6 +1,8 @@
 using ControlHub.Application.AI;
 using ControlHub.Application.Common.Interfaces.AI;
 using ControlHub.Application.Common.Interfaces.AI.V1;
+using ControlHub.Application.Common.Interfaces.AI.V3;
+using ControlHub.Application.Common.Interfaces.AI.V3.Observability;
 using ControlHub.Application.Common.Logging;
 using ControlHub.Application.Common.Logging.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -14,7 +16,9 @@ namespace ControlHub.API.Controllers
     public class AuditController : ControllerBase
     {
         private readonly ILogKnowledgeService _knowledgeService; // V1 service (interface)
-        private readonly IAuditAgentService? _agentService;      // V2.5 service (optional)
+        private readonly IAuditAgentService? _agentService;      // V2.5/V3 service (optional)
+        private readonly IAuditAgentV3? _auditAgentV3;           // V3 full agentic (optional)
+        private readonly IAgentObserver? _agentObserver;         // V3 tracing (optional)
         private readonly ILogReaderService _logReader;
         private readonly ILogParserService? _logParser;          // V2.5 parser
         private readonly IRunbookService? _runbookService;       // V2.5 runbooks
@@ -23,7 +27,7 @@ namespace ControlHub.API.Controllers
         public AuditController(
             ILogKnowledgeService knowledgeService, 
             ILogReaderService logReader,
-            IServiceProvider sp, // Lazy resolve V2 services
+            IServiceProvider sp, // Lazy resolve V2/V3 services
             IConfiguration config)
         {
             _knowledgeService = knowledgeService;
@@ -34,6 +38,10 @@ namespace ControlHub.API.Controllers
             _agentService = sp.GetService<IAuditAgentService>();
             _logParser = sp.GetService<ILogParserService>();
             _runbookService = sp.GetService<IRunbookService>();
+            
+            // V3 specific services
+            _auditAgentV3 = sp.GetService<IAuditAgentV3>();
+            _agentObserver = sp.GetService<IAgentObserver>();
         }
 
         // Endpoint 0: Check AI Version
@@ -186,6 +194,88 @@ namespace ControlHub.API.Controllers
             
             return Ok(result.Templates);
         }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // V3.0 AGENTIC ENDPOINTS
+        // ═══════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// V3.0 Agentic Investigation - Full orchestrated workflow.
+        /// Uses Plan → Execute → Verify → Reflect loop.
+        /// </summary>
+        [Authorize(Policy = "Permission:system.view_logs")]
+        [HttpPost("v3/investigate")]
+        public async Task<IActionResult> InvestigateV3([FromBody] V3InvestigateRequest request)
+        {
+            if (_auditAgentV3 == null)
+            {
+                return BadRequest(new { Error = "V3.0 Agent is not enabled. Set AuditAI:Version to V3.0" });
+            }
+
+            var result = await _auditAgentV3.InvestigateAsync(
+                request.Query,
+                request.CorrelationId,
+                HttpContext.RequestAborted
+            );
+
+            return Ok(new V3InvestigateResponse
+            {
+                Query = request.Query,
+                Answer = result.Answer,
+                Plan = result.Plan,
+                ExecutionResults = result.ExecutionResults,
+                VerificationPassed = result.VerificationPassed,
+                Iterations = result.Iterations,
+                Confidence = result.Confidence,
+                Error = result.Error,
+                Version = "V3.0"
+            });
+        }
+
+        /// <summary>
+        /// V3.0 Get Agent Trace - For debugging agent execution.
+        /// </summary>
+        [Authorize(Policy = "Permission:system.view_logs")]
+        [HttpGet("v3/trace")]
+        public IActionResult GetAgentTrace()
+        {
+            if (_agentObserver is Application.AI.V3.Observability.AgentTracer tracer)
+            {
+                return Ok(new
+                {
+                    Events = tracer.Events,
+                    Summary = tracer.GetTraceSummary()
+                });
+            }
+
+            return Ok(new { Message = "Agent tracing not available" });
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // REQUEST / RESPONSE DTOs
+    // ═══════════════════════════════════════════════════════════════════
+
+    public class V3InvestigateRequest
+    {
+        /// <summary>Investigation query/question</summary>
+        public string Query { get; set; } = string.Empty;
+        
+        /// <summary>Optional correlation ID to focus investigation</summary>
+        public string? CorrelationId { get; set; }
+    }
+
+    public class V3InvestigateResponse
+    {
+        public string Query { get; set; } = string.Empty;
+        public string Answer { get; set; } = string.Empty;
+        public List<string> Plan { get; set; } = new();
+        public List<string> ExecutionResults { get; set; } = new();
+        public bool VerificationPassed { get; set; }
+        public int Iterations { get; set; }
+        public float Confidence { get; set; }
+        public string? Error { get; set; }
+        public string Version { get; set; } = "V3.0";
     }
 
     public class ChatRequest

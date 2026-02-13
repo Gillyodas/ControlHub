@@ -8,10 +8,15 @@
 	<OutputType>Library</OutputType>
 
 	<IsPackable>true</IsPackable>
-	<Version>1.0.2</Version>
+	<Version>1.0.5</Version>
 	<Authors>Huỳnh Anh Khoa</Authors>
 	<PackageId>$(AssemblyName)</PackageId>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
 	<!-- Tự lấy tên Project làm tên gói -->
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
 </Project>

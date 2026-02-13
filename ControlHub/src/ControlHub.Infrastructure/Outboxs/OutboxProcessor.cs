@@ -31,29 +31,32 @@ namespace ControlHub.Infrastructure.Outboxs
                     .Take(20)
                     .ToListAsync(cancellationToken);
 
-                foreach (var msg in messages)
+                if (messages.Any())
                 {
-                    try
+                    foreach (var msg in messages)
                     {
-                        var handler = handlerFactory.Get(msg.Type);
-                        if (handler == null)
+                        try
                         {
-                            //_logger.LogWarning("No handler for outbox message type {Type}", msg.Type);
-                            continue;
+                            var handler = handlerFactory.Get(msg.Type);
+                            if (handler == null)
+                            {
+                                continue;
+                            }
+
+                            await handler.HandleAsync(msg.Payload, cancellationToken);
+
+                            msg.MarkProcessed();
                         }
-
-                        await handler.HandleAsync(msg.Payload, cancellationToken);
-
-                        msg.MarkProcessed();
+                        catch (Exception ex)
+                        {
+                            msg.MarkFailed(ex.Message);
+                            _logger.LogError(ex, "Failed to process outbox {Id}", msg.Id);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        msg.MarkFailed(ex.Message);
-                        _logger.LogError(ex, "Failed to process outbox {Id}", msg.Id);
-                    }
+
+                    await db.SaveChangesAsync(cancellationToken);
                 }
 
-                await db.SaveChangesAsync(cancellationToken);
                 await Task.Delay(5000, cancellationToken);
             }
         }
