@@ -21,6 +21,7 @@ namespace ControlHub.Application.Tests.AI.V3.RAG
         private readonly Mock<IMultiHopRetriever> _multiHopRetrieverMock = new();
         private readonly Mock<IEmbeddingService> _embeddingServiceMock = new();
         private readonly Mock<ILogReaderService> _logReaderMock = new();
+        private readonly Mock<ILogEvidenceProcessor> _evidenceProcessorMock = new();
         private readonly Mock<IConfiguration> _configMock = new();
         private readonly Mock<ILogger<AgenticRAGService>> _loggerMock = new();
         private readonly AgenticRAGService _service;
@@ -33,6 +34,7 @@ namespace ControlHub.Application.Tests.AI.V3.RAG
                 _multiHopRetrieverMock.Object,
                 _embeddingServiceMock.Object,
                 _logReaderMock.Object,
+                _evidenceProcessorMock.Object,
                 _configMock.Object,
                 _loggerMock.Object
             );

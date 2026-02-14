@@ -24,12 +24,14 @@ namespace ControlHub.Application.AI.V3.RAG
         private readonly IMultiHopRetriever _multiHopRetriever;
         private readonly IEmbeddingService _embeddingService;
         private readonly ILogReaderService _logReader;
+        private readonly ILogEvidenceProcessor _evidenceProcessor;
         private readonly IConfiguration _config;
         private readonly ILogger<AgenticRAGService> _logger;
         
         // Cache per-investigation (Scoped lifetime)
         private List<RetrievedDocument>? _cachedLogDocs;
         private string? _cachedCorrelationId;
+        private EvidenceSummary? _cachedEvidenceSummary;
 
         public AgenticRAGService(
             IVectorDatabase vectorDb,
@@ -37,6 +39,7 @@ namespace ControlHub.Application.AI.V3.RAG
             IMultiHopRetriever multiHopRetriever,
             IEmbeddingService embeddingService,
             ILogReaderService logReader,
+            ILogEvidenceProcessor evidenceProcessor,
             IConfiguration config,
             ILogger<AgenticRAGService> logger)
         {
@@ -45,6 +48,7 @@ namespace ControlHub.Application.AI.V3.RAG
             _multiHopRetriever = multiHopRetriever;
             _embeddingService = embeddingService;
             _logReader = logReader;
+            _evidenceProcessor = evidenceProcessor;
             _config = config;
             _logger = logger;
         }
@@ -97,7 +101,7 @@ namespace ControlHub.Application.AI.V3.RAG
 
             var candidates = new List<RetrievedDocument>();
 
-            // Step 1: If correlationId provided, read from log files (with caching)
+            // Step 1: If correlationId provided, read from log files (with caching + evidence processing)
             if (!string.IsNullOrEmpty(options.CorrelationId))
             {
                 if (_cachedCorrelationId == options.CorrelationId && _cachedLogDocs != null)
@@ -116,13 +120,12 @@ namespace ControlHub.Application.AI.V3.RAG
                         logEntries.Count, options.CorrelationId);
 
                     var logDocs = new List<RetrievedDocument>();
-                    // Convert log entries to documents
                     foreach (var entry in logEntries)
                     {
                         var content = $"[{entry.Timestamp:yyyy-MM-dd HH:mm:ss}] [{entry.Level}] {entry.Message}";
                         logDocs.Add(new RetrievedDocument(
                             content,
-                            0.95f, // High score for direct matches
+                            0.95f,
                             new Dictionary<string, string> 
                             { 
                                 ["source"] = "log_file",
@@ -131,10 +134,22 @@ namespace ControlHub.Application.AI.V3.RAG
                             }
                         ));
                     }
+
+                    // Process evidence: filter noise, extract metadata, create summary
+                    var evidence = _evidenceProcessor.ProcessLogs(logDocs);
+                    _cachedEvidenceSummary = evidence;
+
+                    // Prepend formatted summary as highest-priority document
+                    candidates.Add(new RetrievedDocument(
+                        evidence.FormattedSummary,
+                        1.0f,
+                        new Dictionary<string, string> { ["source"] = "evidence_summary" }
+                    ));
+                    // Add prioritized (filtered) logs
+                    candidates.AddRange(evidence.PrioritizedLogs);
                     
                     _cachedLogDocs = logDocs;
                     _cachedCorrelationId = options.CorrelationId;
-                    candidates.AddRange(logDocs);
                 }
             }
             // Step 1b: If NO correlationId, read recent logs for general context
@@ -208,7 +223,9 @@ namespace ControlHub.Application.AI.V3.RAG
                 {
                     ["candidates"] = candidates.Count,
                     ["log_entries"] = candidates.Count(c => c.Metadata.GetValueOrDefault("source") == "log_file"),
-                    ["complexity"] = AnalyzeQueryComplexity(query)
+                    ["complexity"] = AnalyzeQueryComplexity(query),
+                    ["evidence_metadata"] = _cachedEvidenceSummary?.ExtractedMetadata!,
+                    ["evidence_summary"] = _cachedEvidenceSummary?.FormattedSummary ?? ""
                 }
             );
         }

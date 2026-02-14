@@ -125,6 +125,7 @@ namespace ControlHub.Application.AI.V3.Agentic
             
             initialState.Context["pre_retrieval_docs"] = ragResult.Documents;
             initialState.Context["pre_retrieval_strategy"] = ragResult.StrategyUsed.ToString();
+            initialState.Context["rag_metadata"] = ragResult.Metadata;
 
             // Run graph
             var finalState = (AgentState)await _graph.RunAsync(initialState, ct);

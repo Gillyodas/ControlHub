@@ -233,6 +233,7 @@ namespace ControlHub
                 services.AddSingleton<IReranker, OnnxReranker>(); // Singleton: ONNX session is expensive
                 services.AddScoped<IMultiHopRetriever, MultiHopRetriever>();
                 services.AddScoped<IAgenticRAG, AgenticRAGService>();
+                services.AddScoped<ILogEvidenceProcessor, LogEvidenceProcessor>();
                 
                 // V3 Phase 3: Reasoning Integration
                 services.AddHttpClient<IReasoningModel, ReasoningModelClient>(client =>

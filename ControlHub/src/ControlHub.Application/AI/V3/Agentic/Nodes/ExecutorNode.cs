@@ -81,11 +81,33 @@ namespace ControlHub.Application.AI.V3.Agentic.Nodes
                 evidence = ragResult.Documents;
             }
 
-            // Step 2: Build batch execution prompt — demands diagnosis, not step echo
+            // Step 2: Build auto-extracted evidence section (from LogEvidenceProcessor — 100% accurate)
+            var evidenceSection = "";
+            var ragMetadata = clone.GetContext<Dictionary<string, object>>("rag_metadata");
+            if (ragMetadata != null && ragMetadata.TryGetValue("evidence_metadata", out var metaObj) && metaObj is LogMetadata logMeta)
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("## Auto-Extracted Evidence (code-extracted, use as ground truth):");
+                if (logMeta.AffectedEndpoint != null)
+                    sb.AppendLine($"- Request: {logMeta.AffectedEndpoint} → HTTP {logMeta.HttpStatusCode ?? "N/A"}");
+                if (logMeta.ErrorCode != null)
+                    sb.AppendLine($"- Error Code: {logMeta.ErrorCode}");
+                if (logMeta.ErrorMessage != null)
+                    sb.AppendLine($"- Error Message: {logMeta.ErrorMessage}");
+                if (logMeta.TimestampRange != null)
+                    sb.AppendLine($"- Timeline: {logMeta.TimestampRange}");
+                sb.AppendLine($"- Severity: {logMeta.ErrorCount} ERROR, {logMeta.WarningCount} WARNING, {logMeta.InfoCount} INFO");
+                sb.AppendLine();
+                sb.AppendLine("IMPORTANT: Use EXACTLY these values in your diagnosis. Do NOT hallucinate different endpoints or error codes.");
+                evidenceSection = sb.ToString();
+            }
+
+            // Step 3: Build batch execution prompt — demands diagnosis, not step echo
             var planText = string.Join("\n", plan.Select((s, i) => $"{i + 1}. {s}"));
             var batchPrompt = 
                 $"You are a senior IT auditor executing an investigation.\n\n" +
                 $"## Original Query:\n{originalQuery}\n\n" +
+                (string.IsNullOrEmpty(evidenceSection) ? "" : $"{evidenceSection}\n") +
                 $"## Investigation Plan:\n{planText}\n\n" +
                 $"## Your Task:\n" +
                 $"Analyze the provided log evidence following the investigation plan above.\n" +
