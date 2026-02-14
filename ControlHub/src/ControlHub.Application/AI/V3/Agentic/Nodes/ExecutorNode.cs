@@ -81,16 +81,20 @@ namespace ControlHub.Application.AI.V3.Agentic.Nodes
                 evidence = ragResult.Documents;
             }
 
-            // Step 2: Build batch execution prompt
+            // Step 2: Build batch execution prompt — demands diagnosis, not step echo
             var planText = string.Join("\n", plan.Select((s, i) => $"{i + 1}. {s}"));
             var batchPrompt = 
-                $"You are executing a technical investigation plan gộp (batch execution).\n\n" +
+                $"You are a senior IT auditor executing an investigation.\n\n" +
                 $"## Original Query:\n{originalQuery}\n\n" +
                 $"## Investigation Plan:\n{planText}\n\n" +
-                $"## Tasks:\n" +
-                $"Analyze the provided evidence and provide detailed findings for EACH step of the plan. " +
-                $"Format your response as a numbered list of findings corresponding to the plan steps.\n" +
-                $"IMPORTANT: Your output for each step MUST start with 'Step X: [Step Name]' followed by the findings.";
+                $"## Your Task:\n" +
+                $"Analyze the provided log evidence following the investigation plan above.\n" +
+                $"Then produce a FINAL DIAGNOSIS with these 3 mandatory sections:\n\n" +
+                $"1. **Problem Summary**: What specific error or issue occurred? Include the exact error code, HTTP status code, and affected endpoint.\n" +
+                $"2. **Root Cause**: WHY did this happen? Quote the specific WARNING/ERROR log entries that prove the root cause. Ignore INFO-level noise like CORS.\n" +
+                $"3. **Recommendation**: How to fix this? Provide concrete, actionable steps. Reference any matching runbook if available.\n\n" +
+                $"IMPORTANT: Your 'solution' field MUST contain the final diagnosis. Your 'steps' field should contain the 3 sections above as separate items.\n" +
+                $"Do NOT just restate the plan steps. Provide actual findings from the evidence.";
 
             var batchContext = new ReasoningContext(
                 Query: batchPrompt,
@@ -100,40 +104,56 @@ namespace ControlHub.Application.AI.V3.Agentic.Nodes
             // Step 3: Single LLM call for the entire plan
             var analysis = await _reasoningModel.ReasonAsync(
                 batchContext, 
-                new ReasoningOptions(Temperature: 0.2f, MaxTokens: 4096), // Lower temp for factual accuracy
+                new ReasoningOptions(Temperature: 0.2f, MaxTokens: 6144),
                 ct
             );
 
-            // Step 4: Parse and store results
+            // Step 4: Store diagnosis results
             var executionResults = new List<string>();
             
-            // If the LLM returned structured steps in its response, use them. 
-            // Otherwise, we'll use its 'solution' text which contains the findings.
-            if (analysis.Steps.Any() && analysis.Steps.Count >= plan.Count)
+            // Primary: Use the LLM's solution + explanation as the main diagnosis
+            if (!string.IsNullOrEmpty(analysis.Solution) && analysis.Solution != "Partial Diagnosis")
             {
-                for (int i = 0; i < plan.Count; i++)
+                executionResults.Add($"## Problem Summary\n{analysis.Solution}");
+                
+                if (!string.IsNullOrEmpty(analysis.Explanation) && analysis.Explanation != "Refer to raw response")
                 {
-                    var findings = analysis.Steps[i];
-                    executionResults.Add($"Step {i + 1}: {plan[i]}\n{findings}\n_(Source: {evidence.Count} logs via BatchExecution)_");
+                    executionResults.Add($"## Root Cause Analysis\n{analysis.Explanation}");
+                }
+
+                // Add structured steps as recommendation if available
+                if (analysis.Steps.Any())
+                {
+                    var stepsText = string.Join("\n", analysis.Steps.Select((s, idx) => $"- {s}"));
+                    executionResults.Add($"## Recommendation\n{stepsText}");
                 }
             }
             else
             {
-                // Fallback: Use the whole solution text if it couldn't be parsed into steps
-                // We'll split by "Step X:" manually if needed, or just use the whole thing for the last step
-                _logger.LogWarning("LLM did not return structured steps for batch execution, using fallback parsing");
-                executionResults.Add($"Batch Findings for all {plan.Count} steps:\n{analysis.Solution}\n_(Source: {evidence.Count} logs via BatchExecution)_");
+                // Fallback: Use raw steps if solution is empty
+                _logger.LogWarning("LLM did not return structured diagnosis, using step-based fallback");
+                foreach (var step in analysis.Steps)
+                {
+                    executionResults.Add(step);
+                }
+                if (!executionResults.Any())
+                {
+                    executionResults.Add($"Investigation completed but no structured findings were returned.\n_(Source: {evidence.Count} logs)_");
+                }
             }
 
             clone.Context["execution_results"] = executionResults;
-            clone.Context["current_step"] = plan.Count; // Mark all steps as complete
+            clone.Context["current_step"] = plan.Count;
             clone.Context["execution_complete"] = true;
+            clone.Context["diagnosis_solution"] = analysis.Solution;
+            clone.Context["diagnosis_explanation"] = analysis.Explanation;
 
             clone.Messages.Add(new AgentMessage(
                 "assistant",
-                $"Executed all {plan.Count} steps in batch mode: {analysis.Solution.Take(100)}...",
+                $"Diagnosis complete: {(analysis.Solution.Length > 100 ? analysis.Solution.Substring(0, 100) : analysis.Solution)}...",
                 "Executor"
             ));
+
 
             return clone;
         }

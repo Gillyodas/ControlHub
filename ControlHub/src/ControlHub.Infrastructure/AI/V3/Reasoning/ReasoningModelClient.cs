@@ -119,11 +119,12 @@ namespace ControlHub.Infrastructure.AI.V3.Reasoning
             if (options.EnableCoT)
             {
                 sb.AppendLine("## Instructions:");
-                sb.AppendLine("Think step by step and provide your response in the following JSON format:");
+                sb.AppendLine("Think step by step and provide your response in the following JSON format. ");
+                sb.AppendLine("CRITICAL: Ensure all internal quotes in 'solution' and 'explanation' are escaped with a backslash (\\\").");
                 sb.AppendLine("IMPORTANT: Your entire response must be a single valid JSON object. Do not include any conversational text before or after the JSON.");
                 sb.AppendLine("```json");
                 sb.AppendLine("{");
-                sb.AppendLine("  \"solution\": \"Brief solution summary\",");
+                sb.AppendLine("  \"solution\": \"Brief solution summary (escape quotes such as \\\"like this\\\")\",");
                 sb.AppendLine("  \"explanation\": \"Detailed explanation of the problem\",");
                 sb.AppendLine("  \"steps\": [\"Step 1\", \"Step 2\", \"Step 3\"],");
                 sb.AppendLine("  \"confidence\": 0.85");
@@ -135,6 +136,16 @@ namespace ControlHub.Infrastructure.AI.V3.Reasoning
                 sb.AppendLine("## Instructions:");
                 sb.AppendLine("Provide a brief solution to the problem.");
             }
+
+            // Background guidelines — placed LAST and explicitly marked as DO NOT ECHO
+            sb.AppendLine();
+            sb.AppendLine("## Background Guidelines (DO NOT include these as plan steps or findings):");
+            sb.AppendLine("These are general analysis rules for YOUR internal use only. Do NOT repeat them in your output.");
+            sb.AppendLine("- PRIORITIZE WARNING and ERROR level log entries — these contain the actual errors.");
+            sb.AppendLine("- INFO level logs are context only. Do NOT treat INFO-level messages as errors.");
+            sb.AppendLine("- 'CORS policy execution failed' logs are INFRASTRUCTURE NOISE. Ignore unless they cause a 403.");
+            sb.AppendLine("- Look for domain-specific error codes (e.g., 'InvalidFormat', 'DomainError', 'Exception') as the TRUE root cause.");
+            sb.AppendLine("- Check the HTTP status code in 'Request finished' to determine the actual outcome.");
 
             return sb.ToString();
         }
@@ -156,19 +167,40 @@ namespace ControlHub.Infrastructure.AI.V3.Reasoning
                 }
             };
 
-            var content = new StringContent(
-                JsonSerializer.Serialize(requestBody),
-                Encoding.UTF8,
-                "application/json"
-            );
+            var jsonRequest = JsonSerializer.Serialize(requestBody);
+            var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync(_ollamaUrl, content, ct);
-            response.EnsureSuccessStatusCode();
+            // Build a linked CancellationTokenSource with a hard timeout (5 minutes)
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(TimeSpan.FromMinutes(5));
 
-            var responseJson = await response.Content.ReadAsStringAsync(ct);
-            var doc = JsonDocument.Parse(responseJson);
-            
-            return doc.RootElement.GetProperty("response").GetString() ?? string.Empty;
+            try
+            {
+                // Use SendAsync with ResponseHeadersRead for efficiency and better control
+                var request = new HttpRequestMessage(HttpMethod.Post, _ollamaUrl) { Content = content };
+                var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+                
+                response.EnsureSuccessStatusCode();
+
+                // Read entire response into string
+                var responseJson = await response.Content.ReadAsStringAsync(cts.Token);
+                
+                using var jsonDoc = JsonDocument.Parse(responseJson);
+                if (jsonDoc.RootElement.TryGetProperty("response", out var respProp))
+                {
+                    return respProp.GetString() ?? string.Empty;
+                }
+                
+                _logger.LogWarning("LLM response did not contain 'response' property. Raw: {Raw}", 
+                    responseJson.Length > 200 ? responseJson.Substring(0, 200) : responseJson);
+                
+                return string.Empty;
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                _logger.LogError("Ollama request timed out after 5 minutes at {Url}", _ollamaUrl);
+                throw new TimeoutException($"The reasoning request to Ollama ({_modelName}) timed out after 5 minutes.");
+            }
         }
 
         private ReasoningResult ParseResponse(string rawResponse, ReasoningContext context)
@@ -204,10 +236,17 @@ namespace ControlHub.Infrastructure.AI.V3.Reasoning
                         }
                         catch (JsonException ex)
                         {
-                            _logger.LogWarning(ex, "Aggressive cleaning failed. Raw snippet: {Snippet}", 
-                                jsonStr.Length > 100 ? jsonStr.Substring(0, 100) : jsonStr);
+                            _logger.LogWarning(ex, "Aggressive cleaning failed. Attempting Regex extraction fallback...");
+                            
+                            // 4. Regex fallback extraction
+                            return ExtractWithRegex(jsonStr, rawResponse);
                         }
                     }
+                }
+                else
+                {
+                    // No JSON brackets found, try regex on whole response
+                    return ExtractWithRegex(cleaned, rawResponse);
                 }
             }
             catch (Exception ex)
@@ -298,7 +337,79 @@ namespace ControlHub.Infrastructure.AI.V3.Reasoning
             // Fix unescaped backslashes in paths NOT followed by valid escape sequence
             result = System.Text.RegularExpressions.Regex.Replace(result, @"(?<!\\)\\(?![""\\/bfnrtu])", @"\\");
 
+            // Handle common LLM error: "key": "value" missing comma before next key
+            result = System.Text.RegularExpressions.Regex.Replace(result, @"(""\s*:\s*""[^""]+"")\s+(""\w+""\s*:)", "$1, $2");
+
             return result;
+        }
+
+        /// <summary>
+        /// Fallback method to extract fields using Regex if JSON parsing fails.
+        /// Handles both simple string arrays and nested object arrays for "steps".
+        /// </summary>
+        private ReasoningResult ExtractWithRegex(string input, string rawResponse)
+        {
+            _logger.LogInformation("Regex fallback: extracting structured fields from malformed JSON");
+
+            var solutionMatch = System.Text.RegularExpressions.Regex.Match(input, @"""solution""\s*:\s*""([^""]+)""");
+            var explanationMatch = System.Text.RegularExpressions.Regex.Match(input, @"""explanation""\s*:\s*""([^""]+)""");
+            var stepsMatch = System.Text.RegularExpressions.Regex.Match(input, @"""steps""\s*:\s*\[(.*?)\]", System.Text.RegularExpressions.RegexOptions.Singleline);
+
+            var solution = solutionMatch.Success ? solutionMatch.Groups[1].Value : "Partial Diagnosis";
+            var explanation = explanationMatch.Success ? explanationMatch.Groups[1].Value : "Refer to raw response";
+            
+            var steps = new List<string>();
+            if (stepsMatch.Success)
+            {
+                var stepsContent = stepsMatch.Groups[1].Value;
+
+                // Strategy 1: Try to match nested objects {"step": "...", "description": "..."}
+                var nestedPattern = @"\{\s*""(?:step|name)""\s*:\s*""([^""]+)""\s*,\s*""(?:description|content)""\s*:\s*""([^""]+)""\s*\}";
+                var nestedMatches = System.Text.RegularExpressions.Regex.Matches(stepsContent, nestedPattern, System.Text.RegularExpressions.RegexOptions.Singleline);
+
+                if (nestedMatches.Count > 0)
+                {
+                    foreach (System.Text.RegularExpressions.Match m in nestedMatches)
+                    {
+                        var stepName = m.Groups[1].Value.Trim();
+                        var stepDesc = m.Groups[2].Value.Trim();
+                        steps.Add($"{stepName}: {stepDesc}");
+                    }
+                    _logger.LogInformation("Regex fallback: extracted {Count} steps from nested objects", steps.Count);
+                }
+                else
+                {
+                    // Strategy 2: Simple string array — but filter out short garbage like "step", "description"
+                    var simpleMatches = System.Text.RegularExpressions.Regex.Matches(stepsContent, @"""([^""]+)""");
+                    foreach (System.Text.RegularExpressions.Match m in simpleMatches)
+                    {
+                        var value = m.Groups[1].Value.Trim();
+                        // Filter out JSON key names and very short strings
+                        if (value.Length > 5 && 
+                            !value.Equals("step", StringComparison.OrdinalIgnoreCase) &&
+                            !value.Equals("name", StringComparison.OrdinalIgnoreCase) &&
+                            !value.Equals("description", StringComparison.OrdinalIgnoreCase) &&
+                            !value.Equals("content", StringComparison.OrdinalIgnoreCase))
+                        {
+                            steps.Add(value);
+                        }
+                    }
+                    _logger.LogInformation("Regex fallback: extracted {Count} steps from simple strings", steps.Count);
+                }
+            }
+
+            if (steps.Count == 0 && rawResponse.Contains("Root Cause Synthesis", StringComparison.OrdinalIgnoreCase))
+            {
+                steps.Add("Root Cause Synthesis and Recommendations");
+            }
+
+            return new ReasoningResult(
+                Solution: solution,
+                Explanation: explanation,
+                Steps: steps,
+                Confidence: 0.4f,
+                RawResponse: rawResponse
+            );
         }
     }
 }

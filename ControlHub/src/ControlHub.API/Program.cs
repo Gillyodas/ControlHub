@@ -86,7 +86,7 @@ namespace ControlHub.API
 
             // CORS Configuration
             app.UseCors(policy => policy
-                .WithOrigins("http://localhost:3000", "http://localhost:3000/control-hub")
+                .WithOrigins("http://localhost:3000", "http://localhost:3000/control-hub", "https://localhost:7110")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials());

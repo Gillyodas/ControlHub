@@ -23,6 +23,7 @@ namespace ControlHub.Application.AI.V3.Agentic
         private readonly IAgenticRAG _agenticRag;
         private readonly IConfidenceScorer _confidenceScorer;
         private readonly IAgentObserver _observer;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger<AuditAgentV3> _logger;
 
         public AuditAgentV3(
@@ -31,6 +32,7 @@ namespace ControlHub.Application.AI.V3.Agentic
             IAgenticRAG agenticRag,
             IConfidenceScorer confidenceScorer,
             IAgentObserver observer,
+            ILoggerFactory loggerFactory,
             ILogger<AuditAgentV3> logger)
         {
             _graph = graph;
@@ -38,20 +40,20 @@ namespace ControlHub.Application.AI.V3.Agentic
             _agenticRag = agenticRag;
             _confidenceScorer = confidenceScorer;
             _observer = observer;
+            _loggerFactory = loggerFactory;
             _logger = logger;
-
+            
             // Build the graph
             BuildGraph();
         }
 
         private void BuildGraph()
         {
-            // Create nodes
-            var plannerLoggerFactory = LoggerFactory.Create(b => b.AddConsole());
-            var plannerNode = new PlannerNode(_reasoningModel, _observer, plannerLoggerFactory.CreateLogger<PlannerNode>());
-            var executorNode = new ExecutorNode(_agenticRag, _reasoningModel, _observer, plannerLoggerFactory.CreateLogger<ExecutorNode>());
-            var verifierNode = new VerifierNode(_confidenceScorer, _observer, plannerLoggerFactory.CreateLogger<VerifierNode>());
-            var reflectorNode = new ReflectorNode(_reasoningModel, _observer, plannerLoggerFactory.CreateLogger<ReflectorNode>());
+            // Create nodes using the shared logger factory
+            var plannerNode = new PlannerNode(_reasoningModel, _observer, _loggerFactory.CreateLogger<PlannerNode>());
+            var executorNode = new ExecutorNode(_agenticRag, _reasoningModel, _observer, _loggerFactory.CreateLogger<ExecutorNode>());
+            var verifierNode = new VerifierNode(_confidenceScorer, _observer, _loggerFactory.CreateLogger<VerifierNode>());
+            var reflectorNode = new ReflectorNode(_reasoningModel, _observer, _loggerFactory.CreateLogger<ReflectorNode>());
 
             // Add nodes
             _graph.AddNode(plannerNode);
@@ -156,32 +158,36 @@ namespace ControlHub.Application.AI.V3.Agentic
         private string BuildAnswer(AgentState state)
         {
             var sb = new System.Text.StringBuilder();
-
-            // 1. FINAL DIAGNOSIS (If available from synthesis step)
             var results = state.GetContext<List<string>>("execution_results") ?? new List<string>();
-            var synthesis = results.LastOrDefault(r => r.Contains("Root Cause Synthesis", StringComparison.OrdinalIgnoreCase) 
-                                                     || r.Contains("ID_", StringComparison.OrdinalIgnoreCase)
-                                                     || r.Contains("BatchExecution", StringComparison.OrdinalIgnoreCase));
 
-            if (!string.IsNullOrEmpty(synthesis))
+            // 1. MAIN DIAGNOSIS — render execution results directly (they are now structured as Problem/Root Cause/Recommendation)
+            if (results.Any())
             {
-                sb.AppendLine("# 🔍 Final Investigation Diagnosis");
-                sb.AppendLine(synthesis);
+                sb.AppendLine("# 🔍 Investigation Report");
+                sb.AppendLine();
+                foreach (var section in results)
+                {
+                    sb.AppendLine(section);
+                    sb.AppendLine();
+                }
+            }
+            else
+            {
+                sb.AppendLine("# ⚠️ Investigation Incomplete");
+                sb.AppendLine("No findings were produced during the investigation.");
                 sb.AppendLine();
             }
 
-            // 2. DETAILED FINDINGS
-            sb.AppendLine("## 📋 Execution Details");
+            // 2. INVESTIGATION PLAN (for reference)
             var plan = state.GetContext<List<string>>("plan") ?? new List<string>();
-            for (int i = 0; i < plan.Count; i++)
+            if (plan.Any())
             {
-                var stepResult = results.FirstOrDefault(r => r.StartsWith($"Step {i + 1}:"));
-                sb.AppendLine($"### Step {i + 1}: {plan[i]}");
-                if (!string.IsNullOrEmpty(stepResult))
+                sb.AppendLine("---");
+                sb.AppendLine("## 📋 Investigation Plan (" + plan.Count + " steps)");
+                sb.AppendLine();
+                for (int i = 0; i < plan.Count; i++)
                 {
-                    // Clean up stepResult prefix for cleaner view
-                    var cleanerResult = stepResult.Substring(stepResult.IndexOf('\n') + 1);
-                    sb.AppendLine(cleanerResult);
+                    sb.AppendLine($"{i + 1}. {plan[i]}");
                 }
                 sb.AppendLine();
             }
@@ -189,8 +195,7 @@ namespace ControlHub.Application.AI.V3.Agentic
             // 3. VERIFICATION & REFLEXION
             var passed = state.GetContextValue("verification_passed", false);
             var score = state.GetContextValue("verification_score", 0f);
-            sb.AppendLine($"---");
-            sb.AppendLine($"**Verification Status:** {(passed ? "✅ PASSED" : "❌ FAILED")} (Confidence: {score:P0})");
+            sb.AppendLine($"**Verification:** {(passed ? "✅ PASSED" : "❌ FAILED")} (Confidence: {score:P0})");
 
             var analysis = state.GetContext<string>("reflexion_analysis");
             if (!string.IsNullOrEmpty(analysis))
