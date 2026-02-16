@@ -1,8 +1,8 @@
-using ControlHub.Domain.Tokens.Enums;
+using ControlHub.Domain.TokenManagement.Enums;
 using ControlHub.SharedKernel.Results;
 using ControlHub.SharedKernel.Tokens;
 
-namespace ControlHub.Domain.Tokens
+namespace ControlHub.Domain.TokenManagement.Aggregates
 {
     public class Token
     {

@@ -9,7 +9,7 @@ using ControlHub.Application.Tokens.Interfaces.Repositories;
 using ControlHub.Domain.Identity.Enums;
 using ControlHub.Domain.Identity.Identifiers.Services;
 using ControlHub.Domain.Identity.Security;
-using ControlHub.Domain.Tokens.Enums;
+using ControlHub.Domain.TokenManagement.Enums;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;
 using ControlHub.SharedKernel.Tokens;

@@ -1,7 +1,7 @@
 using ControlHub.Domain.Identity.Enums;
 using ControlHub.Domain.Identity.ValueObjects;
 using ControlHub.Domain.AccessControl.Aggregates;
-using ControlHub.Domain.Tokens;
+using ControlHub.Domain.TokenManagement.Aggregates;
 using ControlHub.Domain.Identity.Entities;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;

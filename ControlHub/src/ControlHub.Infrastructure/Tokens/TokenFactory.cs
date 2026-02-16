@@ -1,6 +1,6 @@
 using ControlHub.Application.Tokens.Interfaces;
-using ControlHub.Domain.Tokens;
-using ControlHub.Domain.Tokens.Enums;
+using ControlHub.Domain.TokenManagement.Aggregates;
+using ControlHub.Domain.TokenManagement.Enums;
 using Microsoft.Extensions.Options;
 
 namespace ControlHub.Infrastructure.Tokens

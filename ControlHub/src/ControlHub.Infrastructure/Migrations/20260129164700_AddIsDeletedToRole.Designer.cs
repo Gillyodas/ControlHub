@@ -78,7 +78,7 @@ namespace ControlHub.Infrastructure.Migrations
                     b.ToTable("IdentifierConfigs", "ControlHub");
                 });
 
-            modelBuilder.Entity("ControlHub.Domain.Outboxs.OutboxMessage", b =>
+            modelBuilder.Entity("ControlHub.Application.Messaging.Outbox.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -166,7 +166,7 @@ namespace ControlHub.Infrastructure.Migrations
                     b.ToTable("Roles", "ControlHub");
                 });
 
-            modelBuilder.Entity("ControlHub.Domain.Tokens.Token", b =>
+            modelBuilder.Entity("ControlHub.Domain.TokenManagement.Aggregates.Token", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -381,7 +381,7 @@ namespace ControlHub.Infrastructure.Migrations
                     b.Navigation("Rules");
                 });
 
-            modelBuilder.Entity("ControlHub.Domain.Tokens.Token", b =>
+            modelBuilder.Entity("ControlHub.Domain.TokenManagement.Aggregates.Token", b =>
                 {
                     b.HasOne("ControlHub.Domain.Identity.Aggregates.Account", null)
                         .WithMany("Tokens")

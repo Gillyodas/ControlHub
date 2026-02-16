@@ -1,7 +1,7 @@
 using ControlHub.Application.Accounts.Commands.ForgotPassword;
 using ControlHub.Application.Accounts.Interfaces.Repositories;
 using ControlHub.Application.Common.Persistence;
-using ControlHub.Application.OutBoxs.Repositories;
+using ControlHub.Application.Messaging.Outbox.Repositories;
 using ControlHub.Application.Tokens.Interfaces;
 using ControlHub.Application.Tokens.Interfaces.Generate;
 using ControlHub.Application.Tokens.Interfaces.Repositories;
@@ -10,9 +10,9 @@ using ControlHub.Domain.Identity.Enums;
 using ControlHub.Domain.Identity.Identifiers.Rules;
 using ControlHub.Domain.Identity.Identifiers.Services;   // Namespace ch?a IdentifierFactory
 using ControlHub.Domain.Identity.ValueObjects;
-using ControlHub.Domain.Outboxs;
-using ControlHub.Domain.Tokens;
-using ControlHub.Domain.Tokens.Enums;
+using ControlHub.Application.Messaging.Outbox;
+using ControlHub.Domain.TokenManagement.Aggregates;
+using ControlHub.Domain.TokenManagement.Enums;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Common.Errors;
 using ControlHub.SharedKernel.Tokens;

@@ -1,6 +1,6 @@
-using ControlHub.Domain.Outboxs;
+using ControlHub.Application.Messaging.Outbox;
 
-namespace ControlHub.Application.OutBoxs
+namespace ControlHub.Application.Messaging.Outbox
 {
     public interface IOutboxHandler
     {

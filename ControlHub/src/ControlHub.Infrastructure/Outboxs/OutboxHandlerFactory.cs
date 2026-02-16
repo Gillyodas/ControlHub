@@ -1,5 +1,5 @@
-using ControlHub.Application.OutBoxs;
-using ControlHub.Domain.Outboxs;
+using ControlHub.Application.Messaging.Outbox;
+using ControlHub.Application.Messaging.Outbox;
 
 namespace ControlHub.Infrastructure.Outboxs
 {

@@ -1,73 +1,39 @@
-using ControlHub.Domain.Identity.Aggregates;
-using ControlHub.Domain.Identity.Enums;
-using ControlHub.Domain.Identity.Identifiers;
-using ControlHub.Domain.Identity.Security;
-using ControlHub.Domain.Identity.ValueObjects;
-using ControlHub.Domain.AccessControl.Aggregates;
-using ControlHub.Domain.Identity.Entities;
-using ControlHub.SharedKernel.Constants;
+ï»¿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using ControlHub.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace ControlHub.Infrastructure.Persistence.Seeders
 {
-    internal static class ControlHubSeeder
+    public static class ControlHubSeeder
     {
         public static async Task SeedAsync(AppDbContext db, bool forceSeed = false)
         {
-            // Check if database already has data
-            var hasExistingData = await HasExistingDataAsync(db);
-            
-            if (hasExistingData && !forceSeed)
+            if (!forceSeed && await HasExistingDataAsync(db))
             {
-                Console.WriteLine("Database already contains data. Use forceSeed=true to override.");
                 return;
             }
-            
-            if (hasExistingData && forceSeed)
-            {
-                Console.WriteLine("Database contains data but forceSeed=true. Clearing and reseeding...");
-            }
-            
-            // Seed Roles
-            if (!await db.Roles.AnyAsync())
-            {
-                var superAdmin = Role.Create(
-                    ControlHubDefaults.Roles.SuperAdminId, // Dùng ID c? d?nh
-                    ControlHubDefaults.Roles.SuperAdminName,
-                    "System Super Admin");
 
-                var admin = Role.Create(
-                    ControlHubDefaults.Roles.AdminId, // Dùng ID c? d?nh
-                    ControlHubDefaults.Roles.AdminName,
-                    "System Admin");
+            Console.WriteLine("Seeding database...");
 
-                var user = Role.Create(
-                    ControlHubDefaults.Roles.UserId, // Dùng ID c? d?nh
-                    ControlHubDefaults.Roles.UserName,
-                    "Standard User");
-
-                await db.Roles.AddRangeAsync(superAdmin, admin, user);
-                await db.SaveChangesAsync();
-            }
-
-            // Seed IdentifierConfigs using TestDataProvider
-            await TestDataProvider.SeedTestIdentifierConfigsAsync(db, forceSeed);
-
-            // Seed Permissions and assign to roles
-            await TestDataProvider.SeedPermissionsAndRolesAsync(db, forceSeed);
-
-            // Seed Test Accounts using TestDataProvider (clear and reseed for testing)
             var existingAccounts = await db.Accounts.ToListAsync();
-            if (existingAccounts.Any())
+            var existingRoles = await db.Roles.ToListAsync();
+            var existingPermissions = await db.Permissions.ToListAsync();
+
+            if (existingAccounts.Any() || forceSeed)
             {
                 db.Accounts.RemoveRange(existingAccounts);
+                db.Roles.RemoveRange(existingRoles);
+                db.Permissions.RemoveRange(existingPermissions);
                 await db.SaveChangesAsync();
             }
+
             await TestDataProvider.SeedTestAccountsAsync(db, includeExtended: false, forceSeed: forceSeed);
-            
+
             Console.WriteLine("Database seeding completed successfully.");
         }
-        
+
         /// <summary>
         /// Checks if the database already contains essential data
         /// </summary>
@@ -77,7 +43,7 @@ namespace ControlHub.Infrastructure.Persistence.Seeders
             var hasRoles = await db.Roles.AnyAsync();
             var hasAccounts = await db.Accounts.AnyAsync();
             var hasIdentifierConfigs = await db.IdentifierConfigs.AnyAsync();
-            
+
             return hasRoles || hasAccounts || hasIdentifierConfigs;
         }
     }

@@ -1,5 +1,5 @@
-using ControlHub.Application.OutBoxs.Repositories;
-using ControlHub.Domain.Outboxs;
+using ControlHub.Application.Messaging.Outbox.Repositories;
+using ControlHub.Application.Messaging.Outbox;
 using ControlHub.Infrastructure.Persistence;
 using ControlHub.SharedKernel.Common.Exceptions;
 using Microsoft.EntityFrameworkCore;

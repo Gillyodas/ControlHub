@@ -1,5 +1,5 @@
-using ControlHub.Domain.Tokens;
-using ControlHub.Domain.Tokens.Enums;
+using ControlHub.Domain.TokenManagement.Aggregates;
+using ControlHub.Domain.TokenManagement.Enums;
 
 namespace ControlHub.Application.Tokens.Interfaces
 {

@@ -10,8 +10,8 @@ using ControlHub.Domain.Identity.Identifiers.Rules;
 using ControlHub.Domain.Identity.Identifiers.Services;   // Ch?a IdentifierFactory
 using ControlHub.Domain.Identity.Security;
 using ControlHub.Domain.Identity.ValueObjects;
-using ControlHub.Domain.Tokens;
-using ControlHub.Domain.Tokens.Enums;
+using ControlHub.Domain.TokenManagement.Aggregates;
+using ControlHub.Domain.TokenManagement.Enums;
 using ControlHub.Domain.Identity.Entities;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Common.Errors;

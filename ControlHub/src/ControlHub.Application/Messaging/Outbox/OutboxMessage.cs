@@ -1,4 +1,4 @@
-namespace ControlHub.Domain.Outboxs
+namespace ControlHub.Application.Messaging.Outbox
 {
     public class OutboxMessage
     {

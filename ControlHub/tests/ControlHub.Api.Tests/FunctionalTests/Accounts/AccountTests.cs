@@ -4,7 +4,7 @@ using ControlHub.Api.Tests.Abstractions;
 using ControlHub.API.Accounts.ViewModels.Request;
 using ControlHub.Application.Accounts.Commands.ChangePassword;
 using ControlHub.Domain.Identity.Enums;
-using ControlHub.Domain.Tokens.Enums;
+using ControlHub.Domain.TokenManagement.Enums;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Xunit;

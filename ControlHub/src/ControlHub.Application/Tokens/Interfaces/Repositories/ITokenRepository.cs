@@ -1,4 +1,4 @@
-using ControlHub.Domain.Tokens;
+using ControlHub.Domain.TokenManagement.Aggregates;
 
 namespace ControlHub.Application.Tokens.Interfaces.Repositories
 {

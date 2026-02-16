@@ -35,3 +35,5 @@ appsettings.Local.json
 # Others
 *.DS_Store
 Thumbs.db
+ControlHub/Models/log_classifier.onnx
+*.txt

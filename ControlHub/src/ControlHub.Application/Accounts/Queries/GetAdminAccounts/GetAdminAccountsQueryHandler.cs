@@ -44,7 +44,9 @@ namespace ControlHub.Application.Accounts.Queries.GetAdminAccounts
             
             var dtos = accounts.Select(a => new AccountDto(
                 a.Id,
-                a.Identifiers.FirstOrDefault(i => i.Type == Domain.Identity.Enums.IdentifierType.Username)?.Value ?? "N/A",
+                a.Identifiers.FirstOrDefault(i => i.Type == Domain.Identity.Enums.IdentifierType.Username)?.Value ?? 
+                a.Identifiers.FirstOrDefault(i => i.Type == Domain.Identity.Enums.IdentifierType.Email)?.Value ?? 
+                a.Identifiers.FirstOrDefault()?.Value ?? "N/A",
                 a.Role?.Name ?? "Admin",
                 a.IsActive
             )).ToList();

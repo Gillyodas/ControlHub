@@ -1,5 +1,5 @@
 using ControlHub.Application.Tokens.Interfaces.Repositories;
-using ControlHub.Domain.Tokens;
+using ControlHub.Domain.TokenManagement.Aggregates;
 using ControlHub.Infrastructure.Persistence;
 using ControlHub.SharedKernel.Common.Exceptions;
 using Microsoft.EntityFrameworkCore;

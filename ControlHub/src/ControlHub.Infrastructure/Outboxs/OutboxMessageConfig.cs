@@ -1,4 +1,4 @@
-using ControlHub.Domain.Outboxs;
+using ControlHub.Application.Messaging.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
