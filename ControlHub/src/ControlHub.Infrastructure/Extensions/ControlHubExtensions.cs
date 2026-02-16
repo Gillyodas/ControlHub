@@ -24,7 +24,7 @@ using ControlHub.Application.Users.Interfaces.Repositories;
 using ControlHub.Domain.Accounts.Identifiers.Rules; // Namespace chứa IIdentifierValidator và các Validator cụ thể
 using ControlHub.Domain.Accounts.Identifiers.Services;
 using ControlHub.Domain.Accounts.Security;
-using ControlHub.Domain.Common.Services;
+using ControlHub.Domain.AccessControl.Services;
 using ControlHub.Infrastructure.Accounts.Factories;
 using ControlHub.Infrastructure.Accounts.Repositories;
 using ControlHub.Infrastructure.Accounts.Security;

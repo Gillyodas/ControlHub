@@ -1,4 +1,4 @@
-﻿namespace ControlHub.Domain.Common
+﻿namespace ControlHub.Domain.SharedKernel
 {
     public abstract class ValueObject
     {

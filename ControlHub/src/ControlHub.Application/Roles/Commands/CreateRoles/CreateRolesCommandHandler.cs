@@ -2,7 +2,7 @@
 using ControlHub.Application.Roles.DTOs;
 using ControlHub.Application.Permissions.Interfaces.Repositories;
 using ControlHub.Application.Roles.Interfaces.Repositories;
-using ControlHub.Domain.Common.Services;
+using ControlHub.Domain.AccessControl.Services;
 using ControlHub.Domain.Permissions;
 using ControlHub.Domain.Roles;
 using ControlHub.SharedKernel.Permissions;

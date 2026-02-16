@@ -1,5 +1,5 @@
 ﻿using ControlHub.Domain.Accounts.Enums;
-using ControlHub.Domain.Common;
+using ControlHub.Domain.SharedKernel;
 using ControlHub.SharedKernel.Results;
 
 namespace ControlHub.Domain.Accounts.ValueObjects

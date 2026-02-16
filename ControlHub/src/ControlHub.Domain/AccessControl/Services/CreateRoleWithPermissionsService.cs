@@ -2,7 +2,7 @@
 using ControlHub.Domain.Roles;
 using ControlHub.SharedKernel.Results;
 
-namespace ControlHub.Domain.Common.Services
+namespace ControlHub.Domain.AccessControl.Services
 {
     public class CreateRoleWithPermissionsService
     {

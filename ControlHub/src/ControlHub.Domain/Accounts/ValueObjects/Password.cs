@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using ControlHub.Domain.Accounts.Security;
-using ControlHub.Domain.Common;
+using ControlHub.Domain.SharedKernel;
 using ControlHub.SharedKernel.Accounts;
 using ControlHub.SharedKernel.Results;
 
